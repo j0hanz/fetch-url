@@ -66,6 +66,7 @@ export type StreamResultEvent = { type: "result" } & TransformResponse;
 export type StreamEvent = StreamProgressEvent | StreamResultEvent;
 
 export const NDJSON_CONTENT_TYPE = "application/x-ndjson";
+export const STREAM_PROGRESS_TOTAL = 8;
 export const NETWORK_ERROR_MESSAGE = "Network error. Please try again.";
 export const UNEXPECTED_RESPONSE_MESSAGE = "Unexpected response format.";
 
@@ -106,6 +107,40 @@ export function createNetworkError(): TransformError {
 
 export function createUnexpectedResponseError(): TransformError {
   return createInternalError(UNEXPECTED_RESPONSE_MESSAGE, false);
+}
+
+export function createStreamProgressEvent(
+  progress: number,
+  total?: number,
+  message?: string,
+): StreamProgressEvent {
+  return {
+    type: "progress",
+    progress,
+    total: total && total > 0 ? total : STREAM_PROGRESS_TOTAL,
+    message: message ?? "",
+  };
+}
+
+export function normalizeStreamProgressEvent(
+  event: StreamProgressEvent,
+  previous?: StreamProgressEvent | null,
+): StreamProgressEvent {
+  const total =
+    event.total > 0 ? event.total : (previous?.total ?? STREAM_PROGRESS_TOTAL);
+  const progress = Math.max(event.progress, previous?.progress ?? 0);
+
+  return {
+    ...event,
+    progress,
+    total,
+  };
+}
+
+export function isTerminalStreamProgressEvent(
+  event: StreamProgressEvent,
+): boolean {
+  return event.progress >= event.total;
 }
 
 export function hasTransformResult(

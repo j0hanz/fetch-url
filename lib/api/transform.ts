@@ -4,6 +4,7 @@ import {
 } from "@/lib/validation/request";
 import { transformUrl } from "@/lib/transform/service";
 import {
+  createStreamProgressEvent,
   createTransformError,
   NDJSON_CONTENT_TYPE,
   type StreamEvent,
@@ -48,24 +49,44 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let closed = false;
+
+      const handleAbort = () => closeStream();
+
+      function closeStream() {
+        if (closed) return;
+
+        closed = true;
+        request.signal.removeEventListener("abort", handleAbort);
+        controller.close();
+      }
+
       function writeLine(event: StreamEvent) {
+        if (closed) return;
+
         controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
       }
 
       function onProgress(p: Progress) {
-        writeLine({
-          type: "progress",
-          progress: p.progress,
-          total: p.total ?? 0,
-          message: p.message ?? "",
-        });
+        writeLine(createStreamProgressEvent(p.progress, p.total, p.message));
       }
 
+      request.signal.addEventListener("abort", handleAbort, { once: true });
+
       try {
+        if (request.signal.aborted) {
+          return;
+        }
+
         const response = await transformUrl(validated, onProgress);
+
+        if (request.signal.aborted) {
+          return;
+        }
+
         writeLine({ type: "result", ...response });
       } finally {
-        controller.close();
+        closeStream();
       }
     },
   });

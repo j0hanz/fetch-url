@@ -1,18 +1,20 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
-import Typography from "@mui/material/Typography";
+import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
 
 interface TransformProgressProps {
   progress: number;
   total: number;
+  message?: string;
 }
 
 function computePercentage(progress: number, total: number): number {
   if (total <= 0) return 0;
-  return Math.round((progress / total) * 100);
+
+  const percentage = Math.round((progress / total) * 100);
+  return Math.min(Math.max(percentage, 0), 100);
 }
 
 export default function TransformProgress({
@@ -22,28 +24,16 @@ export default function TransformProgress({
   const percentage = computePercentage(progress, total);
 
   return (
-    <Stack direction="row" spacing={2} alignItems="center" sx={{ py: 4 }}>
-      <Box sx={{ position: "relative", display: "inline-flex" }}>
-        <CircularProgress value={percentage} size={44} />
-        <Box
-          sx={{
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0,
-            position: "absolute",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Typography
-            variant="caption"
-            component="div"
-            color="text.secondary"
-          >{`${percentage}%`}</Typography>
+    <Stack spacing={1.5} sx={{ py: 2 }}>
+      <Stack direction="row" spacing={2} alignItems="center">
+        <Box sx={{ flex: 1 }}>
+          <LinearProgress
+            aria-label="Transform progress"
+            value={percentage}
+            color="inherit"
+          />
         </Box>
-      </Box>
+      </Stack>
     </Stack>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -39,15 +40,25 @@ export default function TransformForm({
 }: TransformFormProps) {
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   function setLoadingState(loading: boolean) {
     setSubmitting(loading);
     onLoading(loading);
   }
 
-  function handleStreamEvent(event: StreamEvent) {
+  async function handleStreamEvent(event: StreamEvent) {
     if (event.type === "progress") {
-      onProgress(event);
+      flushSync(() => {
+        onProgress(event);
+      });
+      await waitForProgressPaint();
       return;
     }
 
@@ -70,6 +81,10 @@ export default function TransformForm({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoadingState(true);
+    abortControllerRef.current?.abort();
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     try {
       const requestBody: TransformRequestBody = { url: url.trim() };
@@ -77,6 +92,7 @@ export default function TransformForm({
         method: "POST",
         headers: JSON_HEADERS,
         body: JSON.stringify(requestBody),
+        signal: abortController.signal,
       });
 
       const contentType = res.headers.get("Content-Type") ?? "";
@@ -86,9 +102,17 @@ export default function TransformForm({
       } else {
         handleJsonFallback(await res.json());
       }
-    } catch {
+    } catch (error) {
+      if (isAbortError(error)) {
+        return;
+      }
+
       onError(createNetworkError());
     } finally {
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
+
       setLoadingState(false);
     }
   }
@@ -105,7 +129,9 @@ export default function TransformForm({
 
     for (;;) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
@@ -114,20 +140,18 @@ export default function TransformForm({
       for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed.length === 0) continue;
-        handleStreamEvent(JSON.parse(trimmed) as StreamEvent);
+        await handleStreamEvent(JSON.parse(trimmed) as StreamEvent);
       }
     }
 
     if (buffer.trim().length > 0) {
-      handleStreamEvent(JSON.parse(buffer.trim()) as StreamEvent);
+      await handleStreamEvent(JSON.parse(buffer.trim()) as StreamEvent);
     }
   }
 
   function handleJsonFallback(data: unknown) {
-    const response = data as { ok?: boolean; error?: TransformError };
-
-    if (response.ok === false && response.error) {
-      onError(response.error);
+    if (isTransformErrorResponse(data)) {
+      onError(data.error);
       return;
     }
 
@@ -161,5 +185,44 @@ export default function TransformForm({
         </Button>
       </Stack>
     </Box>
+  );
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
+function waitForProgressPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.requestAnimationFrame === "function"
+    ) {
+      window.requestAnimationFrame(() => resolve());
+      return;
+    }
+
+    setTimeout(resolve, 0);
+  });
+}
+
+function isTransformErrorResponse(
+  value: unknown,
+): value is { ok: false; error: TransformError } {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as {
+    ok?: unknown;
+    error?: { code?: unknown; message?: unknown; retryable?: unknown };
+  };
+
+  return (
+    candidate.ok === false &&
+    candidate.error !== undefined &&
+    typeof candidate.error.code === "string" &&
+    typeof candidate.error.message === "string" &&
+    typeof candidate.error.retryable === "boolean"
   );
 }

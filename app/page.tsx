@@ -14,6 +14,10 @@ import type {
   TransformError,
   StreamProgressEvent,
 } from "@/lib/errors/transform";
+import {
+  isTerminalStreamProgressEvent,
+  normalizeStreamProgressEvent,
+} from "@/lib/errors/transform";
 
 export default function Home() {
   const [result, setResult] = useState<TransformResult | null>(null);
@@ -34,7 +38,13 @@ export default function Home() {
   }
 
   function handleProgress(event: StreamProgressEvent) {
-    setProgress(event);
+    setProgress((current) => {
+      if (current && isTerminalStreamProgressEvent(current)) {
+        return current;
+      }
+
+      return normalizeStreamProgressEvent(event, current);
+    });
   }
 
   return (
@@ -64,6 +74,7 @@ export default function Home() {
             <TransformProgress
               progress={progress.progress}
               total={progress.total}
+              message={progress.message}
             />
           )}
 

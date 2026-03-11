@@ -22,25 +22,22 @@ export async function callFetchUrl(
   onProgress?: ProgressCallback,
 ): Promise<CallToolResult> {
   const client = new Client(CLIENT_INFO);
-  let closing = false;
 
   const transport = new StdioClientTransport({
     command: FETCH_URL_TRANSPORT_COMMAND,
     args: FETCH_URL_TRANSPORT_ARGS,
   });
 
-  client.onerror = (error) => {
-    console.error("[MCP client error]", error);
-  };
-
-  client.onclose = () => {
-    if (!closing) {
-      console.error("[MCP client connection closed unexpectedly]");
-    }
-  };
-
   try {
     await client.connect(transport);
+
+    const progressOptions = onProgress
+      ? {
+          onprogress: (progress: Progress) => {
+            onProgress(progress);
+          },
+        }
+      : undefined;
 
     const result = await client.callTool(
       {
@@ -48,13 +45,12 @@ export async function callFetchUrl(
         arguments: { url: args.url },
       },
       undefined,
-      onProgress ? { onprogress: onProgress } : undefined,
+      progressOptions,
     );
 
     return result as CallToolResult;
   } finally {
     try {
-      closing = true;
       await client.close();
     } catch {
       // Ignore close errors

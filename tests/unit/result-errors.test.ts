@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { parseMcpResult } from "@/lib/mcp/result";
+import {
+  createStreamProgressEvent,
+  isTerminalStreamProgressEvent,
+  normalizeStreamProgressEvent,
+  STREAM_PROGRESS_TOTAL,
+} from "@/lib/errors/transform";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 function errorResult(code: string, message: string): CallToolResult {
@@ -102,5 +108,44 @@ describe("error mapper", () => {
     if (parsed.ok) return;
     expect(parsed.error.code).toBe("FETCH_ERROR");
     expect(parsed.error.retryable).toBe(true);
+  });
+
+  it("defaults streamed progress events to the shared total", () => {
+    expect(createStreamProgressEvent(3)).toEqual({
+      type: "progress",
+      progress: 3,
+      total: STREAM_PROGRESS_TOTAL,
+      message: "",
+    });
+  });
+
+  it("normalizes progress monotonically against the previous event", () => {
+    const previous = createStreamProgressEvent(
+      5,
+      STREAM_PROGRESS_TOTAL,
+      "Step 5",
+    );
+    const normalized = normalizeStreamProgressEvent(
+      createStreamProgressEvent(3, 0, "Stale step"),
+      previous,
+    );
+
+    expect(normalized).toEqual({
+      type: "progress",
+      progress: 5,
+      total: STREAM_PROGRESS_TOTAL,
+      message: "Stale step",
+    });
+  });
+
+  it("detects terminal streamed progress events", () => {
+    expect(
+      isTerminalStreamProgressEvent(
+        createStreamProgressEvent(STREAM_PROGRESS_TOTAL, STREAM_PROGRESS_TOTAL),
+      ),
+    ).toBe(true);
+    expect(isTerminalStreamProgressEvent(createStreamProgressEvent(7, 8))).toBe(
+      false,
+    );
   });
 });
