@@ -1,17 +1,8 @@
 export interface TransformRequest {
   url: string;
-  skipNoiseRemoval?: boolean;
-  forceRefresh?: boolean;
-  maxInlineChars?: number;
 }
 
-const ALLOWED_FIELDS = new Set<keyof TransformRequest>([
-  "url",
-  "skipNoiseRemoval",
-  "forceRefresh",
-  "maxInlineChars",
-]);
-const BOOLEAN_FIELDS = ["skipNoiseRemoval", "forceRefresh"] as const;
+const ALLOWED_FIELDS = new Set<keyof TransformRequest>(["url"]);
 
 type TransformRequestRecord = Record<string, unknown>;
 
@@ -39,27 +30,7 @@ export function validateTransformRequest(body: unknown): TransformRequest {
   // Validate url
   const url = validateUrl(record.url);
 
-  // Validate optional booleans
-  for (const field of BOOLEAN_FIELDS) {
-    validateOptionalBoolean(record, field);
-  }
-
-  const maxInlineChars = validateMaxInlineChars(record.maxInlineChars);
-
-  const request: TransformRequest = { url };
-  assignOptionalField(
-    request,
-    "skipNoiseRemoval",
-    record.skipNoiseRemoval as boolean | undefined,
-  );
-  assignOptionalField(
-    request,
-    "forceRefresh",
-    record.forceRefresh as boolean | undefined,
-  );
-  assignOptionalField(request, "maxInlineChars", maxInlineChars);
-
-  return request;
+  return { url };
 }
 
 function validateUrl(value: unknown): string {
@@ -81,37 +52,4 @@ function validateUrl(value: unknown): string {
   }
 
   return value;
-}
-
-function validateOptionalBoolean(
-  record: TransformRequestRecord,
-  field: (typeof BOOLEAN_FIELDS)[number],
-): void {
-  if (record[field] !== undefined && typeof record[field] !== "boolean") {
-    throw new ValidationError(`Field "${field}" must be a boolean.`);
-  }
-}
-
-function validateMaxInlineChars(value: unknown): number | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
-    throw new ValidationError(
-      'Field "maxInlineChars" must be a non-negative integer.',
-    );
-  }
-
-  return value;
-}
-
-function assignOptionalField<K extends keyof TransformRequest>(
-  request: TransformRequest,
-  key: K,
-  value: TransformRequest[K] | undefined,
-): void {
-  if (value !== undefined) {
-    request[key] = value;
-  }
 }

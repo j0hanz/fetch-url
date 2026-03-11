@@ -5,9 +5,6 @@ import path from "node:path";
 
 export interface FetchUrlArgs {
   url: string;
-  skipNoiseRemoval?: boolean;
-  forceRefresh?: boolean;
-  maxInlineChars?: number;
 }
 
 const CLIENT_INFO = { name: "page-converter", version: "1.0.0" };
@@ -64,19 +61,5 @@ function getFetchUrlTransportCommand(): string {
 }
 
 function buildToolArguments(args: FetchUrlArgs): Record<string, unknown> {
-  const toolArgs: Record<string, unknown> = { url: args.url };
-  setOptionalToolArgument(toolArgs, "skipNoiseRemoval", args.skipNoiseRemoval);
-  setOptionalToolArgument(toolArgs, "forceRefresh", args.forceRefresh);
-  setOptionalToolArgument(toolArgs, "maxInlineChars", args.maxInlineChars);
-  return toolArgs;
-}
-
-function setOptionalToolArgument(
-  toolArgs: Record<string, unknown>,
-  key: string,
-  value: boolean | number | undefined,
-): void {
-  if (value !== undefined) {
-    toolArgs[key] = value;
-  }
+  return { url: args.url };
 }

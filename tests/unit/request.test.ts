@@ -10,29 +10,6 @@ describe("validateTransformRequest", () => {
     expect(result).toEqual({ url: "https://example.com" });
   });
 
-  it("accepts a valid request with all optional fields", () => {
-    const result = validateTransformRequest({
-      url: "http://example.com/page",
-      skipNoiseRemoval: true,
-      forceRefresh: false,
-      maxInlineChars: 5000,
-    });
-    expect(result).toEqual({
-      url: "http://example.com/page",
-      skipNoiseRemoval: true,
-      forceRefresh: false,
-      maxInlineChars: 5000,
-    });
-  });
-
-  it("accepts maxInlineChars of 0", () => {
-    const result = validateTransformRequest({
-      url: "https://example.com",
-      maxInlineChars: 0,
-    });
-    expect(result.maxInlineChars).toBe(0);
-  });
-
   it("rejects empty url", () => {
     expect(() => validateTransformRequest({ url: "" })).toThrow(
       ValidationError,
@@ -67,46 +44,31 @@ describe("validateTransformRequest", () => {
     ).toThrow(/Unknown field/);
   });
 
-  it("rejects non-boolean skipNoiseRemoval", () => {
+  it("rejects skipNoiseRemoval as unknown field", () => {
     expect(() =>
       validateTransformRequest({
         url: "https://example.com",
-        skipNoiseRemoval: "yes",
+        skipNoiseRemoval: true,
       }),
-    ).toThrow(ValidationError);
+    ).toThrow(/Unknown field/);
   });
 
-  it("rejects non-boolean forceRefresh", () => {
-    expect(() =>
-      validateTransformRequest({ url: "https://example.com", forceRefresh: 1 }),
-    ).toThrow(ValidationError);
-  });
-
-  it("rejects negative maxInlineChars", () => {
+  it("rejects forceRefresh as unknown field", () => {
     expect(() =>
       validateTransformRequest({
         url: "https://example.com",
-        maxInlineChars: -1,
+        forceRefresh: true,
       }),
-    ).toThrow(ValidationError);
+    ).toThrow(/Unknown field/);
   });
 
-  it("rejects non-integer maxInlineChars", () => {
+  it("rejects maxInlineChars as unknown field", () => {
     expect(() =>
       validateTransformRequest({
         url: "https://example.com",
-        maxInlineChars: 1.5,
+        maxInlineChars: 100,
       }),
-    ).toThrow(ValidationError);
-  });
-
-  it("rejects non-number maxInlineChars", () => {
-    expect(() =>
-      validateTransformRequest({
-        url: "https://example.com",
-        maxInlineChars: "100",
-      }),
-    ).toThrow(ValidationError);
+    ).toThrow(/Unknown field/);
   });
 
   it("rejects null body", () => {

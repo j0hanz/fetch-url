@@ -3,20 +3,7 @@
 import { useState } from "react";
 import TransformForm from "@/components/form";
 import TransformResultPanel from "@/components/result";
-import type {
-  TransformResult,
-  TransformError,
-  TransformResponse,
-} from "@/lib/errors/transform";
-import {
-  createNetworkError,
-  hasTransformError,
-  hasTransformResult,
-} from "@/lib/errors/transform";
-
-interface RetryOptions {
-  forceRefresh: boolean;
-}
+import type { TransformResult, TransformError } from "@/lib/errors/transform";
 
 export default function Home() {
   const [result, setResult] = useState<TransformResult | null>(null);
@@ -31,28 +18,6 @@ export default function Home() {
   function handleError(nextError: TransformError) {
     setError(nextError);
     setResult(null);
-  }
-
-  async function handleRetry(options: RetryOptions) {
-    if (!result) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await retryTransform(result.url, options);
-      if (hasTransformResult(response)) {
-        setResult(response.result);
-      } else if (hasTransformError(response)) {
-        handleError(response.error);
-      }
-    } catch {
-      handleError(createNetworkError());
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (
@@ -97,26 +62,8 @@ export default function Home() {
           </div>
         )}
 
-        {result && !loading && (
-          <TransformResultPanel result={result} onRetry={handleRetry} />
-        )}
+        {result && !loading && <TransformResultPanel result={result} />}
       </main>
     </div>
   );
-}
-
-async function retryTransform(
-  url: string,
-  options: RetryOptions,
-): Promise<TransformResponse> {
-  const response = await fetch("/api/transform", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      url,
-      forceRefresh: options.forceRefresh,
-    }),
-  });
-
-  return (await response.json()) as TransformResponse;
 }

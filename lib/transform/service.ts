@@ -37,12 +37,7 @@ export async function transformUrl(
 }
 
 function buildFetchUrlArgs(request: TransformRequest) {
-  return {
-    url: request.url,
-    skipNoiseRemoval: request.skipNoiseRemoval,
-    forceRefresh: request.forceRefresh,
-    maxInlineChars: request.maxInlineChars,
-  };
+  return { url: request.url };
 }
 
 function mapTransportError(error: unknown): TransformError {

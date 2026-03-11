@@ -20,8 +20,19 @@ const baseResult: TransformResult = {
 };
 
 describe("TransformResultPanel", () => {
-  it("renders summary section with title, URLs, cache status, and size", () => {
+  it("renders summary fields inside a collapsed details element", () => {
     renderPanel();
+
+    const details = screen.getByText("Summary").closest("details");
+    expect(details).toBeInTheDocument();
+    expect(details).not.toHaveAttribute("open");
+  });
+
+  it("renders summary data when expanded", () => {
+    renderPanel();
+
+    const details = screen.getByText("Summary").closest("details")!;
+    details.setAttribute("open", "");
 
     expect(screen.getByText("Example Domain")).toBeInTheDocument();
     expect(screen.getByText("https://example.com")).toBeInTheDocument();
@@ -29,11 +40,12 @@ describe("TransformResultPanel", () => {
     expect(screen.getByText("42 chars")).toBeInTheDocument();
   });
 
-  it("renders metadata section", () => {
+  it("renders metadata inside a collapsed details element", () => {
     renderPanel();
 
-    expect(screen.getByText("An example page")).toBeInTheDocument();
-    expect(screen.getByText("IANA")).toBeInTheDocument();
+    const details = screen.getByText("Metadata").closest("details");
+    expect(details).toBeInTheDocument();
+    expect(details).not.toHaveAttribute("open");
   });
 
   it("renders markdown content in a pre element", () => {
@@ -45,23 +57,9 @@ describe("TransformResultPanel", () => {
     expect(pre?.textContent).toContain("This is an example.");
   });
 
-  it("shows cached status when fromCache is true", () => {
-    renderPanel({ result: { ...baseResult, fromCache: true } });
-    expect(screen.getByText("Cached")).toBeInTheDocument();
-  });
-
-  it("shows truncation warning and retry button when truncated", () => {
-    const onRetry = vi.fn();
-    renderPanel({ result: { ...baseResult, truncated: true }, onRetry });
-
+  it("shows truncation warning when truncated", () => {
+    renderPanel({ result: { ...baseResult, truncated: true } });
     expect(screen.getByText(/content was truncated/i)).toBeInTheDocument();
-    const retryBtn = screen.getByRole("button", {
-      name: /retry with fresh fetch/i,
-    });
-    expect(retryBtn).toBeInTheDocument();
-
-    fireEvent.click(retryBtn);
-    expect(onRetry).toHaveBeenCalledWith({ forceRefresh: true });
   });
 
   it("does not show truncation warning when not truncated", () => {
@@ -95,10 +93,8 @@ describe("TransformResultPanel", () => {
 
 function renderPanel({
   result = baseResult,
-  onRetry = vi.fn<(options: { forceRefresh: boolean }) => void>(),
 }: {
   result?: TransformResult;
-  onRetry?: (options: { forceRefresh: boolean }) => void;
 } = {}) {
-  return render(<TransformResultPanel result={result} onRetry={onRetry} />);
+  return render(<TransformResultPanel result={result} />);
 }

@@ -5,7 +5,6 @@ import type { TransformResult } from "@/lib/errors/transform";
 
 interface TransformResultProps {
   result: TransformResult;
-  onRetry: (options: { forceRefresh: boolean }) => void;
 }
 
 interface DetailField {
@@ -15,10 +14,7 @@ interface DetailField {
   truncate?: boolean;
 }
 
-export default function TransformResultPanel({
-  result,
-  onRetry,
-}: TransformResultProps) {
+export default function TransformResultPanel({ result }: TransformResultProps) {
   const [copied, setCopied] = useState(false);
   const copyResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -58,35 +54,29 @@ export default function TransformResultPanel({
             Content was truncated. The full page may be too large to return in
             one response.
           </p>
-          <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-            Try again with <strong>Force refresh</strong> enabled — this
-            bypasses the server cache and may return the complete content.
-          </p>
-          <button
-            onClick={() => onRetry({ forceRefresh: true })}
-            className="mt-2 rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-500"
-          >
-            Retry with fresh fetch
-          </button>
         </div>
       )}
 
-      {/* Summary Section */}
-      <section>
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      {/* Summary Accordion */}
+      <details className="group">
+        <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-zinc-500 select-none dark:text-zinc-400">
           Summary
-        </h3>
-        <DetailList fields={summaryFields} />
-      </section>
+        </summary>
+        <div className="mt-2">
+          <DetailList fields={summaryFields} />
+        </div>
+      </details>
 
-      {/* Metadata Section */}
+      {/* Metadata Accordion */}
       {metadataFields.length > 0 && (
-        <section>
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <details className="group">
+          <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-zinc-500 select-none dark:text-zinc-400">
             Metadata
-          </h3>
-          <DetailList fields={metadataFields} />
-        </section>
+          </summary>
+          <div className="mt-2">
+            <DetailList fields={metadataFields} />
+          </div>
+        </details>
       )}
 
       {/* Markdown Section */}

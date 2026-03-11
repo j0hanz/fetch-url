@@ -11,12 +11,10 @@ describe("TransformForm", () => {
     vi.resetAllMocks();
   });
 
-  it("renders URL input, checkboxes, and submit button", () => {
+  it("renders URL input and submit button", () => {
     renderForm();
 
     expect(screen.getByLabelText(/URL/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/skip noise removal/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/force refresh/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /convert/i }),
     ).toBeInTheDocument();
