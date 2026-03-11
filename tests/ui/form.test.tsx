@@ -33,7 +33,7 @@ describe("TransformForm", () => {
     };
 
     mockStreamResponse([
-      { type: "progress", progress: 1, total: 4, message: "Fetching" },
+      { type: "progress", progress: 1, total: 8, message: "Fetching" },
       { type: "result", ok: true, result: mockResult },
     ]);
     renderForm();
