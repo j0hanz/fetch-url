@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -14,6 +14,7 @@ import type {
 import {
   NDJSON_CONTENT_TYPE,
   createNetworkError,
+  createTimeoutError,
   createUnexpectedResponseError,
   hasTransformError,
   hasTransformResult,
@@ -109,6 +110,7 @@ export default function TransformForm({
   onLoading,
   onProgress,
 }: TransformFormProps) {
+  const urlInputId = useId();
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -186,6 +188,11 @@ export default function TransformForm({
         return;
       }
 
+      if (isTimeoutError(error)) {
+        onError(createTimeoutError());
+        return;
+      }
+
       if (isTransformError(error)) {
         onError(error);
         return;
@@ -214,7 +221,7 @@ export default function TransformForm({
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
         <TextField
-          id="url"
+          id={urlInputId}
           label="Paste a public URL to convert"
           type="url"
           required
@@ -254,4 +261,8 @@ export default function TransformForm({
 
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "TimeoutError";
 }

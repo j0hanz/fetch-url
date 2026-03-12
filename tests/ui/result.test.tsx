@@ -27,7 +27,6 @@ describe("TransformResultPanel", () => {
       expect(screen.getByText("Example")).toBeInTheDocument();
     });
     expect(screen.getByText("This is an example.")).toBeInTheDocument();
-    expect(document.querySelector("pre")).not.toBeInTheDocument();
   });
 
   it("renders raw markdown in code view", () => {

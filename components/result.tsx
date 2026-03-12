@@ -10,6 +10,7 @@ import {
 } from "react";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -20,6 +21,7 @@ import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
 import { MARKDOWN_PANEL_MAX_HEIGHT } from "@/components/markdown-panel.constants";
 import type { TransformResult } from "@/lib/errors/transform";
+import MarkdownErrorBoundary from "@/components/markdown-error-boundary";
 import MarkdownSkeleton from "@/components/skeleton";
 
 const MarkdownPreview = lazy(() => import("@/components/markdown-preview"));
@@ -92,6 +94,7 @@ function downloadMarkdownFile(title: string | undefined, markdown: string) {
 
 export default function TransformResultPanel({ result }: TransformResultProps) {
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
   const copyResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -111,7 +114,10 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
         setCopied(false);
       });
     } catch {
-      // Clipboard API may fail in some contexts
+      setCopyFailed(true);
+      scheduleCopiedReset(copyResetTimeoutRef, () => {
+        setCopyFailed(false);
+      });
     }
   }
 
@@ -157,13 +163,25 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
               return (
                 <Tooltip
                   key={label}
-                  title={isCopyAction && copied ? copiedLabel : label}
+                  title={
+                    isCopyAction && copyFailed
+                      ? "Failed to copy"
+                      : isCopyAction && copied
+                        ? copiedLabel
+                        : label
+                  }
                 >
                   <IconButton
                     size="large"
                     aria-label={label}
                     onClick={isCopyAction ? handleCopy : handleDownload}
-                    color={isCopyAction && copied ? "success" : "default"}
+                    color={
+                      isCopyAction && copyFailed
+                        ? "error"
+                        : isCopyAction && copied
+                          ? "success"
+                          : "default"
+                    }
                   >
                     <Icon fontSize="small" />
                   </IconButton>
@@ -182,11 +200,14 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
             borderRadius: 2,
           }}
         >
-          {viewMode === "preview" ? (
-            <Suspense fallback={<MarkdownSkeleton />}>
-              <MarkdownPreview>{result.markdown}</MarkdownPreview>
-            </Suspense>
-          ) : (
+          <Box sx={{ display: viewMode === "preview" ? "block" : "none" }}>
+            <MarkdownErrorBoundary>
+              <Suspense fallback={<MarkdownSkeleton />}>
+                <MarkdownPreview>{result.markdown}</MarkdownPreview>
+              </Suspense>
+            </MarkdownErrorBoundary>
+          </Box>
+          <Box sx={{ display: viewMode === "code" ? "block" : "none" }}>
             <Typography
               component="pre"
               variant="body2"
@@ -198,7 +219,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
             >
               {result.markdown}
             </Typography>
-          )}
+          </Box>
         </Paper>
       </section>
     </Stack>

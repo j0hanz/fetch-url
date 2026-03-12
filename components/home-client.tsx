@@ -100,29 +100,31 @@ export default function HomeClient() {
         onProgress={handleProgress}
       />
 
-      {state.loading && state.progress && (
-        <TransformProgress
-          progress={state.progress.progress}
-          total={state.progress.total}
-          message={state.progress.message}
-        />
-      )}
+      <div aria-live="polite">
+        {state.loading && state.progress && (
+          <TransformProgress
+            progress={state.progress.progress}
+            total={state.progress.total}
+            message={state.progress.message}
+          />
+        )}
 
-      {state.error && !state.loading && (
-        <Alert severity="error" variant="outlined">
-          <Typography variant="body2" fontWeight="medium">
-            Error: {state.error.message}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Code: {state.error.code}
-            {state.error.retryable && " · Retryable"}
-          </Typography>
-        </Alert>
-      )}
+        {state.error && !state.loading && (
+          <Alert severity="error" variant="outlined">
+            <Typography variant="body2" fontWeight="medium">
+              Error: {state.error.message}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Code: {state.error.code}
+              {state.error.retryable && " · Retryable"}
+            </Typography>
+          </Alert>
+        )}
 
-      {state.result && !state.loading && (
-        <TransformResultPanel result={state.result} />
-      )}
+        {state.result && !state.loading && (
+          <TransformResultPanel result={state.result} />
+        )}
+      </div>
     </>
   );
 }

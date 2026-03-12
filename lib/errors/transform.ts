@@ -107,6 +107,14 @@ export function createNetworkError(): TransformError {
   return createInternalError(NETWORK_ERROR_MESSAGE, true);
 }
 
+export const TIMEOUT_ERROR_MESSAGE = "Request timed out. Please try again.";
+
+export function createTimeoutError(): TransformError {
+  return createTransformError("ABORTED", TIMEOUT_ERROR_MESSAGE, {
+    retryable: true,
+  });
+}
+
 export function createUnexpectedResponseError(): TransformError {
   return createInternalError(UNEXPECTED_RESPONSE_MESSAGE, false);
 }

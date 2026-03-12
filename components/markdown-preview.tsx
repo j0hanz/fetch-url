@@ -148,6 +148,8 @@ const components: Components = {
       component="img"
       src={src}
       alt={alt ?? ""}
+      loading="lazy"
+      decoding="async"
       sx={{ maxWidth: "100%", height: "auto", my: 1, borderRadius: 1 }}
     />
   ),
