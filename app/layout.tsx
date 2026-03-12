@@ -5,7 +5,6 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import theme from "@/lib/theme";
-import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
