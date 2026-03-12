@@ -34,6 +34,7 @@ interface TransformRequestBody {
 
 const TRANSFORM_ENDPOINT = "/api/transform";
 const JSON_HEADERS = { "Content-Type": "application/json" } as const;
+const FETCH_TIMEOUT_MS = 60_000;
 
 function createRequestBody(url: string): TransformRequestBody {
   return { url: url.trim() };
@@ -159,12 +160,17 @@ export default function TransformForm({
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    const signal = AbortSignal.any([
+      abortController.signal,
+      AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    ]);
+
     try {
       const res = await fetch(TRANSFORM_ENDPOINT, {
         method: "POST",
         headers: JSON_HEADERS,
         body: JSON.stringify(createRequestBody(url)),
-        signal: abortController.signal,
+        signal,
       });
 
       if (isNdjsonResponse(res)) {

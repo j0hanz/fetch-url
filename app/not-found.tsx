@@ -5,24 +5,12 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-interface ErrorStateProps {
-  error: Error & { digest?: string };
-  fallbackMessage: string;
-  minHeight: string;
-  reset: () => void;
-}
-
-export default function ErrorState({
-  error,
-  fallbackMessage,
-  minHeight,
-  reset,
-}: ErrorStateProps) {
+export default function NotFound() {
   return (
     <Box
       sx={{
         display: "flex",
-        minHeight,
+        minHeight: "50vh",
         alignItems: "center",
         justifyContent: "center",
         p: 4,
@@ -30,7 +18,7 @@ export default function ErrorState({
     >
       <Stack spacing={2} alignItems="center">
         <Typography variant="h6" color="error">
-          Something went wrong
+          Page not found
         </Typography>
         <Typography
           variant="body2"
@@ -38,15 +26,10 @@ export default function ErrorState({
           textAlign="center"
           sx={{ maxWidth: 400 }}
         >
-          {fallbackMessage}
+          The page you are looking for does not exist.
         </Typography>
-        {error.digest && (
-          <Typography variant="caption" color="text.disabled">
-            Ref: {error.digest}
-          </Typography>
-        )}
-        <Button variant="contained" onClick={reset}>
-          Try again
+        <Button href="/" variant="contained">
+          Go home
         </Button>
       </Stack>
     </Box>

@@ -10,6 +10,13 @@ describe("validateTransformRequest", () => {
     expect(result).toEqual({ url: "https://example.com" });
   });
 
+  it("trims whitespace from url", () => {
+    const result = validateTransformRequest({
+      url: "  https://example.com  ",
+    });
+    expect(result).toEqual({ url: "https://example.com" });
+  });
+
   it("rejects empty url", () => {
     expect(() => validateTransformRequest({ url: "" })).toThrow(
       ValidationError,

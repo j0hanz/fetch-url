@@ -16,9 +16,16 @@ const FETCH_URL_TRANSPORT_COMMAND = getFetchUrlTransportCommand();
 const FETCH_URL_TRANSPORT_ARGS: string[] = [];
 
 export type ProgressCallback = (progress: Progress) => void;
-type FetchUrlClient = { client: Client; transport: StdioClientTransport };
 
-function noop() {}
+interface McpInstance {
+  client: Client;
+  transport: StdioClientTransport;
+}
+
+const globalForMcp = globalThis as unknown as {
+  __mcpInstance?: McpInstance;
+  __mcpConnecting?: Promise<Client>;
+};
 
 function createTransport() {
   return new StdioClientTransport({
@@ -27,54 +34,69 @@ function createTransport() {
   });
 }
 
+function resetInstance() {
+  globalForMcp.__mcpInstance = undefined;
+  globalForMcp.__mcpConnecting = undefined;
+}
+
 function createClient(): Client {
   const client = new Client(CLIENT_INFO);
-  client.onerror = noop;
-  client.onclose = noop;
+
+  client.onerror = () => {
+    resetInstance();
+  };
+
+  client.onclose = () => {
+    resetInstance();
+  };
 
   return client;
 }
 
-function createFetchUrlClient(): FetchUrlClient {
-  return {
-    client: createClient(),
-    transport: createTransport(),
-  };
+async function getConnectedClient(): Promise<Client> {
+  if (globalForMcp.__mcpInstance) {
+    return globalForMcp.__mcpInstance.client;
+  }
+
+  if (globalForMcp.__mcpConnecting) {
+    return globalForMcp.__mcpConnecting;
+  }
+
+  globalForMcp.__mcpConnecting = (async () => {
+    const client = createClient();
+    const transport = createTransport();
+
+    await client.connect(transport);
+
+    globalForMcp.__mcpInstance = { client, transport };
+    globalForMcp.__mcpConnecting = undefined;
+
+    return client;
+  })();
+
+  return globalForMcp.__mcpConnecting;
 }
 
 function createProgressOptions(onProgress?: ProgressCallback) {
   return onProgress ? { onprogress: onProgress } : undefined;
 }
 
-async function closeClientSafely(client: Client) {
-  try {
-    await client.close();
-  } catch {
-    // Ignore close errors
-  }
-}
-
 export async function callFetchUrl(
   args: FetchUrlArgs,
   onProgress?: ProgressCallback,
 ): Promise<CallToolResult> {
-  const { client, transport } = createFetchUrlClient();
+  const client = await getConnectedClient();
 
-  try {
-    await client.connect(transport);
-    const result = await client.callTool(
-      {
-        name: FETCH_URL_TOOL_NAME,
-        arguments: { url: args.url },
-      },
-      undefined,
-      createProgressOptions(onProgress),
-    );
+  const result = await client.callTool(
+    {
+      name: FETCH_URL_TOOL_NAME,
+      arguments: { url: args.url },
+    },
+    undefined,
+    createProgressOptions(onProgress),
+  );
 
-    return result as CallToolResult;
-  } finally {
-    await closeClientSafely(client);
-  }
+  return result as CallToolResult;
 }
 
 function getFetchUrlTransportCommand(): string {

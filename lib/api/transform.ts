@@ -27,7 +27,6 @@ const HTTP_STATUS_BY_ERROR_CODE: Record<TransformErrorCode, number> = {
 const NDJSON_HEADERS = {
   "Content-Type": NDJSON_CONTENT_TYPE,
   "Cache-Control": "no-cache",
-  "Transfer-Encoding": "chunked",
 } as const;
 
 function readValidationErrorMessage(error: unknown): string {

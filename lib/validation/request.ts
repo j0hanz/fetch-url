@@ -45,9 +45,11 @@ function validateUrl(value: unknown): string {
     );
   }
 
+  const trimmed = value.trim();
+
   let parsed: URL;
   try {
-    parsed = new URL(value);
+    parsed = new URL(trimmed);
   } catch {
     throw new ValidationError('Field "url" must be a valid URL.');
   }
@@ -56,5 +58,5 @@ function validateUrl(value: unknown): string {
     throw new ValidationError('Field "url" must use http: or https: scheme.');
   }
 
-  return value;
+  return trimmed;
 }

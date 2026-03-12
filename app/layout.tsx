@@ -19,6 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Page Converter",
   description: "Turn web pages into clean Markdown",
+  openGraph: {
+    title: "Page Converter",
+    description: "Turn web pages into clean Markdown",
+  },
 };
 
 export default function RootLayout({
