@@ -9,16 +9,16 @@ const theme = responsiveFontSizes(
       light: {
         palette: {
           background: {
-            default: "#FFFFFF",
-            paper: "rgba(255, 255, 255, 0.8)",
+            default: "#f0f0f0",
+            paper: "#f0f0f0d8",
           },
         },
       },
       dark: {
         palette: {
           background: {
-            default: "#393939",
-            paper: "rgba(57, 57, 57, 0.74)",
+            default: "#202020",
+            paper: "#202020c4",
           },
         },
       },
