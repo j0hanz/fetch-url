@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={geistSans.variable} suppressHydrationWarning>
       <body className={geistMono.variable}>
-        <InitColorSchemeScript />
+        <InitColorSchemeScript attribute="class" />
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />

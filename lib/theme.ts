@@ -4,7 +4,7 @@ import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 
 const theme = responsiveFontSizes(
   createTheme({
-    cssVariables: true,
+    cssVariables: { colorSchemeSelector: "class" },
     colorSchemes: { dark: true },
     typography: {
       fontFamily: "var(--font-geist-sans)",
