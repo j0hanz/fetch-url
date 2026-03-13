@@ -3,7 +3,7 @@
 import {
   lazy,
   Suspense,
-  type MutableRefObject,
+  type RefObject,
   useEffect,
   useRef,
   useState,
@@ -56,7 +56,7 @@ const ACTION_BUTTONS: readonly ActionButton[] = [
 ];
 
 function clearScheduledTimeout(
-  timeoutRef: MutableRefObject<ReturnType<typeof setTimeout> | null>,
+  timeoutRef: RefObject<ReturnType<typeof setTimeout> | null>,
 ) {
   if (timeoutRef.current === null) {
     return;
@@ -67,7 +67,7 @@ function clearScheduledTimeout(
 }
 
 function scheduleCopiedReset(
-  timeoutRef: MutableRefObject<ReturnType<typeof setTimeout> | null>,
+  timeoutRef: RefObject<ReturnType<typeof setTimeout> | null>,
   onReset: () => void,
 ) {
   clearScheduledTimeout(timeoutRef);
