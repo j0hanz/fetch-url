@@ -6,6 +6,7 @@ import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import HomeClient from "@/components/home-client";
+import AboutDialog from "@/components/about-dialog";
 import ThemeToggle from "@/components/theme-toggle";
 
 export default function Home() {
@@ -19,7 +20,7 @@ export default function Home() {
             alignItems="flex-start"
           >
             <div>
-              <Typography variant="h4" component="h1" gutterBottom>
+              <Typography variant="h4" component="h4" gutterBottom>
                 Page Converter
               </Typography>
               <Typography variant="subtitle1" color="text.secondary">
@@ -27,6 +28,7 @@ export default function Home() {
               </Typography>
             </div>
             <Stack direction="row" spacing={{ xs: 1, sm: 2 }}>
+              <AboutDialog />
               <Tooltip title="View on GitHub">
                 <IconButton
                   component="a"
