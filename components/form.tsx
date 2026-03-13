@@ -219,7 +219,7 @@ export default function TransformForm({
 
   return (
     <Box component="form" onSubmit={handleSubmit}>
-      <Stack spacing={2}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
           id={urlInputId}
           label="Paste a public URL to convert"
@@ -232,6 +232,7 @@ export default function TransformForm({
           disabled={submitting}
           variant="outlined"
           size="small"
+          sx={{ flexGrow: 1 }}
         />
         {submitting ? (
           <Button
@@ -240,7 +241,7 @@ export default function TransformForm({
             fullWidth
             color="error"
             onClick={handleCancel}
-            sx={{ alignSelf: "flex-start", maxWidth: { sm: 200 } }}
+            sx={{ minWidth: { sm: 120 } }}
           >
             Cancel
           </Button>
@@ -249,7 +250,7 @@ export default function TransformForm({
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ alignSelf: "flex-start", maxWidth: { sm: 200 } }}
+            sx={{ minWidth: { sm: 120 } }}
           >
             Convert
           </Button>
