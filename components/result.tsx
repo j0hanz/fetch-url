@@ -25,7 +25,7 @@ import { MarkdownSkeleton } from "@/components/loading";
 
 const MarkdownPreview = lazy(() => import("@/components/markdown-preview"));
 
-export const MARKDOWN_PANEL_MAX_HEIGHT = 600;
+export const MARKDOWN_PANEL_MAX_HEIGHT = 500;
 
 interface TransformResultProps {
   result: TransformResult;
