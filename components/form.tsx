@@ -232,7 +232,7 @@ export default function TransformForm({
           disabled={submitting}
           variant="outlined"
           size="small"
-          sx={{ flexGrow: 1 }}
+          sx={{ flexGrow: 1, flex: { md: "2 1 0" } }}
         />
         {submitting ? (
           <Button
@@ -241,7 +241,7 @@ export default function TransformForm({
             fullWidth
             color="error"
             onClick={handleCancel}
-            sx={{ minWidth: { sm: 120 } }}
+            sx={{ minWidth: { sm: 120 }, flex: { md: "1 1 0" } }}
           >
             Cancel
           </Button>
@@ -250,7 +250,7 @@ export default function TransformForm({
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ minWidth: { sm: 120 } }}
+            sx={{ minWidth: { sm: 120 }, flex: { md: "1 1 0" } }}
           >
             Convert
           </Button>
