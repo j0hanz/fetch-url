@@ -30,24 +30,24 @@
     </style>
 
     <!-- Browser window outline -->
-    <rect x="16" y="24" width="224" height="208" rx="16" stroke-width="6" class="dynamic-box" />
+    <rect x="20" y="28" width="216" height="200" rx="20" stroke-width="6" class="dynamic-box" />
 
     <!-- Browser controls line -->
-    <line x1="16" y1="72" x2="240" y2="72" stroke-width="6" class="dynamic-stroke" stroke-linecap="round" />
+    <line x1="20" y1="68" x2="236" y2="68" stroke-width="6" class="dynamic-stroke" stroke-linecap="round" />
 
     <!-- Browser dots -->
-    <circle cx="48" cy="48" r="6" class="dynamic-fill" />
-    <circle cx="76" cy="48" r="6" class="dynamic-fill" />
-    <circle cx="104" cy="48" r="6" class="dynamic-fill" />
+    <circle cx="44" cy="48" r="4.5" class="dynamic-fill" />
+    <circle cx="64" cy="48" r="4.5" class="dynamic-fill" />
+    <circle cx="84" cy="48" r="4.5" class="dynamic-fill" />
 
     <!-- Markdown Symbol centered -->
-    <g transform="translate(68, 120)" class="dynamic-stroke" stroke-width="15" stroke-linecap="round"
+    <g transform="translate(68, 118)" class="dynamic-stroke" stroke-width="10" stroke-linecap="round"
         stroke-linejoin="round" fill="none">
         <!-- Letter M -->
-        <path d="M 0 56 L 0 0 L 28 28 L 56 0 L 56 56" />
+        <path d="M 0 60 L 0 0 L 28 30 L 56 0 L 56 60" />
 
         <!-- Down Arrow -->
-        <path d="M 96 0 L 96 56" />
-        <path d="M 72 32 L 96 56 L 120 32" />
+        <path d="M 96 0 L 96 60" />
+        <path d="M 72 36 L 96 60 L 120 36" />
     </g>
 </svg>
