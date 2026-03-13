@@ -3,12 +3,14 @@ import { parseMcpResult } from "@/lib/mcp";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 type ParsedResult = ReturnType<typeof parseMcpResult>;
+type ParsedSuccessResult = Extract<ParsedResult, { ok: true }>["result"];
+type ParsedErrorResult = Extract<ParsedResult, { ok: false }>["error"];
 
 function textContent(text: string): CallToolResult["content"] {
   return [{ type: "text" as const, text }];
 }
 
-function expectSuccessResult(parsed: ParsedResult) {
+function expectSuccessResult(parsed: ParsedResult): ParsedSuccessResult {
   expect(parsed.ok).toBe(true);
   if (!parsed.ok) {
     throw new Error("Expected parseMcpResult to return a success result.");
@@ -17,7 +19,7 @@ function expectSuccessResult(parsed: ParsedResult) {
   return parsed.result;
 }
 
-function expectErrorResult(parsed: ParsedResult) {
+function expectErrorResult(parsed: ParsedResult): ParsedErrorResult {
   expect(parsed.ok).toBe(false);
   if (parsed.ok) {
     throw new Error("Expected parseMcpResult to return an error result.");

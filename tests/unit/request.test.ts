@@ -47,14 +47,14 @@ function createJsonRequest(body: string): Request {
 }
 
 function parseNdjsonLine(line: string): unknown {
-  return JSON.parse(line) as unknown;
+  return JSON.parse(line);
 }
 
-describe("validateTransformRequest", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-  });
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
+describe("validateTransformRequest", () => {
   it("accepts a valid request with only url", () => {
     const result = validateTransformRequest({ url: VALID_URL });
     expect(result).toEqual({ url: VALID_URL });
@@ -100,10 +100,6 @@ describe("validateTransformRequest", () => {
 });
 
 describe("POST /api/transform", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-  });
-
   it("returns a validation error for invalid JSON payloads", async () => {
     const response = await POST(createJsonRequest("not json"));
 

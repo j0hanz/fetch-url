@@ -1,30 +1,32 @@
-# How It Works
+# How Page Converter Works
 
-Ever wondered what happens when you paste a URL and hit **Convert**? Here's a peek under the hood of the Page Converter engine.
+Page Converter turns a web page into clean Markdown in four simple steps.
 
-## Step by Step
+## 1. Paste a Link
 
-1. **Link Validation**  
-   You submit a URL. Our app quickly verifies that it's a valid, accessible public web address.
+Add a public web link and start.
 
-2. **Content Extraction**  
-   The request is handed off to our background [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server. It fetches the webpage, slices through the noise (like ads, popups, and navigation menus), and isolates the core content.
+## 2. Read the Page
 
-3. **Real-Time Streaming**  
-   You don't have to wait in the dark. As the engine processes the page and converts HTML to Markdown, it streams live progress updates directly to your screen.
+The app gets the page and keeps the main text.
+It removes ads, popups, menus, and other page noise.
 
-4. **Instant Delivery**  
-   The final, pristine Markdown is delivered. You can preview it fully formatted, toggle the raw code view, copy it to your clipboard, or download it as a `.md` file for your own use.
+## 3. See Live Progress
+
+You can follow progress while the page is being converted.
+
+## 4. Get the Result
+
+Your Markdown is ready right away.
+You can preview it, copy it, or download it as a `.md` file.
 
 ---
 
-## The Tech Stack
+## Tools Used
 
-We've built Page Converter using modern, reliable technologies to ensure a seamless experience:
-
-| Component             | Technology                                                                                   |
-| :-------------------- | :------------------------------------------------------------------------------------------- |
-| **Frontend UI**       | [React](https://react.dev) + [Material UI (MUI)](https://mui.com) for a clean, snappy design |
-| **Web Framework**     | [Next.js](https://nextjs.org) (App Router) for robust server and client-side operations      |
-| **Conversion Engine** | Powered by an underlying [Model Context Protocol](https://modelcontextprotocol.io) server    |
-| **Speed & Caching**   | Built-in caching ensures repeated requests for the same URL load almost instantly            |
+| Part                | Tool                                                            |
+| :------------------ | :-------------------------------------------------------------- |
+| Interface           | [React](https://react.dev) + [Material UI](https://mui.com)     |
+| App platform        | [Next.js](https://nextjs.org)                                   |
+| Background service  | [Model Context Protocol (MCP)](https://modelcontextprotocol.io) |
+| Faster repeat links | Built-in cache                                                  |

@@ -1,26 +1,27 @@
 # About Page Converter
 
-> **Page Converter** is a fast, reliable web application that transforms any public webpage into clean, well-structured Markdown. It extracts the core content of an article, documentation page, or blog post—stripping away clutter like ads and navigation—so you can focus on what matters.
+**Page Converter** changes public web pages into clean Markdown.
+Markdown is a simple text format that is easy to read, save, and share.
 
-## What are the benefits?
+## Why People Use It
 
-- **Extract pure content:** Removes ads, popups, and distracting layouts.
-- **Developer-friendly:** Converts complex HTML elements (tables, code blocks, formatting) into semantic Markdown ready for your notes or codebase.
-- **Fast and resilient:** Utilizes robust background fetching with automatic retries and real-time streaming updates.
-- **No login required:** Instantly paste a URL and get your Markdown within seconds.
+- **Clean text only:** Removes ads, popups, menus, and visual noise.
+- **Easy to read:** Keeps titles, sections, lists, and tables clear.
+- **Fast results:** Shows live progress while the page is being processed.
+- **No account needed:** Paste a link and get results in seconds.
 
-## Features
+## What You Can Do
 
-- **Clean Markdown output:** The engine converts HTML to human-readable Markdown, preserving structure and formatting.
-- **Rich preview:** Rendered Markdown with full styling, tables, code blocks, and more.
-- **Copy & download:** Grab the result to your clipboard or save it as a `.md` file.
+- **Preview:** Read the formatted Markdown in the app.
+- **Copy:** Copy the Markdown with one click.
+- **Download:** Save it as a `.md` file.
 
-## Examples of Usage
+## Common Uses
 
-- **Personal Knowledge Management:** Save blog posts or tutorials as Markdown files for note-taking apps like Obsidian, Notion, or Roam Research.
-- **Documentation Scraping:** Quickly convert technical documentation into plain text to feed as context into AI tools and LLMs.
-- **Offline Reading:** Download long-form articles or recipes as `.md` files to read later without an internet connection.
-- **Archiving:** Preserve the content of web pages in a clean format for future reference or sharing.
+- Save articles for later reading.
+- Keep lessons and notes in one format.
+- Share clean page text with your team.
+- Keep a simple archive of useful pages.
 
 ---
 

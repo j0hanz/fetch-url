@@ -30,6 +30,9 @@ const NDJSON_HEADERS = {
 } as const;
 
 const MAX_REQUEST_BODY_SIZE = 4096;
+const INVALID_REQUEST_MESSAGE = "Invalid request.";
+const INVALID_JSON_BODY_MESSAGE = "Invalid JSON body.";
+const REQUEST_BODY_TOO_LARGE_MESSAGE = "Request body too large.";
 
 interface StreamGuard {
   close: () => void;
@@ -38,14 +41,16 @@ interface StreamGuard {
 }
 
 function readValidationErrorMessage(error: unknown): string {
-  return error instanceof ValidationError ? error.message : "Invalid request.";
+  return error instanceof ValidationError
+    ? error.message
+    : INVALID_REQUEST_MESSAGE;
 }
 
 async function readRequestBody(request: Request): Promise<unknown> {
   try {
     return await request.json();
   } catch {
-    throw new ValidationError("Invalid JSON body.");
+    throw new ValidationError(INVALID_JSON_BODY_MESSAGE);
   }
 }
 
@@ -151,13 +156,7 @@ function createNdjsonResponseStream(
         }
 
         const response = await handleTransform((progress) => {
-          streamGuard.write(
-            createStreamProgressEvent(
-              progress.progress,
-              progress.total,
-              progress.message,
-            ),
-          );
+          writeProgressEvent(streamGuard, progress);
         });
 
         if (!request.signal.aborted) {
@@ -170,9 +169,22 @@ function createNdjsonResponseStream(
   });
 }
 
+function writeProgressEvent(
+  streamGuard: StreamGuard,
+  progress: Progress,
+): void {
+  streamGuard.write(
+    createStreamProgressEvent(
+      progress.progress,
+      progress.total,
+      progress.message,
+    ),
+  );
+}
+
 export async function POST(request: Request) {
   if (isOversizedRequest(request)) {
-    return createValidationErrorResponse("Request body too large.");
+    return createValidationErrorResponse(REQUEST_BODY_TOO_LARGE_MESSAGE);
   }
 
   try {

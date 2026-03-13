@@ -28,10 +28,12 @@ interface McpInstance {
   transport: StdioClientTransport;
 }
 
-const globalForMcp = globalThis as unknown as {
+interface McpGlobalState {
   __mcpInstance?: McpInstance;
   __mcpConnecting?: Promise<Client>;
-};
+}
+
+const globalForMcp = globalThis as typeof globalThis & McpGlobalState;
 
 function createTransport() {
   return new StdioClientTransport({
@@ -142,8 +144,12 @@ type JsonRecord = Record<string, unknown>;
 type KnownMcpErrorCode = keyof typeof KNOWN_MCP_ERRORS;
 type KnownMcpErrorDefinition = (typeof KNOWN_MCP_ERRORS)[KnownMcpErrorCode];
 
+function isKnownMcpErrorCode(code: string): code is KnownMcpErrorCode {
+  return code in KNOWN_MCP_ERRORS;
+}
+
 function readKnownMcpError(code: string): KnownMcpErrorDefinition | undefined {
-  return KNOWN_MCP_ERRORS[code as KnownMcpErrorCode];
+  return isKnownMcpErrorCode(code) ? KNOWN_MCP_ERRORS[code] : undefined;
 }
 
 /**
@@ -221,18 +227,36 @@ export type ParsedMcpResult =
   | { ok: false; error: TransformError };
 
 export function parseMcpResult(raw: CallToolResult): ParsedMcpResult {
-  const payload = readPayloadRecord(raw);
-  if (!payload) {
-    return createPayloadParseFailure(raw);
+  const payloadState = readPayloadRecord(raw);
+  if (!payloadState.payload) {
+    return createPayloadParseFailure(raw, payloadState.hadTextBlock);
   }
 
   return raw.isError
-    ? createErrorResult(payload)
-    : createSuccessResult(payload);
+    ? createErrorResult(payloadState.payload)
+    : createSuccessResult(payloadState.payload);
 }
 
-function readPayloadRecord(raw: CallToolResult): JsonRecord | null {
-  return asRecord(raw.structuredContent) ?? parseFirstTextRecord(raw);
+interface PayloadReadState {
+  payload: JsonRecord | null;
+  hadTextBlock: boolean;
+}
+
+function readPayloadRecord(raw: CallToolResult): PayloadReadState {
+  const structuredPayload = asRecord(raw.structuredContent);
+  if (structuredPayload) {
+    return { payload: structuredPayload, hadTextBlock: false };
+  }
+
+  const text = getFirstTextBlock(raw);
+  if (text === null) {
+    return { payload: null, hadTextBlock: false };
+  }
+
+  return {
+    payload: parseJsonRecord(text),
+    hadTextBlock: true,
+  };
 }
 
 function createErrorResult(payload: JsonRecord): ParsedMcpResult {
@@ -249,7 +273,10 @@ function createSuccessResult(payload: JsonRecord): ParsedMcpResult {
   };
 }
 
-function createPayloadParseFailure(raw: CallToolResult): ParsedMcpResult {
+function createPayloadParseFailure(
+  raw: CallToolResult,
+  hadTextBlock: boolean,
+): ParsedMcpResult {
   if (raw.isError) {
     return {
       ok: false,
@@ -257,7 +284,7 @@ function createPayloadParseFailure(raw: CallToolResult): ParsedMcpResult {
     };
   }
 
-  if (getFirstTextBlock(raw) !== null) {
+  if (hadTextBlock) {
     return {
       ok: false,
       error: createInternalError(INVALID_MCP_RESPONSE_MESSAGE),
@@ -268,15 +295,6 @@ function createPayloadParseFailure(raw: CallToolResult): ParsedMcpResult {
     ok: false,
     error: createInternalError(EMPTY_MCP_RESPONSE_MESSAGE),
   };
-}
-
-function parseFirstTextRecord(raw: CallToolResult): JsonRecord | null {
-  const text = getFirstTextBlock(raw);
-  if (text === null) {
-    return null;
-  }
-
-  return parseJsonRecord(text);
 }
 
 function getFirstTextBlock(raw: CallToolResult): string | null {

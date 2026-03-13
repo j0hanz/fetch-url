@@ -72,7 +72,6 @@ export const UNEXPECTED_RESPONSE_MESSAGE = "Unexpected response format.";
 const EMPTY_STREAM_MESSAGE = "";
 
 type TransformErrorOptions = Omit<TransformError, "code" | "message">;
-type TransformErrorOverrides = Pick<TransformError, "statusCode" | "details">;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -81,31 +80,26 @@ export function createTransformError(
   message: string,
   options: Partial<TransformErrorOptions> = {},
 ): TransformError {
-  return withTransformErrorOptions(
-    {
-      code,
-      message,
-      retryable: options.retryable ?? false,
-    },
-    options,
-  );
+  const error: TransformError = {
+    code,
+    message,
+    retryable: options.retryable ?? false,
+  };
+
+  return applyOptionalTransformErrorOptions(error, options);
 }
 
-function withTransformErrorOptions(
+function applyOptionalTransformErrorOptions(
   error: TransformError,
   options: Partial<TransformErrorOptions>,
 ): TransformError {
-  const overrides: TransformErrorOverrides = {};
-
-  if (options.statusCode !== undefined) {
-    overrides.statusCode = options.statusCode;
-  }
-
-  if (options.details !== undefined) {
-    overrides.details = options.details;
-  }
-
-  return { ...error, ...overrides };
+  return {
+    ...error,
+    ...(options.statusCode !== undefined
+      ? { statusCode: options.statusCode }
+      : {}),
+    ...(options.details !== undefined ? { details: options.details } : {}),
+  };
 }
 
 export function createInternalError(

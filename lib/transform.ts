@@ -8,12 +8,13 @@ import type {
 import { createInternalError } from "@/lib/api";
 import { callFetchUrl, type ProgressCallback, parseMcpResult } from "@/lib/mcp";
 
-const RETRYABLE_TRANSPORT_ERROR_CODES = new Set<ErrorCode>([
+const RETRYABLE_TRANSPORT_ERROR_CODES = new Set<number>([
   ErrorCode.RequestTimeout,
   ErrorCode.ConnectionClosed,
 ]);
 const MAX_TRANSFORM_ATTEMPTS = 2;
 const FALLBACK_INTERNAL_ERROR_MESSAGE = "Transform failed to execute.";
+const UNKNOWN_ERROR_MESSAGE = "Unknown error";
 
 async function executeTransform(
   request: TransformRequest,
@@ -65,19 +66,19 @@ function createInternalErrorResponse(message: string): TransformErrorResponse {
   };
 }
 
-function isRetryableTransportError(code: ErrorCode): boolean {
+function isRetryableTransportError(code: number): boolean {
   return RETRYABLE_TRANSPORT_ERROR_CODES.has(code);
 }
 
 function readErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Unknown error";
+  return error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE;
 }
 
 function mapTransportError(error: unknown): TransformError {
   if (error instanceof McpError) {
     return createInternalError(
       error.message,
-      isRetryableTransportError(error.code as ErrorCode),
+      isRetryableTransportError(error.code),
     );
   }
 
