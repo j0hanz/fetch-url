@@ -12,10 +12,10 @@ import AboutDialog from "@/components/about-dialog";
 import ThemeToggle from "@/components/theme-toggle";
 
 export default async function Home() {
-  const markdown = await readFile(
-    join(process.cwd(), "public", "about.md"),
-    "utf-8",
-  );
+  const [markdown, architectureMarkdown] = await Promise.all([
+    readFile(join(process.cwd(), "public", "about.md"), "utf-8"),
+    readFile(join(process.cwd(), "public", "Architecture.md"), "utf-8"),
+  ]);
   return (
     <Box sx={{ minHeight: "100dvh", py: { xs: 2, sm: 4, md: 6 } }}>
       <Container maxWidth="lg">
@@ -34,7 +34,10 @@ export default async function Home() {
               </Typography>
             </div>
             <Stack direction="row" spacing={{ xs: 1, sm: 2 }}>
-              <AboutDialog markdown={markdown} />
+              <AboutDialog
+                markdown={markdown}
+                architectureMarkdown={architectureMarkdown}
+              />
               <Tooltip title="View on GitHub">
                 <IconButton
                   component="a"

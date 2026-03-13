@@ -22,7 +22,6 @@ interface MarkdownPreviewProps {
 }
 
 const remarkPlugins = [remarkGfm];
-const MONO_FONT_FAMILY = "var(--font-geist-mono), monospace";
 
 function readTextAlign(style?: CSSProperties) {
   return style?.textAlign;
@@ -100,12 +99,9 @@ const components: Components = {
           variant="outlined"
           component="pre"
           sx={{
-            p: 2,
-            my: 1,
+            px: 2,
+            py: 1,
             overflow: "auto",
-            fontFamily: MONO_FONT_FAMILY,
-            fontSize: "0.85rem",
-            lineHeight: 1.6,
           }}
         >
           <code>{children}</code>
@@ -118,10 +114,6 @@ const components: Components = {
         sx={{
           px: 0.6,
           py: 0.2,
-          borderRadius: 0.5,
-          bgcolor: "action.hover",
-          fontFamily: MONO_FONT_FAMILY,
-          fontSize: "0.85em",
         }}
       >
         {children}

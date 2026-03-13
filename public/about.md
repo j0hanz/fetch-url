@@ -1,26 +1,27 @@
-# Page Converter
+# About Page Converter
 
-Turn any public web page into clean, readable Markdown.
+> **Page Converter** is a fast, reliable web application that transforms any public webpage into clean, well-structured Markdown. It extracts the core content of an article, documentation page, or blog post—stripping away clutter like ads and navigation—so you can focus on what matters.
 
-## How It Works
+## What are the benefits?
 
-1. Paste a URL into the input field
-2. Hit **Convert**
-3. Get well-formatted Markdown — ready for docs, notes, or further processing
+- **Extract pure content:** Removes ads, popups, and distracting layouts.
+- **Developer-friendly:** Converts complex HTML elements (tables, code blocks, formatting) into semantic Markdown ready for your notes or codebase.
+- **Fast and resilient:** Utilizes robust background fetching with automatic retries and real-time streaming updates.
+- **No login required:** Instantly paste a URL and get your Markdown within seconds.
 
 ## Features
 
-- **Live progress** — watch the conversion happen in real time with streaming updates
-- **Rich preview** — rendered Markdown with full styling, tables, code blocks, and more
-- **Raw view** — switch to the raw Markdown source with one click
-- **Copy & download** — grab the result to your clipboard or save it as a `.md` file
+- **Clean Markdown output:** The engine converts HTML to human-readable Markdown, preserving structure and formatting.
+- **Rich preview:** Rendered Markdown with full styling, tables, code blocks, and more.
+- **Copy & download:** Grab the result to your clipboard or save it as a `.md` file.
 
-## Tech Stack
+## Examples of Usage
 
-- [Next.js](https://nextjs.org) — React framework with App Router
-- [MUI](https://mui.com) — Material UI component library
-- [Model Context Protocol](https://modelcontextprotocol.io) — powers the URL-to-Markdown engine
+- **Personal Knowledge Management:** Save blog posts or tutorials as Markdown files for note-taking apps like Obsidian, Notion, or Roam Research.
+- **Documentation Scraping:** Quickly convert technical documentation into plain text to feed as context into AI tools and LLMs.
+- **Offline Reading:** Download long-form articles or recipes as `.md` files to read later without an internet connection.
+- **Archiving:** Preserve the content of web pages in a clean format for future reference or sharing.
 
-## Source
+---
 
-View the project on [GitHub](https://github.com/j0hanz/page-converter).
+View the project on **[GitHub](https://github.com/j0hanz/page-converter)**.
