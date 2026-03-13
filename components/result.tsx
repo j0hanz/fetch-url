@@ -93,9 +93,10 @@ function downloadMarkdownFile(title: string | undefined, markdown: string) {
   }
 }
 
+type CopyStatus = "idle" | "copied" | "failed";
+
 export default function TransformResultPanel({ result }: TransformResultProps) {
-  const [copied, setCopied] = useState(false);
-  const [copyFailed, setCopyFailed] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
   const copyResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -110,14 +111,14 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(result.markdown);
-      setCopied(true);
+      setCopyStatus("copied");
       scheduleCopiedReset(copyResetTimeoutRef, () => {
-        setCopied(false);
+        setCopyStatus("idle");
       });
     } catch {
-      setCopyFailed(true);
+      setCopyStatus("failed");
       scheduleCopiedReset(copyResetTimeoutRef, () => {
-        setCopyFailed(false);
+        setCopyStatus("idle");
       });
     }
   }
@@ -165,9 +166,9 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
                 <Tooltip
                   key={label}
                   title={
-                    isCopyAction && copyFailed
+                    isCopyAction && copyStatus === "failed"
                       ? "Failed to copy"
-                      : isCopyAction && copied
+                      : isCopyAction && copyStatus === "copied"
                         ? copiedLabel
                         : label
                   }
@@ -177,9 +178,9 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
                     aria-label={label}
                     onClick={isCopyAction ? handleCopy : handleDownload}
                     color={
-                      isCopyAction && copyFailed
+                      isCopyAction && copyStatus === "failed"
                         ? "error"
-                        : isCopyAction && copied
+                        : isCopyAction && copyStatus === "copied"
                           ? "success"
                           : "default"
                     }

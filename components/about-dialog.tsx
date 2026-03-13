@@ -4,6 +4,7 @@ import { lazy, Suspense, useState } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -27,8 +28,9 @@ export default function AboutDialog({ markdown }: { markdown: string }) {
           size="small"
           aria-label="About Page Converter"
         >
-          <InfoOutlinedIcon fontSize="small" sx={{ display: { sm: "none" } }} />
-          <InfoOutlinedIcon sx={{ display: { xs: "none", sm: "block" } }} />
+          <InfoOutlinedIcon
+            sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+          />
         </IconButton>
       </Tooltip>
 
@@ -41,6 +43,9 @@ export default function AboutDialog({ markdown }: { markdown: string }) {
         fullScreen={fullScreen}
         scroll="paper"
       >
+        <DialogTitle id="about-dialog-title" sx={{ display: "none" }}>
+          About
+        </DialogTitle>
         <DialogContent dividers>
           <MarkdownErrorBoundary>
             <Suspense fallback={<MarkdownSkeleton />}>

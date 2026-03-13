@@ -26,7 +26,7 @@ export default async function Home() {
             alignItems="flex-start"
           >
             <div>
-              <Typography variant="h4" component="h4" gutterBottom>
+              <Typography variant="h4" component="h1" gutterBottom>
                 Page Converter
               </Typography>
               <Typography variant="subtitle1" color="text.secondary">
@@ -45,10 +45,8 @@ export default async function Home() {
                   aria-label="View on GitHub"
                 >
                   <GitHubIcon
-                    fontSize="small"
-                    sx={{ display: { sm: "none" } }}
+                    sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
                   />
-                  <GitHubIcon sx={{ display: { xs: "none", sm: "block" } }} />
                 </IconButton>
               </Tooltip>
               <ThemeToggle />
