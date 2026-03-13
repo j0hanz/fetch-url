@@ -10,23 +10,23 @@ import ThemeToggle from "@/components/theme-toggle";
 
 export default function Home() {
   return (
-    <Box sx={{ minHeight: "100dvh", py: { xs: 3, sm: 5, md: 8 } }}>
+    <Box sx={{ minHeight: "100dvh", py: { xs: 2, sm: 4, md: 6 } }}>
       <Container maxWidth="md">
-        <Stack spacing={{ xs: 2.5, sm: 4 }}>
+        <Stack spacing={{ xs: 2, sm: 4 }}>
           <Stack
             direction="row"
             justifyContent="space-between"
             alignItems="flex-start"
           >
             <div>
-              <Typography variant="h4" component="h1" fontWeight="bold">
+              <Typography variant="h4" component="h1" gutterBottom>
                 Page Converter
               </Typography>
               <Typography variant="subtitle1" color="text.secondary">
                 Turn web pages into clean Markdown
               </Typography>
             </div>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={{ xs: 1, sm: 2 }}>
               <Tooltip title="View on GitHub">
                 <IconButton
                   component="a"
@@ -36,7 +36,11 @@ export default function Home() {
                   size="small"
                   aria-label="View on GitHub"
                 >
-                  <GitHubIcon />
+                  <GitHubIcon
+                    fontSize="small"
+                    sx={{ display: { sm: "none" } }}
+                  />
+                  <GitHubIcon sx={{ display: { xs: "none", sm: "block" } }} />
                 </IconButton>
               </Tooltip>
               <ThemeToggle />

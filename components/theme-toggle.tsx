@@ -1,6 +1,7 @@
 "use client";
 
 import { useColorScheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -29,6 +30,7 @@ const MODE_LABEL: Record<Mode, string> = {
 
 export default function ThemeToggle() {
   const { mode, setMode } = useColorScheme();
+  const isSmUp = useMediaQuery((theme) => theme.breakpoints.up("sm"));
 
   if (!mode) {
     return null;
@@ -44,7 +46,7 @@ export default function ThemeToggle() {
         aria-label={MODE_LABEL[current]}
         size="small"
       >
-        <Icon />
+        <Icon fontSize={isSmUp ? "medium" : "small"} />
       </IconButton>
     </Tooltip>
   );
