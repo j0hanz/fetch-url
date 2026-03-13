@@ -17,6 +17,14 @@ const theme = responsiveFontSizes(
               WebkitBoxShadow:
                 "0 0 0 100px var(--mui-palette-background-default) inset",
               WebkitTextFillColor: "var(--mui-palette-text-primary)",
+              caretColor: "var(--mui-palette-text-primary)",
+              borderRadius: "inherit",
+            },
+            ".dark &:-webkit-autofill": {
+              WebkitBoxShadow:
+                "0 0 0 100px var(--mui-palette-background-default) inset",
+              WebkitTextFillColor: "var(--mui-palette-text-primary)",
+              caretColor: "var(--mui-palette-text-primary)",
             },
           },
         },
