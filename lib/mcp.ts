@@ -4,7 +4,7 @@ import type {
   CallToolResult,
   Progress,
 } from "@modelcontextprotocol/sdk/types.js";
-import path from "node:path";
+import { createRequire } from "node:module";
 import type {
   TransformError,
   TransformMetadata,
@@ -18,8 +18,7 @@ export interface FetchUrlArgs {
 
 const CLIENT_INFO = { name: "page-converter", version: "1.0.0" };
 const FETCH_URL_TOOL_NAME = "fetch-url";
-const FETCH_URL_TRANSPORT_COMMAND = getFetchUrlTransportCommand();
-const FETCH_URL_TRANSPORT_ARGS: string[] = [];
+const mcpPackageRequire = createRequire(import.meta.url);
 
 export type ProgressCallback = (progress: Progress) => void;
 
@@ -33,12 +32,19 @@ interface McpGlobalState {
   __mcpConnecting?: Promise<Client>;
 }
 
+interface TransportConfig {
+  command: string;
+  args: string[];
+}
+
 const globalForMcp = globalThis as typeof globalThis & McpGlobalState;
 
 function createTransport(): StdioClientTransport {
+  const { command, args } = getFetchUrlTransportConfig();
+
   return new StdioClientTransport({
-    command: FETCH_URL_TRANSPORT_COMMAND,
-    args: FETCH_URL_TRANSPORT_ARGS,
+    command,
+    args,
   });
 }
 
@@ -112,11 +118,20 @@ export async function callFetchUrl(
   return result as CallToolResult;
 }
 
-function getFetchUrlTransportCommand(): string {
-  const transportExecutable =
-    process.platform === "win32" ? "fetch-url-mcp.cmd" : "fetch-url-mcp";
+function resolveFetchUrlTransportEntry(
+  resolvePackagePath: (specifier: string) => string = (specifier) =>
+    mcpPackageRequire.resolve(specifier),
+): string {
+  return resolvePackagePath("@j0hanz/fetch-url-mcp");
+}
 
-  return path.join(process.cwd(), "node_modules", ".bin", transportExecutable);
+export function getFetchUrlTransportConfig(
+  resolvePackagePath?: (specifier: string) => string,
+): TransportConfig {
+  return {
+    command: process.execPath,
+    args: [resolveFetchUrlTransportEntry(resolvePackagePath)],
+  };
 }
 
 const METADATA_FIELDS = [
