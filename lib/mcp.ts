@@ -29,6 +29,7 @@ interface McpInstance {
 interface McpGlobalState {
   __mcpInstance?: McpInstance;
   __mcpConnecting?: Promise<Client>;
+  __mcpLastStderr?: string;
 }
 
 interface TransportConfig {
@@ -40,11 +41,14 @@ const globalForMcp = globalThis as typeof globalThis & McpGlobalState;
 
 function createTransport(): StdioClientTransport {
   const { command, args } = getFetchUrlTransportConfig();
-
-  return new StdioClientTransport({
+  const transport = new StdioClientTransport({
     command,
     args,
+    stderr: "pipe",
   });
+
+  attachTransportDiagnostics(transport);
+  return transport;
 }
 
 function resetInstance() {
@@ -84,7 +88,7 @@ async function getConnectedClient(): Promise<Client> {
       return client;
     } catch (error) {
       await transport.close().catch(() => {});
-      throw error;
+      throw createTransportError(error);
     } finally {
       globalForMcp.__mcpConnecting = undefined;
     }
@@ -105,16 +109,20 @@ export async function callFetchUrl(
 ): Promise<CallToolResult> {
   const client = await getConnectedClient();
 
-  const result = await client.callTool(
-    {
-      name: FETCH_URL_TOOL_NAME,
-      arguments: { url: args.url },
-    },
-    undefined,
-    createProgressOptions(onProgress),
-  );
+  try {
+    const result = await client.callTool(
+      {
+        name: FETCH_URL_TOOL_NAME,
+        arguments: { url: args.url },
+      },
+      undefined,
+      createProgressOptions(onProgress),
+    );
 
-  return result as CallToolResult;
+    return result as CallToolResult;
+  } catch (error) {
+    throw createTransportError(error);
+  }
 }
 
 export function getFetchUrlTransportConfig(
@@ -143,6 +151,7 @@ const METADATA_FIELDS = [
   "image",
   "favicon",
 ] as const;
+const MAX_STDERR_BUFFER_LENGTH = 4000;
 const HTTP_ERROR_CODE_PREFIX = "HTTP_";
 const UNKNOWN_MCP_ERROR_MESSAGE = "Unknown MCP error";
 const EMPTY_MCP_RESPONSE_MESSAGE = "Empty MCP response";
@@ -155,6 +164,35 @@ const KNOWN_MCP_ERRORS = {
   ABORTED: { code: "ABORTED", retryable: true },
   queue_full: { code: "QUEUE_FULL", retryable: true },
 } as const;
+
+function attachTransportDiagnostics(transport: StdioClientTransport): void {
+  globalForMcp.__mcpLastStderr = undefined;
+
+  transport.stderr?.on("data", (chunk: string | Buffer) => {
+    globalForMcp.__mcpLastStderr = appendStderrChunk(String(chunk));
+  });
+}
+
+function appendStderrChunk(chunk: string): string {
+  const stderr = `${globalForMcp.__mcpLastStderr ?? ""}${chunk}`;
+  return stderr.slice(-MAX_STDERR_BUFFER_LENGTH);
+}
+
+function createTransportError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error);
+  const stderr = globalForMcp.__mcpLastStderr?.trim();
+
+  if (!stderr) {
+    return error instanceof Error ? error : new Error(message);
+  }
+
+  const transportError = new Error(`${message}\nChild stderr: ${stderr}`);
+  if (error instanceof Error && error.stack) {
+    transportError.stack = error.stack;
+  }
+
+  return transportError;
+}
 
 type JsonRecord = Record<string, unknown>;
 type KnownMcpErrorCode = keyof typeof KNOWN_MCP_ERRORS;
