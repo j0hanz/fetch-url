@@ -1,0 +1,11 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "app/**/{layout,page,route,loading,error,not-found,global-error}.{ts,tsx}"
+  ],
+  "project": ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.ts"],
+  "next": true,
+  "vitest": true,
+  "eslint": true,
+  "ignoreDependencies": ["@j0hanz/fetch-url-mcp"]
+}

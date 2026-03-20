@@ -67,8 +67,8 @@ export type StreamEvent = StreamProgressEvent | StreamResultEvent;
 
 export const NDJSON_CONTENT_TYPE = "application/x-ndjson";
 export const STREAM_PROGRESS_TOTAL = 8;
-export const NETWORK_ERROR_MESSAGE = "Network error. Please try again.";
-export const UNEXPECTED_RESPONSE_MESSAGE = "Unexpected response format.";
+const NETWORK_ERROR_MESSAGE = "Network error. Please try again.";
+const UNEXPECTED_RESPONSE_MESSAGE = "Unexpected response format.";
 const EMPTY_STREAM_MESSAGE = "";
 
 type TransformErrorOptions = Omit<TransformError, "code" | "message">;
@@ -102,7 +102,7 @@ export function createNetworkError(): TransformError {
   return createInternalError(NETWORK_ERROR_MESSAGE, true);
 }
 
-export const TIMEOUT_ERROR_MESSAGE = "Request timed out. Please try again.";
+const TIMEOUT_ERROR_MESSAGE = "Request timed out. Please try again.";
 
 export function createTimeoutError(): TransformError {
   return createTransformError("ABORTED", TIMEOUT_ERROR_MESSAGE, {
