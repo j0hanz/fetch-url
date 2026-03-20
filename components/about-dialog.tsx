@@ -59,7 +59,7 @@ function MarkdownTabPanel({ children }: { children: string }) {
   return (
     <MarkdownErrorBoundary resetKey={children}>
       <Suspense fallback={<MarkdownSkeleton />}>
-        <MarkdownPreview imageMode="inline">{children}</MarkdownPreview>
+        <MarkdownPreview>{children}</MarkdownPreview>
       </Suspense>
     </MarkdownErrorBoundary>
   );

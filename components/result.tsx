@@ -196,9 +196,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
           {isPreviewMode ? (
             <MarkdownErrorBoundary resetKey={result.markdown}>
               <Suspense fallback={<MarkdownSkeleton />}>
-                <MarkdownPreview imageMode="link">
-                  {result.markdown}
-                </MarkdownPreview>
+                <MarkdownPreview>{result.markdown}</MarkdownPreview>
               </Suspense>
             </MarkdownErrorBoundary>
           ) : (
