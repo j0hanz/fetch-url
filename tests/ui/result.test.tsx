@@ -25,6 +25,10 @@ describe("TransformResultPanel", () => {
   it("renders markdown preview by default", async () => {
     renderPanel();
 
+    expect(
+      screen.getByRole("status", { name: /markdown preview loading/i }),
+    ).toBeInTheDocument();
+
     await waitFor(() => {
       expect(screen.getByText("Example")).toBeInTheDocument();
     });
@@ -104,6 +108,32 @@ describe("TransformResultPanel", () => {
     expect(
       screen.queryByRole("img", { name: "Tracker" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows the skeleton again when new preview content arrives", async () => {
+    const { rerender } = renderPanel();
+
+    await waitFor(() => {
+      expect(screen.getByText("Example")).toBeInTheDocument();
+    });
+
+    rerender(
+      <TransformResultPanel
+        result={{
+          ...baseResult,
+          fetchedAt: "2026-03-10T12:01:00.000Z",
+          markdown: "# Updated",
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("status", { name: /markdown preview loading/i }),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Updated")).toBeInTheDocument();
+    });
   });
 });
 

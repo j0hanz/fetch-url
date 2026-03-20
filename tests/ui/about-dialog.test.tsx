@@ -18,4 +18,22 @@ describe("AboutDialog", () => {
       await screen.findByRole("dialog", { name: /about/i }),
     ).toBeInTheDocument();
   });
+
+  it("renders the markdown tab content", async () => {
+    render(
+      <AboutDialog markdown="# Overview" howItWorksMarkdown="# How It Works" />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /about page converter/i }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /about page converter/i }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Overview" }),
+    ).toBeInTheDocument();
+  });
 });

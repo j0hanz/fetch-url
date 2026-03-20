@@ -52,15 +52,14 @@ const SKELETON_PADDING_OFFSET = 25;
 const INTRO_LINE_WIDTHS = ["100%", "100%", "75%"] as const;
 const BODY_LINE_WIDTHS = ["100%", "90%", "100%", "60%"] as const;
 const OUTRO_LINE_WIDTHS = ["100%", "85%", "50%"] as const;
-const WAVE = "wave" as const;
 
 function TextLine({ width = "100%" }: { width?: string }) {
-  return <Skeleton animation={WAVE} variant="text" width={width} />;
+  return <Skeleton animation="wave" variant="text" width={width} />;
 }
 
 function Heading({ fontSize, width }: { fontSize: string; width: string }) {
   return (
-    <Skeleton animation={WAVE} variant="text" width={width} sx={{ fontSize }} />
+    <Skeleton animation="wave" variant="text" width={width} sx={{ fontSize }} />
   );
 }
 
@@ -73,6 +72,8 @@ function renderTextLines(widths: readonly string[]) {
 export function MarkdownSkeleton() {
   return (
     <Stack
+      role="status"
+      aria-label="Markdown preview loading"
       spacing={1}
       sx={{ height: MARKDOWN_PANEL_MAX_HEIGHT - SKELETON_PADDING_OFFSET }}
     >
@@ -83,7 +84,7 @@ export function MarkdownSkeleton() {
       </Box>
       {renderTextLines(BODY_LINE_WIDTHS)}
       <Skeleton
-        animation={WAVE}
+        animation="wave"
         variant="rounded"
         sx={{ flexGrow: 1, minHeight: 80 }}
       />

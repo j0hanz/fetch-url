@@ -1,9 +1,11 @@
 "use client";
 
-import { lazy, Suspense, useState, type ReactNode } from "react";
+import { startTransition, useEffect, useState, type ReactNode } from "react";
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
+import Fade from "@mui/material/Fade";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -14,16 +16,20 @@ import Snackbar from "@mui/material/Snackbar";
 import Tooltip from "@mui/material/Tooltip";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import { useTheme } from "@mui/material/styles";
 import type { TransformResult } from "@/lib/api";
 import { MarkdownErrorBoundary } from "@/components/error";
 import { MarkdownSkeleton } from "@/components/loading";
-
-const MarkdownPreview = lazy(() => import("@/components/markdown-preview"));
+import MarkdownPreview from "@/components/markdown-preview";
 
 export const MARKDOWN_PANEL_MAX_HEIGHT = 500;
 
 interface TransformResultProps {
   result: TransformResult;
+}
+
+interface PreviewContentProps {
+  markdown: string;
 }
 
 type ViewMode = "preview" | "code";
@@ -105,6 +111,52 @@ function readCopyStatusColor(copyStatus: CopyStatus): IconButtonColor {
 
 function readCopyStatusMessage(copyStatus: CopyStatus): string | undefined {
   return copyStatus === "idle" ? undefined : COPY_STATUS_MESSAGE[copyStatus];
+}
+
+function PreviewContent({ markdown }: PreviewContentProps) {
+  const theme = useTheme();
+  const [previewMarkdown, setPreviewMarkdown] = useState<string | null>(null);
+  const isPending = previewMarkdown !== markdown;
+  const previewTransitionDuration = theme.transitions.duration.shortest;
+  const previewRevealDelay = theme.transitions.duration.shorter;
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      startTransition(() => {
+        setPreviewMarkdown(markdown);
+      });
+    }, previewRevealDelay);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [markdown, previewRevealDelay]);
+
+  return (
+    <Box aria-busy={isPending}>
+      <Fade
+        in={isPending}
+        appear
+        timeout={previewTransitionDuration}
+        mountOnEnter
+        unmountOnExit
+      >
+        <Box>
+          <MarkdownSkeleton />
+        </Box>
+      </Fade>
+      <Fade
+        in={!isPending}
+        timeout={previewTransitionDuration}
+        mountOnEnter
+        unmountOnExit
+      >
+        <Box>
+          <MarkdownPreview>{previewMarkdown ?? ""}</MarkdownPreview>
+        </Box>
+      </Fade>
+    </Box>
+  );
 }
 
 export default function TransformResultPanel({ result }: TransformResultProps) {
@@ -193,17 +245,16 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
           </Stack>
         </Stack>
         <Paper sx={MARKDOWN_PANEL_SX}>
-          {isPreviewMode ? (
+          <Box sx={{ display: isPreviewMode ? "block" : "none" }}>
             <MarkdownErrorBoundary resetKey={result.markdown}>
-              <Suspense fallback={<MarkdownSkeleton />}>
-                <MarkdownPreview>{result.markdown}</MarkdownPreview>
-              </Suspense>
+              <PreviewContent markdown={result.markdown} />
             </MarkdownErrorBoundary>
-          ) : (
+          </Box>
+          <Box sx={{ display: !isPreviewMode ? "block" : "none" }}>
             <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
               {result.markdown}
             </Typography>
-          )}
+          </Box>
         </Paper>
       </section>
 
