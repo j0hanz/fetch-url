@@ -70,6 +70,43 @@ describe("TransformResultPanel", () => {
 
     expect(writeText).toHaveBeenCalledWith("# Example\n\nThis is an example.");
   });
+
+  it("renders remote markdown images as safe links instead of inline images", async () => {
+    renderPanel({
+      result: {
+        ...baseResult,
+        markdown: "![Tracker](https://images.example/tracker.png)",
+      },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("link", { name: /open image in a new tab/i }),
+      ).toHaveAttribute("href", "https://images.example/tracker.png");
+    });
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("unmounts the preview tree when switching to code view", async () => {
+    renderPanel({
+      result: {
+        ...baseResult,
+        markdown: "![Tracker](https://images.example/tracker.png)",
+      },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("link", { name: /open image in a new tab/i }),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /code/i }));
+
+    expect(
+      screen.queryByRole("link", { name: /open image in a new tab/i }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 function renderPanel({

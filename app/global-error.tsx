@@ -15,7 +15,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <InitColorSchemeScript attribute="class" />
         <AppRouterCacheProvider>

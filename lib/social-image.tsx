@@ -1,0 +1,209 @@
+import type { CSSProperties, ReactNode } from "react";
+
+interface SocialImagePalette {
+  accentBackground: string;
+  accentColor: string;
+  background: string;
+  bodyColor: string;
+  cardBackground: string;
+  cardBorder: string;
+  textColor: string;
+}
+
+interface SocialImageFrameProps {
+  children: ReactNode;
+  palette: SocialImagePalette;
+}
+
+interface SocialFeaturePillProps {
+  backgroundColor: string;
+  color?: string;
+  label: string;
+}
+
+const FONT_STACK = "'Geist Variable', sans-serif";
+
+const ROOT_STYLE: CSSProperties = {
+  display: "flex",
+  height: "100%",
+  width: "100%",
+  padding: 48,
+  fontFamily: FONT_STACK,
+};
+
+const CARD_STYLE: CSSProperties = {
+  display: "flex",
+  width: "100%",
+  height: "100%",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  borderRadius: 32,
+  padding: "44px 48px",
+};
+
+const CONTENT_STACK_STYLE: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 18,
+};
+
+const TITLE_STYLE: CSSProperties = {
+  display: "flex",
+  fontSize: 74,
+  fontWeight: 700,
+  lineHeight: 1.05,
+  letterSpacing: "-0.05em",
+};
+
+const FEATURE_LIST_STYLE: CSSProperties = {
+  display: "flex",
+  gap: 16,
+};
+
+export function SocialImageFrame({ children, palette }: SocialImageFrameProps) {
+  return (
+    <main
+      style={{
+        ...ROOT_STYLE,
+        color: palette.textColor,
+        background: palette.background,
+      }}
+    >
+      <section
+        style={{
+          ...CARD_STYLE,
+          background: palette.cardBackground,
+          border: `1px solid ${palette.cardBorder}`,
+        }}
+      >
+        {children}
+      </section>
+    </main>
+  );
+}
+
+export function SocialImageContent({
+  children,
+  maxWidth,
+}: {
+  children: ReactNode;
+  maxWidth?: number;
+}) {
+  return (
+    <article
+      style={{
+        ...CONTENT_STACK_STYLE,
+        ...(maxWidth ? { maxWidth } : {}),
+      }}
+    >
+      {children}
+    </article>
+  );
+}
+
+export function SocialEyebrow({
+  label,
+  palette,
+  variant = "filled",
+}: {
+  label: string;
+  palette: SocialImagePalette;
+  variant?: "filled" | "outlined";
+}) {
+  return (
+    <p
+      style={{
+        display: "flex",
+        alignSelf: "flex-start",
+        borderRadius: 999,
+        padding: "10px 18px",
+        fontSize: 24,
+        fontWeight: 600,
+        letterSpacing: "-0.02em",
+        ...(variant === "filled"
+          ? {
+              backgroundColor: palette.accentBackground,
+              color: palette.accentColor,
+            }
+          : {
+              border: `1px solid ${palette.cardBorder}`,
+              color: palette.textColor,
+            }),
+      }}
+    >
+      {label}
+    </p>
+  );
+}
+
+export function SocialTitle({ children }: { children: ReactNode }) {
+  return <h1 style={TITLE_STYLE}>{children}</h1>;
+}
+
+export function SocialBody({
+  children,
+  color,
+}: {
+  children: ReactNode;
+  color: string;
+}) {
+  return (
+    <p
+      style={{
+        display: "flex",
+        fontSize: 32,
+        lineHeight: 1.3,
+        color,
+      }}
+    >
+      {children}
+    </p>
+  );
+}
+
+export function SocialFeatureList({ children }: { children: ReactNode }) {
+  return <ul style={FEATURE_LIST_STYLE}>{children}</ul>;
+}
+
+export function SocialFeaturePill({
+  backgroundColor,
+  color = "#0f172a",
+  label,
+}: SocialFeaturePillProps) {
+  return (
+    <li
+      style={{
+        display: "flex",
+        borderRadius: 999,
+        padding: "12px 22px",
+        fontSize: 26,
+        fontWeight: 500,
+        lineHeight: 1,
+        backgroundColor,
+        color,
+      }}
+    >
+      {label}
+    </li>
+  );
+}
+
+export const LIGHT_SOCIAL_PALETTE: SocialImagePalette = {
+  accentBackground: "#0f172a",
+  accentColor: "#f8fafc",
+  background: "#ebebeb",
+  bodyColor: "#334155",
+  cardBackground: "#ffffff",
+  cardBorder: "rgba(15, 23, 42, 0.08)",
+  textColor: "#0f172a",
+};
+
+export const DARK_SOCIAL_PALETTE: SocialImagePalette = {
+  accentBackground: "#1d4ed8",
+  accentColor: "#eff6ff",
+  background: "#202020",
+  bodyColor: "#cbd5e1",
+  cardBackground: "#111827",
+  cardBorder: "rgba(255, 255, 255, 0.14)",
+  textColor: "#f8fafc",
+};

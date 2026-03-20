@@ -99,7 +99,7 @@ export default function HomeClient() {
 
   return (
     <>
-      <TransformForm {...formHandlers} />
+      <TransformForm loading={loading} {...formHandlers} />
 
       <div aria-live="polite">
         <Collapse in={showProgress} unmountOnExit>

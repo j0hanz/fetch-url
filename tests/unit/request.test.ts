@@ -29,6 +29,14 @@ const SUCCESS_RESPONSE: TransformResponse = {
     truncated: false,
   },
 };
+const IMMEDIATE_ERROR_RESPONSE: TransformResponse = {
+  ok: false,
+  error: {
+    code: "FETCH_ERROR",
+    message: "Upstream unavailable",
+    retryable: true,
+  },
+};
 
 function expectValidationError(body: unknown, matcher?: RegExp): void {
   expect(() => validateTransformRequest(body)).toThrow(ValidationError);
@@ -151,6 +159,54 @@ describe("POST /api/transform", () => {
       {
         type: "result",
         ...SUCCESS_RESPONSE,
+      },
+    ]);
+  });
+
+  it("returns a JSON error response when transform fails before streaming starts", async () => {
+    transformUrlMock.mockResolvedValue(IMMEDIATE_ERROR_RESPONSE);
+
+    const response = await POST(
+      createJsonRequest(JSON.stringify({ url: VALID_URL })),
+    );
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get("Content-Type")).toContain("application/json");
+    await expect(response.json()).resolves.toEqual(IMMEDIATE_ERROR_RESPONSE);
+  });
+
+  it("keeps using NDJSON once progress has started, even for final errors", async () => {
+    transformUrlMock.mockImplementation((_request, onProgress) => {
+      onProgress?.({
+        progress: 1,
+        total: 8,
+        message: "Starting",
+      });
+      return Promise.resolve(IMMEDIATE_ERROR_RESPONSE);
+    });
+
+    const response = await POST(
+      createJsonRequest(JSON.stringify({ url: VALID_URL })),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/x-ndjson");
+
+    const lines = (await response.text())
+      .trim()
+      .split("\n")
+      .map(parseNdjsonLine);
+
+    expect(lines).toEqual([
+      {
+        type: "progress",
+        progress: 1,
+        total: 8,
+        message: "Starting",
+      },
+      {
+        type: "result",
+        ...IMMEDIATE_ERROR_RESPONSE,
       },
     ]);
   });

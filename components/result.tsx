@@ -3,7 +3,6 @@
 import { lazy, Suspense, useState, type ReactNode } from "react";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -194,18 +193,19 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
           </Stack>
         </Stack>
         <Paper sx={MARKDOWN_PANEL_SX}>
-          <Box sx={{ display: isPreviewMode ? "block" : "none" }}>
+          {isPreviewMode ? (
             <MarkdownErrorBoundary resetKey={result.markdown}>
               <Suspense fallback={<MarkdownSkeleton />}>
-                <MarkdownPreview>{result.markdown}</MarkdownPreview>
+                <MarkdownPreview imageMode="link">
+                  {result.markdown}
+                </MarkdownPreview>
               </Suspense>
             </MarkdownErrorBoundary>
-          </Box>
-          <Box sx={{ display: isPreviewMode ? "none" : "block" }}>
+          ) : (
             <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
               {result.markdown}
             </Typography>
-          </Box>
+          )}
         </Paper>
       </section>
 

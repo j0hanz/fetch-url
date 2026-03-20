@@ -1,7 +1,6 @@
 "use client";
 
 import { useColorScheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -27,6 +26,7 @@ const MODE_LABEL: Record<Mode, string> = {
   dark: "Dark mode",
   system: "System mode",
 };
+const THEME_ICON_SX = { fontSize: { xs: "1.25rem", sm: "1.5rem" } } as const;
 
 function isMode(value: string | undefined): value is Mode {
   return value === "light" || value === "dark" || value === "system";
@@ -34,24 +34,24 @@ function isMode(value: string | undefined): value is Mode {
 
 export default function ThemeToggle() {
   const { mode, setMode } = useColorScheme();
-  const isSmUp = useMediaQuery((theme) => theme.breakpoints.up("sm"));
 
   if (!isMode(mode)) {
     return null;
   }
 
-  const currentLabel = MODE_LABEL[mode];
   const nextMode = MODE_CYCLE[mode];
+  const nextLabel = MODE_LABEL[nextMode];
   const Icon = MODE_ICON[mode];
+  const actionLabel = `Switch to ${nextLabel.toLowerCase()}`;
 
   return (
-    <Tooltip title={currentLabel}>
+    <Tooltip title={actionLabel}>
       <IconButton
         onClick={() => setMode(nextMode)}
-        aria-label={currentLabel}
+        aria-label={actionLabel}
         size="small"
       >
-        <Icon fontSize={isSmUp ? "medium" : "small"} />
+        <Icon sx={THEME_ICON_SX} />
       </IconButton>
     </Tooltip>
   );

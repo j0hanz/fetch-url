@@ -24,6 +24,7 @@ import {
 import type { TransformRequest } from "@/lib/validate";
 
 interface TransformFormProps {
+  loading: boolean;
   onResult: (result: TransformResult) => void;
   onError: (error: TransformError) => void;
   onLoading: (loading: boolean) => void;
@@ -77,6 +78,7 @@ function flushBufferedLines(
 
 async function readNdjsonStream(
   response: Response,
+  signal: AbortSignal,
   onEvent: (event: StreamEvent) => void,
 ): Promise<TransformError | null> {
   const reader = response.body?.getReader();
@@ -86,6 +88,7 @@ async function readNdjsonStream(
 
   const decoder = new TextDecoder();
   let buffer = "";
+  let sawTerminalEvent = false;
 
   try {
     for (;;) {
@@ -96,19 +99,47 @@ async function readNdjsonStream(
 
       buffer = flushBufferedLines(
         buffer + decoder.decode(value, { stream: true }),
-        onEvent,
+        (event) => {
+          if (event.type !== "progress") {
+            sawTerminalEvent = true;
+          }
+
+          onEvent(event);
+        },
       );
     }
 
     const trailingContent = buffer.trim();
     if (trailingContent.length > 0) {
-      onEvent(parseStreamEvent(trailingContent));
+      const event = parseStreamEvent(trailingContent);
+      if (event.type !== "progress") {
+        sawTerminalEvent = true;
+      }
+
+      onEvent(event);
     }
+  } catch (error) {
+    if (isTimeoutError(error)) {
+      return createTimeoutError();
+    }
+
+    if (isAbortError(error)) {
+      return null;
+    }
+
+    return createUnexpectedResponseError();
   } finally {
     reader.releaseLock();
   }
 
-  return null;
+  if (sawTerminalEvent || !signal.aborted) {
+    return sawTerminalEvent ? null : createUnexpectedResponseError();
+  }
+
+  return signal.reason instanceof DOMException &&
+    signal.reason.name === "TimeoutError"
+    ? createTimeoutError()
+    : null;
 }
 
 function createRequestSignal(abortController: AbortController): AbortSignal {
@@ -168,11 +199,14 @@ function handleRequestError(
 
 async function handleTransformResponse(
   response: Response,
+  signal: AbortSignal,
   handlers: StreamHandlers,
 ): Promise<void> {
   if (isNdjsonResponse(response)) {
-    const streamError = await readNdjsonStream(response, (streamEvent) =>
-      handleStreamEvent(streamEvent, handlers),
+    const streamError = await readNdjsonStream(
+      response,
+      signal,
+      (streamEvent) => handleStreamEvent(streamEvent, handlers),
     );
 
     if (streamError) {
@@ -197,10 +231,11 @@ async function submitTransformRequest(
     signal,
   });
 
-  await handleTransformResponse(response, handlers);
+  await handleTransformResponse(response, signal, handlers);
 }
 
 export default function TransformForm({
+  loading,
   onResult,
   onError,
   onLoading,
@@ -208,7 +243,6 @@ export default function TransformForm({
 }: TransformFormProps) {
   const urlInputId = useId();
   const [url, setUrl] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamHandlers: StreamHandlers = { onError, onProgress, onResult };
 
@@ -219,11 +253,6 @@ export default function TransformForm({
   useEffect(() => {
     return () => abortControllerRef.current?.abort();
   }, []);
-
-  function setLoadingState(loading: boolean) {
-    setSubmitting(loading);
-    onLoading(loading);
-  }
 
   function handleCancel(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -236,13 +265,13 @@ export default function TransformForm({
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoadingState(true);
     abortActiveRequest();
 
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
     try {
+      onLoading(true);
       await submitTransformRequest(
         url,
         streamHandlers,
@@ -257,9 +286,8 @@ export default function TransformForm({
     } finally {
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null;
+        onLoading(false);
       }
-
-      setLoadingState(false);
     }
   }
 
@@ -275,12 +303,12 @@ export default function TransformForm({
           placeholder="https://example.com"
           value={url}
           onChange={handleUrlChange}
-          disabled={submitting}
+          disabled={loading}
           variant="outlined"
           size="small"
           sx={URL_INPUT_SX}
         />
-        {submitting ? (
+        {loading ? (
           <Button
             type="button"
             variant="contained"

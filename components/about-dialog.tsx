@@ -18,6 +18,7 @@ import Tabs from "@mui/material/Tabs";
 import Tooltip from "@mui/material/Tooltip";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
+import { visuallyHidden } from "@mui/utils";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { MarkdownErrorBoundary } from "@/components/error";
 import { MarkdownSkeleton } from "@/components/loading";
@@ -58,7 +59,7 @@ function MarkdownTabPanel({ children }: { children: string }) {
   return (
     <MarkdownErrorBoundary resetKey={children}>
       <Suspense fallback={<MarkdownSkeleton />}>
-        <MarkdownPreview>{children}</MarkdownPreview>
+        <MarkdownPreview imageMode="inline">{children}</MarkdownPreview>
       </Suspense>
     </MarkdownErrorBoundary>
   );
@@ -98,7 +99,7 @@ export default function AboutDialog({
         fullScreen={fullScreen}
         scroll="paper"
       >
-        <DialogTitle id="about-dialog-title" sx={{ display: "none" }}>
+        <DialogTitle id="about-dialog-title" sx={visuallyHidden}>
           About
         </DialogTitle>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { useState } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import TransformForm from "@/components/form";
@@ -110,6 +111,39 @@ describe("TransformForm", () => {
     });
   });
 
+  it("calls onError when a streamed response ends before a terminal event", async () => {
+    mockStreamResponse([
+      { type: "progress", progress: 1, total: 8, message: "Fetching" },
+    ]);
+
+    renderForm();
+    submitUrl(VALID_URL);
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: "INTERNAL_ERROR",
+          message: "Unexpected response format.",
+        }),
+      );
+    });
+  });
+
+  it("calls onError on timeout failures", async () => {
+    global.fetch = vi
+      .fn()
+      .mockRejectedValue(new DOMException("Timed out", "TimeoutError"));
+
+    renderForm();
+    submitUrl(VALID_URL);
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "ABORTED", retryable: true }),
+      );
+    });
+  });
+
   it("does not surface an error when the request is aborted", async () => {
     global.fetch = vi.fn().mockRejectedValue(createAbortError());
 
@@ -137,6 +171,31 @@ describe("TransformForm", () => {
 
     await waitFor(() => {
       expect(onError).toHaveBeenCalledWith(mockError);
+    });
+  });
+
+  it("submits the trimmed request body to the transform endpoint", async () => {
+    mockJsonResponse({
+      ok: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Invalid URL",
+        retryable: false,
+      },
+    });
+
+    renderForm();
+    submitUrl(`  ${VALID_URL}  `);
+
+    await waitFor(() => {
+      const lastCall = vi.mocked(global.fetch).mock.calls.at(-1);
+      expect(lastCall?.[0]).toBe("/api/transform");
+      expect(lastCall?.[1]).toMatchObject({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: VALID_URL }),
+      });
+      expect(lastCall?.[1]?.signal).toBeInstanceOf(AbortSignal);
     });
   });
 
@@ -207,14 +266,24 @@ describe("TransformForm", () => {
 });
 
 function renderForm() {
-  return render(
-    <TransformForm
-      onResult={onResult}
-      onError={onError}
-      onLoading={onLoading}
-      onProgress={onProgress}
-    />,
-  );
+  function FormHarness() {
+    const [loading, setLoading] = useState(false);
+
+    return (
+      <TransformForm
+        loading={loading}
+        onResult={onResult}
+        onError={onError}
+        onLoading={(nextLoading) => {
+          onLoading(nextLoading);
+          setLoading(nextLoading);
+        }}
+        onProgress={onProgress}
+      />
+    );
+  }
+
+  return render(<FormHarness />);
 }
 
 function submitUrl(url: string) {
