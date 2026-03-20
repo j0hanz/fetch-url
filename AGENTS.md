@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Page Converter is a Next.js web client for [`@j0hanz/fetch-url-mcp`](https://github.com/j0hanz/fetch-url-mcp). It turns public web pages into clean Markdown with live progress, an in-app preview, one-click copy, and Markdown downloads.
 
 ## Tooling
 
@@ -13,7 +13,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Testing Strategy
 
-- Config: vitest.config.ts, Dedicated test directory, Integration test directory, 6 test files found
+- Config: vitest.config.ts, Dedicated test directory, Integration test directory, 8 test files found
 
 ## Commands
 
