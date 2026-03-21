@@ -30,12 +30,20 @@ type TextAlignStyle = Pick<CSSProperties, 'textAlign'>;
 interface RendererChildrenProps {
   children?: ReactNode;
 }
+const MARKDOWN_ROOT_SX = {
+  '& > :first-of-type': { mt: 0 },
+  '& > :last-child': { mb: 0 },
+} as const;
 const BLOCKQUOTE_SX = {
   borderLeft: 4,
   borderColor: 'primary.main',
+  bgcolor: 'action.hover',
+  borderRadius: 1.5,
   pl: 2,
-  py: 0.5,
-  my: 1,
+  pr: 2,
+  py: 1,
+  my: 2,
+  mx: 0,
   color: 'text.secondary',
   '& > p': { mb: 0 },
 } as const;
@@ -57,7 +65,17 @@ const IMAGE_SX = {
   borderRadius: 1,
 } as const;
 const LIST_SX = { pl: 3, my: 1 } as const;
-const TABLE_CONTAINER_SX = { my: 2 } as const;
+const LINK_SX = {
+  fontWeight: 500,
+  textUnderlineOffset: '0.18em',
+  textDecorationThickness: '0.08em',
+} as const;
+const PARAGRAPH_SX = {
+  mb: 1.5,
+  lineHeight: 1.75,
+} as const;
+const TABLE_CONTAINER_SX = { my: 2, overflowX: 'auto' } as const;
+const TABLE_CELL_SX = { verticalAlign: 'top' } as const;
 
 interface TableCellRendererProps extends RendererChildrenProps {
   style?: TextAlignStyle;
@@ -94,6 +112,7 @@ function createTableCellRenderer(fontWeight?: FontWeight) {
     return (
       <TableCell
         sx={{
+          ...TABLE_CELL_SX,
           ...(fontWeight ? { fontWeight } : {}),
           textAlign: readTextAlign(style),
         }}
@@ -122,12 +141,12 @@ const components: Components = {
   h5: createHeadingRenderer('subtitle2', 0, { fontWeight: 'bold' }),
   h6: createHeadingRenderer('subtitle2', 0, { color: 'text.secondary' }),
   p: ({ children }) => (
-    <Typography variant="body1" paragraph>
+    <Typography variant="body1" paragraph sx={PARAGRAPH_SX}>
       {children}
     </Typography>
   ),
   a: ({ href, children }) => (
-    <Link href={href} target="_blank" rel="noopener noreferrer">
+    <Link href={href} target="_blank" rel="noopener noreferrer" sx={LINK_SX}>
       {children}
     </Link>
   ),
@@ -203,8 +222,10 @@ const components: Components = {
 
 export default function MarkdownPreview({ children }: MarkdownPreviewProps) {
   return (
-    <Markdown remarkPlugins={remarkPlugins} components={components}>
-      {children}
-    </Markdown>
+    <Box component="article" sx={MARKDOWN_ROOT_SX}>
+      <Markdown remarkPlugins={remarkPlugins} components={components}>
+        {children}
+      </Markdown>
+    </Box>
   );
 }

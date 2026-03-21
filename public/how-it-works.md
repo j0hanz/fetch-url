@@ -1,27 +1,36 @@
 # How It Works
 
-Page Converter turns a web page into clean, readable text in just a few seconds. Here's what happens when you use it:
+> A public page goes in. Cleaner Markdown comes out.
 
-## 1. Paste a Link
+## 1. Submit a Public URL
 
-Copy the address of any public web page and paste it into the input field. Press **Convert** to begin.
+Paste the URL of a public web page into the app and start the conversion.
 
-## 2. The Page Is Cleaned Up
+> Page Converter works best with pages that can be fetched without signing in.
 
-Page Converter reads the web page and extracts the meaningful content — the article text, headings, lists, and tables. Everything else — ads, pop-ups, navigation menus, cookie banners, and other distractions — is automatically removed.
+## 2. Extract the Main Content
 
-## 3. Follow Along in Real Time
+The app keeps the parts people usually want to reuse:
 
-A live progress indicator shows you each step as it happens, so you always know where things stand.
+- Headings and body text
+- Lists, links, and tables
+- Useful page structure
 
-## 4. Your Clean Text Is Ready
+It removes common page clutter such as:
 
-Once processing is complete, you get the result right away. From there, you can:
+- Navigation and page chrome
+- Ads and promotional blocks
+- Cookie notices and pop-ups
+- Repeated boilerplate around the main content
 
-- **Preview** it in a nicely formatted view inside the app.
-- **Copy** it to your clipboard with a single click.
-- **Download** it as a file to keep on your device.
+## 3. Review the Result
+
+When the conversion is complete, you can:
+
+- Preview the Markdown in the app
+- Copy it with one click
+- Download it as a `.md` file
 
 ## Example
 
-You're researching a topic and want to ask an AI assistant about a specific article. Instead of copying messy text full of menu links and ads, paste the page URL into Page Converter. A few seconds later, you have the clean article text — ready to drop into ChatGPT, Claude, or your notes app with all the formatting intact.
+If you want to reference an article in ChatGPT, Claude, or a notes app, paste the article URL into Page Converter first. You get a cleaner version of the content without the surrounding site clutter.
