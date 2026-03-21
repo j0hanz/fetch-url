@@ -103,16 +103,18 @@ async function getConnectedClient(): Promise<Client> {
   return globalForMcp.__mcpConnecting;
 }
 
-function createRequestOptions(
-  options?: FetchUrlCallOptions,
-): { onprogress?: ProgressCallback; signal?: AbortSignal } | undefined {
-  if (!options?.onProgress && !options?.signal) {
-    return undefined;
-  }
-
+function createRequestOptions(options?: FetchUrlCallOptions): {
+  onprogress?: ProgressCallback;
+  signal?: AbortSignal;
+  resetTimeoutOnProgress?: boolean;
+  maxTotalTimeout: number;
+} {
   return {
-    ...(options.onProgress ? { onprogress: options.onProgress } : {}),
-    ...(options.signal ? { signal: options.signal } : {}),
+    maxTotalTimeout: MCP_MAX_TOTAL_TIMEOUT,
+    ...(options?.onProgress
+      ? { onprogress: options.onProgress, resetTimeoutOnProgress: true }
+      : {}),
+    ...(options?.signal ? { signal: options.signal } : {}),
   };
 }
 
@@ -134,6 +136,7 @@ export async function callFetchUrl(
 
     return result as CallToolResult;
   } catch (error) {
+    resetInstance();
     throw createTransportError(error);
   }
 }
@@ -157,6 +160,7 @@ export function getFetchUrlTransportConfig(
 }
 
 const MAX_STDERR_BUFFER_LENGTH = 4000;
+const MCP_MAX_TOTAL_TIMEOUT = 120_000;
 const HTTP_ERROR_CODE_PREFIX = "HTTP_";
 const UNKNOWN_MCP_ERROR_MESSAGE = "Unknown MCP error";
 const EMPTY_MCP_RESPONSE_MESSAGE = "Empty MCP response";

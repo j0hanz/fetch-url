@@ -43,7 +43,7 @@ export async function transformUrl(
   for (let attempt = 1; attempt <= MAX_TRANSFORM_ATTEMPTS; attempt += 1) {
     const response = await executeTransform(request, onProgress, signal);
 
-    if (!shouldRetryResponse(response, attempt)) {
+    if (!shouldRetryResponse(response, attempt, signal)) {
       return response;
     }
   }
@@ -60,7 +60,9 @@ function isRetryableErrorResponse(
 function shouldRetryResponse(
   response: TransformResponse,
   attempt: number,
+  signal?: AbortSignal,
 ): boolean {
+  if (signal?.aborted) return false;
   return isRetryableErrorResponse(response) && attempt < MAX_TRANSFORM_ATTEMPTS;
 }
 
