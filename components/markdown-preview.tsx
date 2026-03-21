@@ -71,12 +71,33 @@ const LINK_SX = {
   transition: 'all 0.2s ease',
   '&:hover': { textDecorationThickness: '0.12em' },
 } as const;
+const PARAGRAPH_SX = { mb: { xs: 1, sm: 1.5 } } as const;
+const LIST_ITEM_SX = { mb: { xs: 0.5, sm: 1 } } as const;
+const CHECKBOX_SX = {
+  p: 0,
+  mr: 0.5,
+  verticalAlign: 'middle',
+  pointerEvents: 'none',
+} as const;
 const HEADING_BORDER_SX = {
   my: 1.5,
   pb: 0.5,
-  borderBottom: 2,
+  borderBottom: 1,
   borderColor: 'divider',
 } as const;
+const TABLE_CONTAINER_SX = { my: 2, overflowX: 'auto' } as const;
+const TABLE_ROW_SX = {
+  '&:nth-of-type(odd)': { bgcolor: 'action.hover' },
+  '&:last-child td, &:last-child th': { border: 0 },
+} as const;
+
+interface MarkdownNodeProps {
+  children?: ReactNode;
+}
+
+interface TableCellRendererProps extends MarkdownNodeProps {
+  style?: Pick<CSSProperties, 'textAlign'>;
+}
 
 function createHeadingRenderer(
   variant: ComponentProps<typeof Typography>['variant'],
@@ -103,10 +124,7 @@ function createTableCellRenderer(
   return function TableCellRenderer({
     children,
     style,
-  }: {
-    children?: ReactNode;
-    style?: Pick<CSSProperties, 'textAlign'>;
-  }) {
+  }: TableCellRendererProps) {
     return (
       <TableCell
         sx={{
@@ -122,7 +140,7 @@ function createTableCellRenderer(
 }
 
 function createListRenderer(component: 'ul' | 'ol') {
-  return function ListRenderer({ children }: { children?: ReactNode }) {
+  return function ListRenderer({ children }: MarkdownNodeProps) {
     return (
       <Box component={component} sx={{ pl: 3, my: 2 }}>
         {children}
@@ -139,7 +157,7 @@ const components: Components = {
   h5: createHeadingRenderer('subtitle2', 0, { fontWeight: 'bold' }),
   h6: createHeadingRenderer('subtitle2', 0, { color: 'text.secondary' }),
   p: ({ children }) => (
-    <Typography variant="body1" sx={{ mb: { xs: 1, sm: 1.5 } }}>
+    <Typography variant="body1" sx={PARAGRAPH_SX}>
       {children}
     </Typography>
   ),
@@ -181,7 +199,7 @@ const components: Components = {
       checked={checked ?? false}
       disabled={disabled}
       size="small"
-      sx={{ p: 0, mr: 0.5, verticalAlign: 'middle', pointerEvents: 'none' }}
+      sx={CHECKBOX_SX}
     />
   ),
   hr: () => <Divider sx={{ my: 2 }} />,
@@ -196,11 +214,7 @@ const components: Components = {
     />
   ),
   table: ({ children }) => (
-    <TableContainer
-      component={Paper}
-      variant="outlined"
-      sx={{ my: 2, overflowX: 'auto' }}
-    >
+    <TableContainer component={Paper} variant="outlined" sx={TABLE_CONTAINER_SX}>
       <Table size="small">{children}</Table>
     </TableContainer>
   ),
@@ -209,13 +223,7 @@ const components: Components = {
   ),
   tbody: ({ children }) => <TableBody>{children}</TableBody>,
   tr: ({ children }) => (
-    <TableRow
-      hover
-      sx={{
-        '&:nth-of-type(odd)': { bgcolor: 'action.hover' },
-        '&:last-child td, &:last-child th': { border: 0 },
-      }}
-    >
+    <TableRow hover sx={TABLE_ROW_SX}>
       {children}
     </TableRow>
   ),
@@ -224,7 +232,7 @@ const components: Components = {
   ul: createListRenderer('ul'),
   ol: createListRenderer('ol'),
   li: ({ children }) => (
-    <Typography component="li" variant="body1" sx={{ mb: { xs: 0.5, sm: 1 } }}>
+    <Typography component="li" variant="body1" sx={LIST_ITEM_SX}>
       {children}
     </Typography>
   ),
