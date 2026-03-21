@@ -131,10 +131,7 @@ async function readNdjsonStream(
     return sawTerminalEvent ? null : createUnexpectedResponseError();
   }
 
-  return signal.reason instanceof DOMException &&
-    signal.reason.name === 'TimeoutError'
-    ? createTimeoutError()
-    : null;
+  return isTimeoutError(signal.reason) ? createTimeoutError() : null;
 }
 
 function handleStreamEvent(

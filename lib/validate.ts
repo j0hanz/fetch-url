@@ -37,20 +37,14 @@ function parseValidatedUrl(value: unknown): string {
     throw new ValidationError(URL_REQUIRED_MESSAGE);
   }
 
-  assertSupportedProtocol(parseUrl(trimmed).protocol);
-  return trimmed;
-}
-
-function parseUrl(value: string): URL {
-  try {
-    return new URL(value);
-  } catch {
+  const parsed = URL.parse(trimmed);
+  if (!parsed) {
     throw new ValidationError('Field "url" must be a valid URL.');
   }
-}
 
-function assertSupportedProtocol(protocol: URL['protocol']): void {
-  if (!SUPPORTED_PROTOCOLS.has(protocol)) {
+  if (!SUPPORTED_PROTOCOLS.has(parsed.protocol)) {
     throw new ValidationError('Field "url" must use http: or https: scheme.');
   }
+
+  return trimmed;
 }

@@ -34,12 +34,16 @@ function createDefaultSiteUrl(): URL {
   return new URL(DEFAULT_SITE_URL);
 }
 
-function normalizeSiteUrl(value: string): URL {
+function normalizeSiteUrl(value: string): URL | null {
   const trimmedValue = value.trim();
   const withProtocol = /^https?:\/\//i.test(trimmedValue)
     ? trimmedValue
     : `https://${trimmedValue}`;
-  const url = new URL(withProtocol);
+  const url = URL.parse(withProtocol);
+
+  if (!url) {
+    return null;
+  }
 
   url.pathname = '/';
   url.search = '';
@@ -69,9 +73,5 @@ export function resolveSiteUrl(
     return createDefaultSiteUrl();
   }
 
-  try {
-    return normalizeSiteUrl(configuredUrl);
-  } catch {
-    return createDefaultSiteUrl();
-  }
+  return normalizeSiteUrl(configuredUrl) ?? createDefaultSiteUrl();
 }
