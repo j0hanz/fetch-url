@@ -1,4 +1,4 @@
-# About Page Converter
+# About Fetch URL
 
 > Clean, readable Markdown from public web pages.
 
@@ -13,7 +13,7 @@
 
 ## Why It Exists
 
-Most pages are designed for browsing, not reuse. When you copy text from an article, you often pull in navigation, promos, cookie banners, and broken formatting. Page Converter keeps the main content and leaves the rest behind.
+Most pages are designed for browsing, not reuse. When you copy text from an article, you often pull in navigation, promos, cookie banners, and broken formatting. Fetch URL keeps the main content and leaves the rest behind.
 
 ## Common Uses
 
@@ -29,4 +29,4 @@ Open the app, paste a link, and convert.
 
 ---
 
-View the project on **[GitHub](https://github.com/j0hanz/page-converter)**.
+View the project on **[GitHub](https://github.com/j0hanz/fetch-url)**.

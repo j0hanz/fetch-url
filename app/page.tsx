@@ -82,7 +82,11 @@ export default async function Home() {
                 {SITE_TAGLINE}
               </Typography>
             </Box>
-            <Stack direction="row" spacing={{ xs: 1, sm: 2 }}>
+            <Stack
+              direction="row"
+              spacing={{ xs: 0.5, sm: 1 }}
+              alignItems="center"
+            >
               <AboutDialog
                 markdown={aboutMarkdown}
                 howItWorksMarkdown={howItWorksMarkdown}

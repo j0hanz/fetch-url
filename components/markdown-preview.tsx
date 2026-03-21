@@ -71,7 +71,7 @@ const LINK_SX = {
   textDecorationThickness: '0.08em',
 } as const;
 const PARAGRAPH_SX = {
-  mb: 1.5,
+  mb: { xs: 1, sm: 1.5 },
   lineHeight: 1.75,
 } as const;
 const TABLE_CONTAINER_SX = { my: 2, overflowX: 'auto' } as const;
@@ -141,7 +141,7 @@ const components: Components = {
   h5: createHeadingRenderer('subtitle2', 0, { fontWeight: 'bold' }),
   h6: createHeadingRenderer('subtitle2', 0, { color: 'text.secondary' }),
   p: ({ children }) => (
-    <Typography variant="body1" paragraph sx={PARAGRAPH_SX}>
+    <Typography variant="body1" sx={PARAGRAPH_SX}>
       {children}
     </Typography>
   ),

@@ -12,9 +12,7 @@ describe('AboutDialog', () => {
       <AboutDialog markdown="# Overview" howItWorksMarkdown="# How It Works" />
     );
 
-    await user.click(
-      screen.getByRole('button', { name: /about page converter/i })
-    );
+    await user.click(screen.getByRole('button', { name: /about fetch url/i }));
 
     expect(
       await screen.findByRole('dialog', { name: /about/i })
@@ -28,12 +26,10 @@ describe('AboutDialog', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: /about page converter/i })
+      screen.getByRole('button', { name: /about fetch url/i })
     ).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole('button', { name: /about page converter/i })
-    );
+    await user.click(screen.getByRole('button', { name: /about fetch url/i }));
 
     expect(
       await screen.findByRole('heading', { name: 'Overview' })

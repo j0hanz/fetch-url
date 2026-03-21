@@ -51,6 +51,7 @@ const MARKDOWN_PANEL_SX = {
 } as const;
 const RAW_MARKDOWN_SX = {
   fontFamily: MARKDOWN_FONT_FAMILY,
+  fontSize: { xs: '0.8125rem', sm: '0.875rem' },
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
 } as const;

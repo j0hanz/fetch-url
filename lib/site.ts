@@ -9,15 +9,15 @@ const SITE_URL_ENV_KEYS = [
 ] as const;
 type SiteEnvironment = Readonly<Record<string, string | undefined>>;
 
-export const SITE_NAME = 'Page Converter';
+export const SITE_NAME = 'Fetch URL';
 export const SITE_TAGLINE = 'Turn public web pages into clean Markdown';
 export const SITE_DESCRIPTION =
   'Convert public web pages into clean Markdown with live progress, in-app preview, one-click copy, and Markdown downloads.';
 export const SITE_CATEGORY = 'productivity';
 export const SITE_CREATOR = 'j0hanz';
-export const SITE_REPOSITORY_URL = 'https://github.com/j0hanz/page-converter';
+export const SITE_REPOSITORY_URL = 'https://github.com/j0hanz/fetch-url';
 export const SITE_KEYWORDS = [
-  'page converter',
+  'fetch url',
   'web page to markdown',
   'html to markdown',
   'markdown converter',

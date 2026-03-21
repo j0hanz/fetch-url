@@ -6,7 +6,7 @@
 
 Paste the URL of a public web page into the app and start the conversion.
 
-> Page Converter works best with pages that can be fetched without signing in.
+> Fetch URL works best with pages that can be fetched without signing in.
 
 ## 2. Extract the Main Content
 
@@ -33,4 +33,4 @@ When the conversion is complete, you can:
 
 ## Example
 
-If you want to reference an article in ChatGPT, Claude, or a notes app, paste the article URL into Page Converter first. You get a cleaner version of the content without the surrounding site clutter.
+If you want to reference an article in ChatGPT, Claude, or a notes app, paste the article URL into Fetch URL first. You get a cleaner version of the content without the surrounding site clutter.

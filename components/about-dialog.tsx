@@ -112,7 +112,7 @@ export default function AboutDialog({
         <IconButton
           onClick={() => setOpen(true)}
           size="small"
-          aria-label="About Page Converter"
+          aria-label="About Fetch URL"
         >
           <InfoOutlinedIcon sx={ABOUT_ICON_SX} />
         </IconButton>

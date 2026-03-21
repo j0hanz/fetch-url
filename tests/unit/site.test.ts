@@ -11,18 +11,18 @@ describe('resolveSiteUrl', () => {
 
   it('prefers an explicitly configured site url', () => {
     const siteUrl = resolveSiteUrl({
-      NEXT_PUBLIC_APP_URL: 'https://page-converter.example.com/app?x=1',
+      NEXT_PUBLIC_APP_URL: 'https://fetch-url.example.com/app?x=1',
     });
 
-    expect(siteUrl.toString()).toBe('https://page-converter.example.com/');
+    expect(siteUrl.toString()).toBe('https://fetch-url.example.com/');
   });
 
   it('normalizes bare hostnames from platform env vars', () => {
     const siteUrl = resolveSiteUrl({
-      VERCEL_URL: 'page-converter.vercel.app',
+      VERCEL_URL: 'fetch-url.vercel.app',
     });
 
-    expect(siteUrl.toString()).toBe('https://page-converter.vercel.app/');
+    expect(siteUrl.toString()).toBe('https://fetch-url.vercel.app/');
   });
 
   it('falls back to localhost when the configured site url is invalid', () => {

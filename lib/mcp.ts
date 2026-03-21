@@ -30,7 +30,7 @@ function readPackageVersion(): string {
   return pkg.version ?? '0.0.0';
 }
 
-const CLIENT_INFO = { name: 'page-converter', version: readPackageVersion() };
+const CLIENT_INFO = { name: 'fetch-url', version: readPackageVersion() };
 const FETCH_URL_PACKAGE_NAME = '@j0hanz/fetch-url-mcp';
 const FETCH_URL_ENTRYPOINT = path.join('dist', 'index.js');
 const FETCH_URL_TOOL_NAME = 'fetch-url';

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Page Converter is a Next.js web client for [`@j0hanz/fetch-url-mcp`](https://github.com/j0hanz/fetch-url-mcp). It turns public web pages into clean Markdown with live progress, an in-app preview, one-click copy, and Markdown downloads.
+Fetch URL is a Next.js web client for [`@j0hanz/fetch-url-mcp`](https://github.com/j0hanz/fetch-url-mcp). It turns public web pages into clean Markdown with live progress, an in-app preview, one-click copy, and Markdown downloads.
 
 ## Tooling
 

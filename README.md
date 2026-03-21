@@ -1,6 +1,6 @@
-# Page Converter
+# Fetch URL
 
-Page Converter is a Next.js web client for [`@j0hanz/fetch-url-mcp`](https://github.com/j0hanz/fetch-url-mcp). It turns public web pages into clean Markdown with live progress, an in-app preview, one-click copy, and Markdown downloads.
+Fetch URL is a Next.js web client for [`@j0hanz/fetch-url-mcp`](https://github.com/j0hanz/fetch-url-mcp). It turns public web pages into clean Markdown with live progress, an in-app preview, one-click copy, and Markdown downloads.
 
 Unlike the server repo, this codebase does not expose an MCP server surface. It embeds an MCP client inside a web app and calls the `fetch-url` tool over stdio on the server side.
 
@@ -120,4 +120,4 @@ If none are set or the value is invalid, the app falls back to `http://localhost
 ## Related Repositories
 
 - Server reference: [`j0hanz/fetch-url-mcp`](https://github.com/j0hanz/fetch-url-mcp)
-- Client app: [`j0hanz/page-converter`](https://github.com/j0hanz/page-converter)
+- Client app: [`j0hanz/fetch-url`](https://github.com/j0hanz/fetch-url)
