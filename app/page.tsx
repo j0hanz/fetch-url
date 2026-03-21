@@ -14,6 +14,7 @@ import Typography from '@mui/material/Typography';
 
 import AboutDialog from '@/components/about-dialog';
 import HomeClient from '@/components/home-client';
+import LogoIcon from '@/components/logo-icon';
 import ThemeToggle from '@/components/theme-toggle';
 import {
   SITE_DESCRIPTION,
@@ -67,9 +68,16 @@ export default async function Home() {
         <Stack spacing={{ xs: 3, sm: 4 }}>
           <Toolbar disableGutters sx={{ alignItems: 'flex-start' }}>
             <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h4" component="h1" gutterBottom>
-                {SITE_NAME}
-              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <LogoIcon
+                  sx={{
+                    fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.85rem' },
+                  }}
+                />
+                <Typography variant="h4" component="h1">
+                  {SITE_NAME}
+                </Typography>
+              </Stack>
               <Typography variant="subtitle1" color="text.secondary">
                 {SITE_TAGLINE}
               </Typography>
