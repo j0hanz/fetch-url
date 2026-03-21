@@ -1,12 +1,10 @@
-import type { TransformRequest } from "@/lib/validate";
 import type {
   StreamEvent,
   StreamProgressEvent,
   TransformError,
   TransformResult,
-} from "@/lib/api";
+} from '@/lib/api';
 import {
-  NDJSON_CONTENT_TYPE,
   createNetworkError,
   createTimeoutError,
   createUnexpectedResponseError,
@@ -15,7 +13,9 @@ import {
   isStreamEvent,
   isTransformError,
   isTransformErrorResponse,
-} from "@/lib/api";
+  NDJSON_CONTENT_TYPE,
+} from '@/lib/api';
+import type { TransformRequest } from '@/lib/validate';
 
 interface ClientTransformHandlers {
   onError: (error: TransformError) => void;
@@ -23,16 +23,16 @@ interface ClientTransformHandlers {
   onResult: (result: TransformResult) => void;
 }
 
-const JSON_HEADERS = { "Content-Type": "application/json" } as const;
-const TRANSFORM_ENDPOINT = "/api/transform";
+const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
+const TRANSFORM_ENDPOINT = '/api/transform';
 
 function createRequestBody(url: string): TransformRequest {
   return { url: url.trim() };
 }
 
 function isNdjsonResponse(response: Response): boolean {
-  return (response.headers.get("Content-Type") ?? "").includes(
-    NDJSON_CONTENT_TYPE,
+  return (response.headers.get('Content-Type') ?? '').includes(
+    NDJSON_CONTENT_TYPE
   );
 }
 
@@ -40,7 +40,7 @@ function parseStreamEvent(line: string): StreamEvent {
   const parsed: unknown = JSON.parse(line);
 
   if (!isStreamEvent(parsed)) {
-    throw new Error("Invalid stream event");
+    throw new Error('Invalid stream event');
   }
 
   return parsed;
@@ -48,10 +48,10 @@ function parseStreamEvent(line: string): StreamEvent {
 
 function flushBufferedLines(
   chunk: string,
-  onEvent: (event: StreamEvent) => void,
+  onEvent: (event: StreamEvent) => void
 ): { remainder: string; sawTerminalEvent: boolean } {
-  const lines = chunk.split("\n");
-  const remainder = lines.pop() ?? "";
+  const lines = chunk.split('\n');
+  const remainder = lines.pop() ?? '';
   let sawTerminalEvent = false;
 
   for (const line of lines) {
@@ -67,17 +67,17 @@ function flushBufferedLines(
 
 function emitParsedStreamEvent(
   line: string,
-  onEvent: (event: StreamEvent) => void,
+  onEvent: (event: StreamEvent) => void
 ): boolean {
   const event = parseStreamEvent(line);
 
   onEvent(event);
-  return event.type !== "progress";
+  return event.type !== 'progress';
 }
 
 function emitTrailingStreamEvent(
   buffer: string,
-  onEvent: (event: StreamEvent) => void,
+  onEvent: (event: StreamEvent) => void
 ): boolean {
   const trailingContent = buffer.trim();
   if (trailingContent.length === 0) {
@@ -90,7 +90,7 @@ function emitTrailingStreamEvent(
 async function readNdjsonStream(
   response: Response,
   signal: AbortSignal,
-  onEvent: (event: StreamEvent) => void,
+  onEvent: (event: StreamEvent) => void
 ): Promise<TransformError | null> {
   const reader = response.body?.getReader();
   if (!reader) {
@@ -98,7 +98,7 @@ async function readNdjsonStream(
   }
 
   const decoder = new TextDecoder();
-  let buffer = "";
+  let buffer = '';
   let sawTerminalEvent = false;
 
   try {
@@ -110,7 +110,7 @@ async function readNdjsonStream(
 
       const flushResult = flushBufferedLines(
         buffer + decoder.decode(value, { stream: true }),
-        onEvent,
+        onEvent
       );
       buffer = flushResult.remainder;
       sawTerminalEvent = sawTerminalEvent || flushResult.sawTerminalEvent;
@@ -137,16 +137,16 @@ async function readNdjsonStream(
   }
 
   return signal.reason instanceof DOMException &&
-    signal.reason.name === "TimeoutError"
+    signal.reason.name === 'TimeoutError'
     ? createTimeoutError()
     : null;
 }
 
 function handleStreamEvent(
   event: StreamEvent,
-  handlers: ClientTransformHandlers,
+  handlers: ClientTransformHandlers
 ): void {
-  if (event.type === "progress") {
+  if (event.type === 'progress') {
     handlers.onProgress(event);
     return;
   }
@@ -166,7 +166,7 @@ function handleStreamEvent(
 
 function handleJsonFallback(
   data: unknown,
-  onError: ClientTransformHandlers["onError"],
+  onError: ClientTransformHandlers['onError']
 ): void {
   if (isTransformErrorResponse(data)) {
     onError(data.error);
@@ -179,13 +179,13 @@ function handleJsonFallback(
 async function handleTransformResponse(
   response: Response,
   signal: AbortSignal,
-  handlers: ClientTransformHandlers,
+  handlers: ClientTransformHandlers
 ): Promise<void> {
   if (isNdjsonResponse(response)) {
     const streamError = await readNdjsonStream(
       response,
       signal,
-      (streamEvent) => handleStreamEvent(streamEvent, handlers),
+      (streamEvent) => handleStreamEvent(streamEvent, handlers)
     );
 
     if (streamError) {
@@ -201,10 +201,10 @@ async function handleTransformResponse(
 export async function submitTransformRequest(
   url: string,
   handlers: ClientTransformHandlers,
-  signal: AbortSignal,
+  signal: AbortSignal
 ): Promise<void> {
   const response = await fetch(TRANSFORM_ENDPOINT, {
-    method: "POST",
+    method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify(createRequestBody(url)),
     signal,
@@ -214,7 +214,7 @@ export async function submitTransformRequest(
 }
 
 export function createClientTransformSignal(
-  abortController: AbortController,
+  abortController: AbortController
 ): AbortSignal {
   return abortController.signal;
 }
@@ -232,9 +232,9 @@ export function mapClientTransformError(error: unknown): TransformError {
 }
 
 export function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
+  return error instanceof DOMException && error.name === 'AbortError';
 }
 
 function isTimeoutError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "TimeoutError";
+  return error instanceof DOMException && error.name === 'TimeoutError';
 }

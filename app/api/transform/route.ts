@@ -1,22 +1,23 @@
-import {
-  validateTransformRequest,
-  ValidationError,
-  type TransformRequest,
-} from "@/lib/validate";
-import { transformUrl } from "@/lib/transform";
+import type { Progress } from '@modelcontextprotocol/sdk/types.js';
+
 import {
   createStreamProgressEvent,
   createTransformError,
   NDJSON_CONTENT_TYPE,
   type StreamEvent,
-  type TransformResponse,
   type TransformError,
   type TransformErrorCode,
   type TransformErrorResponse,
-} from "@/lib/api";
-import type { Progress } from "@modelcontextprotocol/sdk/types.js";
+  type TransformResponse,
+} from '@/lib/api';
+import { transformUrl } from '@/lib/transform';
+import {
+  type TransformRequest,
+  validateTransformRequest,
+  ValidationError,
+} from '@/lib/validate';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 const HTTP_STATUS_BY_ERROR_CODE: Record<TransformErrorCode, number> = {
   VALIDATION_ERROR: 400,
@@ -28,14 +29,14 @@ const HTTP_STATUS_BY_ERROR_CODE: Record<TransformErrorCode, number> = {
 };
 
 const NDJSON_HEADERS = {
-  "Content-Type": NDJSON_CONTENT_TYPE,
-  "Cache-Control": "no-cache",
+  'Content-Type': NDJSON_CONTENT_TYPE,
+  'Cache-Control': 'no-cache',
 } as const;
 
 const MAX_REQUEST_BODY_SIZE = 4096;
-const INVALID_REQUEST_MESSAGE = "Invalid request.";
-const INVALID_JSON_BODY_MESSAGE = "Invalid JSON body.";
-const REQUEST_BODY_TOO_LARGE_MESSAGE = "Request body too large.";
+const INVALID_REQUEST_MESSAGE = 'Invalid request.';
+const INVALID_JSON_BODY_MESSAGE = 'Invalid JSON body.';
+const REQUEST_BODY_TOO_LARGE_MESSAGE = 'Request body too large.';
 
 interface StreamGuard {
   close: () => void;
@@ -47,13 +48,13 @@ interface ProgressBridge {
   handleProgress: (progress: Progress) => void;
   hasProgress: () => boolean;
   readFirstOutcome: (
-    responsePromise: Promise<TransformResponse>,
+    responsePromise: Promise<TransformResponse>
   ) => Promise<FirstTransformOutcome>;
 }
 
 type FirstTransformOutcome =
-  | { type: "progress" }
-  | { type: "response"; response: TransformResponse };
+  | { type: 'progress' }
+  | { type: 'response'; response: TransformResponse };
 
 function readValidationErrorMessage(error: unknown): string {
   return error instanceof ValidationError
@@ -78,13 +79,13 @@ function validateRequestBody(body: unknown): TransformRequest {
 }
 
 async function parseTransformRequest(
-  request: Request,
+  request: Request
 ): Promise<TransformRequest> {
   return validateRequestBody(await readRequestBody(request));
 }
 
 function isOversizedRequest(request: Request): boolean {
-  const contentLength = request.headers.get("content-length");
+  const contentLength = request.headers.get('content-length');
   if (contentLength === null) {
     return false;
   }
@@ -95,28 +96,28 @@ function isOversizedRequest(request: Request): boolean {
 
 function createValidationErrorResponse(message: string): Response {
   return createErrorResponse(
-    createTransformError("VALIDATION_ERROR", message, { retryable: false }),
+    createTransformError('VALIDATION_ERROR', message, { retryable: false })
   );
 }
 
 function createErrorResponse(error: TransformError): Response {
   return Response.json(
     { ok: false, error },
-    { status: HTTP_STATUS_BY_ERROR_CODE[error.code] },
+    { status: HTTP_STATUS_BY_ERROR_CODE[error.code] }
   );
 }
 
 function encodeNdjsonEvent(
   encoder: TextEncoder,
-  event: StreamEvent,
+  event: StreamEvent
 ): Uint8Array {
-  return encoder.encode(JSON.stringify(event) + "\n");
+  return encoder.encode(JSON.stringify(event) + '\n');
 }
 
 function createStreamGuard(
   request: Request,
   controller: ReadableStreamDefaultController<Uint8Array>,
-  encoder: TextEncoder,
+  encoder: TextEncoder
 ): StreamGuard {
   let closed = false;
 
@@ -126,7 +127,7 @@ function createStreamGuard(
     }
 
     closed = true;
-    request.signal.removeEventListener("abort", close);
+    request.signal.removeEventListener('abort', close);
     try {
       controller.close();
     } catch {
@@ -134,7 +135,7 @@ function createStreamGuard(
     }
   };
 
-  request.signal.addEventListener("abort", close, { once: true });
+  request.signal.addEventListener('abort', close, { once: true });
 
   return {
     close,
@@ -155,7 +156,7 @@ function createStreamGuard(
 function createNdjsonResponseStream(
   request: Request,
   responsePromise: Promise<TransformResponse>,
-  onStart: (streamGuard: StreamGuard) => void,
+  onStart: (streamGuard: StreamGuard) => void
 ): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
 
@@ -183,22 +184,22 @@ function createNdjsonResponseStream(
 
 function writeProgressEvent(
   streamGuard: StreamGuard,
-  progress: Progress,
+  progress: Progress
 ): void {
   streamGuard.write(
     createStreamProgressEvent(
       progress.progress,
       progress.total,
-      progress.message,
-    ),
+      progress.message
+    )
   );
 }
 
 function writeResultEvent(
   streamGuard: StreamGuard,
-  response: TransformResponse,
+  response: TransformResponse
 ): void {
-  streamGuard.write({ type: "result", ...response });
+  streamGuard.write({ type: 'result', ...response });
 }
 
 function createFirstProgressPromise(): {
@@ -210,13 +211,13 @@ function createFirstProgressPromise(): {
 
 async function readFirstTransformOutcome(
   responsePromise: Promise<TransformResponse>,
-  firstProgressPromise: Promise<void>,
+  firstProgressPromise: Promise<void>
 ): Promise<FirstTransformOutcome> {
   return Promise.race([
     responsePromise.then(
-      (response) => ({ type: "response", response }) as const,
+      (response) => ({ type: 'response', response }) as const
     ),
-    firstProgressPromise.then(() => ({ type: "progress" }) as const),
+    firstProgressPromise.then(() => ({ type: 'progress' }) as const),
   ]);
 }
 
@@ -265,13 +266,13 @@ function createProgressBridge(): ProgressBridge {
 
 function shouldReturnImmediateErrorResponse(
   firstOutcome: FirstTransformOutcome,
-  progressBridge: ProgressBridge,
+  progressBridge: ProgressBridge
 ): firstOutcome is {
-  type: "response";
+  type: 'response';
   response: TransformErrorResponse;
 } {
   return (
-    firstOutcome.type === "response" &&
+    firstOutcome.type === 'response' &&
     !progressBridge.hasProgress() &&
     !firstOutcome.response.ok
   );
@@ -289,7 +290,7 @@ export async function POST(request: Request): Promise<Response> {
     const responsePromise = transformUrl(
       validated,
       progressBridge.handleProgress,
-      request.signal,
+      request.signal
     );
 
     const firstOutcome = await progressBridge.readFirstOutcome(responsePromise);
@@ -300,7 +301,7 @@ export async function POST(request: Request): Promise<Response> {
     const stream = createNdjsonResponseStream(
       request,
       responsePromise,
-      progressBridge.attachStreamGuard,
+      progressBridge.attachStreamGuard
     );
 
     return new Response(stream, { headers: NDJSON_HEADERS });

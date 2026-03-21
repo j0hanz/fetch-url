@@ -1,56 +1,58 @@
-"use client";
+'use client';
 
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import Typography from "@mui/material/Typography";
-import Link from "@mui/material/Link";
-import Divider from "@mui/material/Divider";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import type { Components } from "react-markdown";
-import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+
+import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import Divider from '@mui/material/Divider';
+import Link from '@mui/material/Link';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Typography from '@mui/material/Typography';
+
+import Markdown from 'react-markdown';
+import type { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface MarkdownPreviewProps {
   children: string;
 }
 
 const remarkPlugins = [remarkGfm];
-type TypographyVariant = ComponentProps<typeof Typography>["variant"];
-type FontWeight = ComponentProps<typeof Typography>["fontWeight"];
-type TextAlignStyle = Pick<CSSProperties, "textAlign">;
+type TypographyVariant = ComponentProps<typeof Typography>['variant'];
+type FontWeight = ComponentProps<typeof Typography>['fontWeight'];
+type TextAlignStyle = Pick<CSSProperties, 'textAlign'>;
 interface RendererChildrenProps {
   children?: ReactNode;
 }
 const BLOCKQUOTE_SX = {
   borderLeft: 4,
-  borderColor: "primary.main",
+  borderColor: 'primary.main',
   pl: 2,
   py: 0.5,
   my: 1,
-  color: "text.secondary",
-  "& > p": { mb: 0 },
+  color: 'text.secondary',
+  '& > p': { mb: 0 },
 } as const;
 const BLOCK_CODE_SX = {
   px: 2,
   py: 1,
-  overflow: "auto",
+  overflow: 'auto',
 } as const;
 const INLINE_CODE_SX = {
   px: 0.4,
   py: 0.2,
-  bgcolor: "action.hover",
+  bgcolor: 'action.hover',
   borderRadius: 0.5,
 } as const;
 const IMAGE_SX = {
-  maxWidth: "100%",
-  height: "auto",
+  maxWidth: '100%',
+  height: 'auto',
   my: 1,
   borderRadius: 1,
 } as const;
@@ -68,7 +70,7 @@ function readTextAlign(style?: TextAlignStyle) {
 function createHeadingRenderer(
   variant: TypographyVariant,
   marginTop: number,
-  props: Partial<ComponentProps<typeof Typography>> = {},
+  props: Partial<ComponentProps<typeof Typography>> = {}
 ) {
   return function HeadingRenderer({ children }: RendererChildrenProps) {
     return (
@@ -102,7 +104,7 @@ function createTableCellRenderer(fontWeight?: FontWeight) {
   };
 }
 
-function createListRenderer(component: "ul" | "ol") {
+function createListRenderer(component: 'ul' | 'ol') {
   return function ListRenderer({ children }: RendererChildrenProps) {
     return (
       <Box component={component} sx={LIST_SX}>
@@ -113,12 +115,12 @@ function createListRenderer(component: "ul" | "ol") {
 }
 
 const components: Components = {
-  h1: createHeadingRenderer("h4", 2),
-  h2: createHeadingRenderer("h5", 2),
-  h3: createHeadingRenderer("h6", 1.5),
-  h4: createHeadingRenderer("subtitle1", 1, { fontWeight: "bold" }),
-  h5: createHeadingRenderer("subtitle2", 0, { fontWeight: "bold" }),
-  h6: createHeadingRenderer("subtitle2", 0, { color: "text.secondary" }),
+  h1: createHeadingRenderer('h4', 2),
+  h2: createHeadingRenderer('h5', 2),
+  h3: createHeadingRenderer('h6', 1.5),
+  h4: createHeadingRenderer('subtitle1', 1, { fontWeight: 'bold' }),
+  h5: createHeadingRenderer('subtitle2', 0, { fontWeight: 'bold' }),
+  h6: createHeadingRenderer('subtitle2', 0, { color: 'text.secondary' }),
   p: ({ children }) => (
     <Typography variant="body1" paragraph>
       {children}
@@ -136,7 +138,7 @@ const components: Components = {
   ),
   code: ({ className, children, node }) => {
     const isBlock =
-      className?.startsWith("language-") ||
+      className?.startsWith('language-') ||
       node?.position?.start.line !== node?.position?.end.line;
     if (isBlock) {
       return (
@@ -169,8 +171,8 @@ const components: Components = {
   img: ({ src, alt }) => (
     <Box
       component="img"
-      src={typeof src === "string" ? src : undefined}
-      alt={alt ?? ""}
+      src={typeof src === 'string' ? src : undefined}
+      alt={alt ?? ''}
       loading="lazy"
       decoding="async"
       sx={IMAGE_SX}
@@ -188,10 +190,10 @@ const components: Components = {
   thead: ({ children }) => <TableHead>{children}</TableHead>,
   tbody: ({ children }) => <TableBody>{children}</TableBody>,
   tr: ({ children }) => <TableRow>{children}</TableRow>,
-  th: createTableCellRenderer("bold"),
+  th: createTableCellRenderer('bold'),
   td: createTableCellRenderer(),
-  ul: createListRenderer("ul"),
-  ol: createListRenderer("ol"),
+  ul: createListRenderer('ul'),
+  ol: createListRenderer('ol'),
   li: ({ children }) => (
     <Typography component="li" variant="body1" sx={{ mb: 0.5 }}>
       {children}

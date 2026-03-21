@@ -1,4 +1,12 @@
-import { ImageResponse } from "next/og";
+import { ImageResponse } from 'next/og';
+
+import {
+  SITE_NAME,
+  SITE_TAGLINE,
+  SOCIAL_IMAGE_ALT,
+  SOCIAL_IMAGE_CONTENT_TYPE,
+  SOCIAL_IMAGE_SIZE,
+} from '@/lib/site';
 import {
   LIGHT_SOCIAL_PALETTE,
   SocialBody,
@@ -8,23 +16,16 @@ import {
   SocialImageContent,
   SocialImageFrame,
   SocialTitle,
-} from "@/lib/social-image";
-import {
-  SITE_NAME,
-  SITE_TAGLINE,
-  SOCIAL_IMAGE_ALT,
-  SOCIAL_IMAGE_CONTENT_TYPE,
-  SOCIAL_IMAGE_SIZE,
-} from "@/lib/site";
+} from '@/lib/social-image';
 
 export const alt = SOCIAL_IMAGE_ALT;
 export const size = SOCIAL_IMAGE_SIZE;
 export const contentType = SOCIAL_IMAGE_CONTENT_TYPE;
 
 const OG_FEATURES = [
-  { label: "Clean extraction", backgroundColor: "#dbeafe" },
-  { label: "No account needed", backgroundColor: "#d1fae5" },
-  { label: "Markdown export", backgroundColor: "#ede9fe" },
+  { label: 'Clean extraction', backgroundColor: '#dbeafe' },
+  { label: 'No account needed', backgroundColor: '#d1fae5' },
+  { label: 'Markdown export', backgroundColor: '#ede9fe' },
 ] as const;
 
 export default function OpenGraphImage() {
@@ -47,6 +48,6 @@ export default function OpenGraphImage() {
         ))}
       </SocialFeatureList>
     </SocialImageFrame>,
-    size,
+    size
   );
 }

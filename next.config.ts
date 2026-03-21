@@ -1,6 +1,7 @@
-import fs from "node:fs";
-import path from "node:path";
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+
+import fs from 'node:fs';
+import path from 'node:path';
 
 interface LockfilePackage {
   dependencies?: Record<string, string>;
@@ -12,9 +13,9 @@ interface PackageLock {
 
 function readPackageLockPackages(): Record<string, LockfilePackage> {
   try {
-    const packageLockPath = path.join(process.cwd(), "package-lock.json");
+    const packageLockPath = path.join(process.cwd(), 'package-lock.json');
     const packageLock = JSON.parse(
-      fs.readFileSync(packageLockPath, "utf8"),
+      fs.readFileSync(packageLockPath, 'utf8')
     ) as PackageLock;
 
     return packageLock.packages ?? {};
@@ -26,7 +27,7 @@ function readPackageLockPackages(): Record<string, LockfilePackage> {
 function resolveDependencyPath(
   packages: Record<string, LockfilePackage>,
   dependencyName: string,
-  fromPackagePath: string,
+  fromPackagePath: string
 ): string | null {
   const nestedPath = `${fromPackagePath}/node_modules/${dependencyName}`;
   if (packages[nestedPath]) {
@@ -84,7 +85,7 @@ function collectPackageTraceGlobs(packageName: string): string[] {
 const nextConfig: NextConfig = {
   reactCompiler: true,
   outputFileTracingIncludes: {
-    "/api/transform": collectPackageTraceGlobs("@j0hanz/fetch-url-mcp"),
+    '/api/transform': collectPackageTraceGlobs('@j0hanz/fetch-url-mcp'),
   },
 };
 

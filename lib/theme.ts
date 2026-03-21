@@ -1,36 +1,36 @@
-"use client";
+'use client';
 
-import { createTheme, responsiveFontSizes } from "@mui/material/styles";
+import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
 const PAPER_ROOT_SX = {
   borderRadius: 16,
-  boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-  backdropFilter: "blur(12.3px)",
-  WebkitBackdropFilter: "blur(12.3px)",
+  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+  backdropFilter: 'blur(12.3px)',
+  WebkitBackdropFilter: 'blur(12.3px)',
 } as const;
 const AUTOFILL_TEXT_SX = {
-  WebkitBoxShadow: "0 0 0 100px var(--mui-palette-background-default) inset",
-  WebkitTextFillColor: "var(--mui-palette-text-primary)",
-  caretColor: "var(--mui-palette-text-primary)",
+  WebkitBoxShadow: '0 0 0 100px var(--mui-palette-background-default) inset',
+  WebkitTextFillColor: 'var(--mui-palette-text-primary)',
+  caretColor: 'var(--mui-palette-text-primary)',
 } as const;
 
 const theme = responsiveFontSizes(
   createTheme({
-    cssVariables: { colorSchemeSelector: "class" },
+    cssVariables: { colorSchemeSelector: 'class' },
     colorSchemes: {
       light: {
         palette: {
           background: {
-            default: "#ebebeb",
-            paper: "#ffffffd8",
+            default: '#ebebeb',
+            paper: '#ffffffd8',
           },
         },
       },
       dark: {
         palette: {
           background: {
-            default: "#202020",
-            paper: "#000000d3",
+            default: '#202020',
+            paper: '#000000d3',
           },
         },
       },
@@ -41,7 +41,7 @@ const theme = responsiveFontSizes(
     components: {
       MuiAlert: {
         defaultProps: {
-          variant: "outlined",
+          variant: 'outlined',
         },
       },
       MuiPaper: {
@@ -52,18 +52,18 @@ const theme = responsiveFontSizes(
       MuiOutlinedInput: {
         styleOverrides: {
           input: {
-            "&:-webkit-autofill": {
+            '&:-webkit-autofill': {
               ...AUTOFILL_TEXT_SX,
-              borderRadius: "inherit",
+              borderRadius: 'inherit',
             },
-            ".dark &:-webkit-autofill": {
+            '.dark &:-webkit-autofill': {
               ...AUTOFILL_TEXT_SX,
             },
           },
         },
       },
     },
-  }),
+  })
 );
 
 export default theme;

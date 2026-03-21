@@ -1,16 +1,16 @@
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 export default function NotFound() {
   return (
     <Box
       sx={{
-        display: "flex",
-        minHeight: "50vh",
-        alignItems: "center",
-        justifyContent: "center",
+        display: 'flex',
+        minHeight: '50vh',
+        alignItems: 'center',
+        justifyContent: 'center',
         p: 4,
       }}
     >

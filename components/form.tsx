@@ -1,10 +1,11 @@
-"use client";
+'use client';
 
-import { useId, useImperativeHandle, useRef } from "react";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
+import { useId, useImperativeHandle, useRef } from 'react';
+
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
 
 export interface TransformFormHandle {
   clear: () => void;
@@ -16,10 +17,10 @@ interface TransformFormProps {
   onSubmit: (url: string) => void;
 }
 
-const URL_INPUT_SX = { flexGrow: 1, flex: { md: "2 1 0" } } as const;
+const URL_INPUT_SX = { flexGrow: 1, flex: { md: '2 1 0' } } as const;
 const ACTION_BUTTON_SX = {
   maxWidth: { sm: 150 },
-  flex: { md: "1 1 0" },
+  flex: { md: '1 1 0' },
 } as const;
 
 export default function TransformForm({
@@ -33,7 +34,7 @@ export default function TransformForm({
   useImperativeHandle(ref, () => ({
     clear() {
       if (inputRef.current) {
-        inputRef.current.value = "";
+        inputRef.current.value = '';
       }
     },
   }));
@@ -47,7 +48,7 @@ export default function TransformForm({
 
   return (
     <Box component="form" onSubmit={handleSubmit}>
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <TextField
           id={urlInputId}
           inputRef={inputRef}
@@ -69,7 +70,7 @@ export default function TransformForm({
           disabled={loading}
           sx={ACTION_BUTTON_SX}
         >
-          {loading ? "Converting..." : "Convert"}
+          {loading ? 'Converting...' : 'Convert'}
         </Button>
       </Stack>
     </Box>

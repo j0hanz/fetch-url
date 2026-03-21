@@ -1,37 +1,39 @@
-"use client";
+'use client';
 
 import {
   lazy,
+  type ReactNode,
   Suspense,
+  type SyntheticEvent,
   useRef,
   useState,
-  type ReactNode,
-  type SyntheticEvent,
-} from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import IconButton from "@mui/material/IconButton";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
-import Tooltip from "@mui/material/Tooltip";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
-import { visuallyHidden } from "@mui/utils";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { MarkdownErrorBoundary } from "@/components/error";
-import { MarkdownSkeleton } from "@/components/loading";
+} from 'react';
 
-const MarkdownPreview = lazy(() => import("@/components/markdown-preview"));
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import { useTheme } from '@mui/material/styles';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Tooltip from '@mui/material/Tooltip';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { visuallyHidden } from '@mui/utils';
+
+import { MarkdownErrorBoundary } from '@/components/error';
+import { MarkdownSkeleton } from '@/components/loading';
+
+const MarkdownPreview = lazy(() => import('@/components/markdown-preview'));
 
 interface AboutDialogProps {
   markdown: string;
   howItWorksMarkdown: string;
 }
 
-type AboutTabId = "overview" | "how-it-works";
+type AboutTabId = 'overview' | 'how-it-works';
 
 interface AboutTabDefinition {
   content: string;
@@ -39,7 +41,7 @@ interface AboutTabDefinition {
   label: string;
 }
 
-const ABOUT_ICON_SX = { fontSize: { xs: "1.25rem", sm: "1.5rem" } } as const;
+const ABOUT_ICON_SX = { fontSize: { xs: '1.25rem', sm: '1.5rem' } } as const;
 
 interface TabPanelProps {
   children: ReactNode;
@@ -73,7 +75,7 @@ function readTabPanelId(tabId: AboutTabId): string {
 function readTabA11yProps(tabId: AboutTabId) {
   return {
     id: readTabId(tabId),
-    "aria-controls": readTabPanelId(tabId),
+    'aria-controls': readTabPanelId(tabId),
   };
 }
 
@@ -89,13 +91,13 @@ function MarkdownTabPanel({ children }: { children: string }) {
 
 function createAboutTabs(
   markdown: string,
-  howItWorksMarkdown: string,
+  howItWorksMarkdown: string
 ): readonly AboutTabDefinition[] {
   return [
-    { id: "overview", label: "Overview", content: markdown },
+    { id: 'overview', label: 'Overview', content: markdown },
     {
-      id: "how-it-works",
-      label: "How It Works",
+      id: 'how-it-works',
+      label: 'How It Works',
       content: howItWorksMarkdown,
     },
   ] as const;
@@ -106,9 +108,9 @@ export default function AboutDialog({
   howItWorksMarkdown,
 }: AboutDialogProps) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<AboutTabId>("overview");
+  const [tab, setTab] = useState<AboutTabId>('overview');
   const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const tabs = createAboutTabs(markdown, howItWorksMarkdown);
 
   function handleTabChange(_event: SyntheticEvent, nextTab: AboutTabId) {
@@ -138,7 +140,7 @@ export default function AboutDialog({
         <DialogTitle id="about-dialog-title" sx={visuallyHidden}>
           About
         </DialogTitle>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs
             value={tab}
             onChange={handleTabChange}

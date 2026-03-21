@@ -1,29 +1,31 @@
-"use client";
+'use client';
 
-import { startTransition, useEffect, useState, type ReactNode } from "react";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
-import Alert from "@mui/material/Alert";
-import Typography from "@mui/material/Typography";
-import Fade from "@mui/material/Fade";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DownloadIcon from "@mui/icons-material/Download";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import CodeIcon from "@mui/icons-material/Code";
-import IconButton from "@mui/material/IconButton";
-import Paper from "@mui/material/Paper";
-import Snackbar from "@mui/material/Snackbar";
-import Tooltip from "@mui/material/Tooltip";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { useTheme } from "@mui/material/styles";
-import type { TransformResult } from "@/lib/api";
-import { MarkdownErrorBoundary } from "@/components/error";
+import { type ReactNode, startTransition, useEffect, useState } from 'react';
+
+import CodeIcon from '@mui/icons-material/Code';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DownloadIcon from '@mui/icons-material/Download';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Fade from '@mui/material/Fade';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import Snackbar from '@mui/material/Snackbar';
+import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+
+import { MarkdownErrorBoundary } from '@/components/error';
 import {
   MARKDOWN_PANEL_MAX_HEIGHT,
   MarkdownSkeleton,
-} from "@/components/loading";
-import MarkdownPreview from "@/components/markdown-preview";
+} from '@/components/loading';
+import MarkdownPreview from '@/components/markdown-preview';
+import type { TransformResult } from '@/lib/api';
 
 interface TransformResultProps {
   result: TransformResult;
@@ -33,30 +35,30 @@ interface PreviewContentProps {
   markdown: string;
 }
 
-type ViewMode = "preview" | "code";
+type ViewMode = 'preview' | 'code';
 
 const COPY_FEEDBACK_DELAY_MS = 2000;
-const DEFAULT_DOWNLOAD_FILE_NAME = "page";
+const DEFAULT_DOWNLOAD_FILE_NAME = 'page';
 const MARKDOWN_FONT_FAMILY = "'Geist Mono Variable', monospace";
 const TOGGLE_BUTTON_SX = { border: 0, minWidth: 50 } as const;
 const MARKDOWN_PANEL_SX = {
   p: { xs: 1.5, sm: 2.5 },
   maxHeight: { xs: 350, sm: 450, md: MARKDOWN_PANEL_MAX_HEIGHT },
-  overflow: "auto",
-  border: "1px solid",
-  borderColor: "divider",
+  overflow: 'auto',
+  border: '1px solid',
+  borderColor: 'divider',
   borderRadius: 2,
 } as const;
 const RAW_MARKDOWN_SX = {
   fontFamily: MARKDOWN_FONT_FAMILY,
-  whiteSpace: "pre-wrap",
-  wordBreak: "break-word",
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
 } as const;
 
 function downloadMarkdownFile(title: string | undefined, markdown: string) {
-  const blob = new Blob([markdown], { type: "text/markdown" });
+  const blob = new Blob([markdown], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
+  const link = document.createElement('a');
   let attached = false;
 
   try {
@@ -74,17 +76,17 @@ function downloadMarkdownFile(title: string | undefined, markdown: string) {
   }
 }
 
-type CopyStatus = "idle" | "copied" | "failed";
+type CopyStatus = 'idle' | 'copied' | 'failed';
 
-type IconButtonColor = React.ComponentProps<typeof IconButton>["color"];
+type IconButtonColor = React.ComponentProps<typeof IconButton>['color'];
 const COPY_STATUS_COLOR: Record<CopyStatus, IconButtonColor> = {
-  idle: "default",
-  copied: "success",
-  failed: "error",
+  idle: 'default',
+  copied: 'success',
+  failed: 'error',
 };
-const COPY_STATUS_MESSAGE: Record<Exclude<CopyStatus, "idle">, string> = {
-  copied: "Copied to clipboard",
-  failed: "Failed to copy",
+const COPY_STATUS_MESSAGE: Record<Exclude<CopyStatus, 'idle'>, string> = {
+  copied: 'Copied to clipboard',
+  failed: 'Failed to copy',
 };
 
 interface ResultActionButtonProps {
@@ -100,7 +102,7 @@ function ResultActionButton({
   title,
   onClick,
   children,
-  color = "default",
+  color = 'default',
 }: ResultActionButtonProps) {
   return (
     <Tooltip title={title}>
@@ -116,7 +118,7 @@ function readCopyStatusColor(copyStatus: CopyStatus): IconButtonColor {
 }
 
 function readCopyStatusMessage(copyStatus: CopyStatus): string | undefined {
-  return copyStatus === "idle" ? undefined : COPY_STATUS_MESSAGE[copyStatus];
+  return copyStatus === 'idle' ? undefined : COPY_STATUS_MESSAGE[copyStatus];
 }
 
 function PreviewContent({ markdown }: PreviewContentProps) {
@@ -158,7 +160,7 @@ function PreviewContent({ markdown }: PreviewContentProps) {
         unmountOnExit
       >
         <Box>
-          <MarkdownPreview>{previewMarkdown ?? ""}</MarkdownPreview>
+          <MarkdownPreview>{previewMarkdown ?? ''}</MarkdownPreview>
         </Box>
       </Fade>
     </Box>
@@ -166,14 +168,14 @@ function PreviewContent({ markdown }: PreviewContentProps) {
 }
 
 export default function TransformResultPanel({ result }: TransformResultProps) {
-  const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
-  const [viewMode, setViewMode] = useState<ViewMode>("preview");
-  const isPreviewMode = viewMode === "preview";
-  const copyFeedbackOpen = copyStatus !== "idle";
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
+  const [viewMode, setViewMode] = useState<ViewMode>('preview');
+  const isPreviewMode = viewMode === 'preview';
+  const copyFeedbackOpen = copyStatus !== 'idle';
 
   function handleViewModeChange(
     _event: React.MouseEvent<HTMLElement>,
-    nextViewMode: ViewMode | null,
+    nextViewMode: ViewMode | null
   ) {
     if (nextViewMode !== null) {
       setViewMode(nextViewMode);
@@ -183,9 +185,9 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(result.markdown);
-      setCopyStatus("copied");
+      setCopyStatus('copied');
     } catch {
-      setCopyStatus("failed");
+      setCopyStatus('failed');
     }
   }
 
@@ -194,7 +196,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
   }
 
   function clearCopyFeedback() {
-    setCopyStatus("idle");
+    setCopyStatus('idle');
   }
 
   return (
@@ -251,12 +253,12 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
           </Stack>
         </Stack>
         <Paper sx={MARKDOWN_PANEL_SX}>
-          <Box sx={{ display: isPreviewMode ? "block" : "none" }}>
+          <Box sx={{ display: isPreviewMode ? 'block' : 'none' }}>
             <MarkdownErrorBoundary resetKey={result.markdown}>
               <PreviewContent markdown={result.markdown} />
             </MarkdownErrorBoundary>
           </Box>
-          <Box sx={{ display: !isPreviewMode ? "block" : "none" }}>
+          <Box sx={{ display: !isPreviewMode ? 'block' : 'none' }}>
             <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
               {result.markdown}
             </Typography>

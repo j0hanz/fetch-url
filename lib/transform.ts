@@ -1,30 +1,31 @@
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import type { TransformRequest } from "@/lib/validate";
+import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+
 import type {
-  TransformResponse,
   TransformError,
   TransformErrorResponse,
-} from "@/lib/api";
-import { createInternalError, createTransformError } from "@/lib/api";
-import { callFetchUrl, type ProgressCallback, parseMcpResult } from "@/lib/mcp";
+  TransformResponse,
+} from '@/lib/api';
+import { createInternalError, createTransformError } from '@/lib/api';
+import { callFetchUrl, parseMcpResult, type ProgressCallback } from '@/lib/mcp';
+import type { TransformRequest } from '@/lib/validate';
 
 const RETRYABLE_TRANSPORT_ERROR_CODES = new Set<number>([
   ErrorCode.RequestTimeout,
   ErrorCode.ConnectionClosed,
 ]);
 const MAX_TRANSFORM_ATTEMPTS = 2;
-const FALLBACK_INTERNAL_ERROR_MESSAGE = "Transform failed to execute.";
-const UNKNOWN_ERROR_MESSAGE = "Unknown error";
+const FALLBACK_INTERNAL_ERROR_MESSAGE = 'Transform failed to execute.';
+const UNKNOWN_ERROR_MESSAGE = 'Unknown error';
 
 async function executeTransform(
   request: TransformRequest,
   onProgress?: ProgressCallback,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<TransformResponse> {
   try {
     const raw = await callFetchUrl(
       { url: request.url },
-      { onProgress, signal },
+      { onProgress, signal }
     );
     return parseMcpResult(raw);
   } catch (error) {
@@ -38,7 +39,7 @@ async function executeTransform(
 export async function transformUrl(
   request: TransformRequest,
   onProgress?: ProgressCallback,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<TransformResponse> {
   for (let attempt = 1; attempt <= MAX_TRANSFORM_ATTEMPTS; attempt += 1) {
     const response = await executeTransform(request, onProgress, signal);
@@ -52,7 +53,7 @@ export async function transformUrl(
 }
 
 function isRetryableErrorResponse(
-  response: TransformResponse,
+  response: TransformResponse
 ): response is TransformErrorResponse {
   return !response.ok && response.error.retryable;
 }
@@ -60,7 +61,7 @@ function isRetryableErrorResponse(
 function shouldRetryResponse(
   response: TransformResponse,
   attempt: number,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): boolean {
   if (signal?.aborted) return false;
   return isRetryableErrorResponse(response) && attempt < MAX_TRANSFORM_ATTEMPTS;
@@ -82,32 +83,32 @@ function readErrorMessage(error: unknown): string {
 }
 
 function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
+  return error instanceof Error && error.name === 'AbortError';
 }
 
 function isTimeoutLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "TimeoutError";
+  return error instanceof Error && error.name === 'TimeoutError';
 }
 
 function mapTransportError(error: unknown): TransformError {
   if (isTimeoutLikeError(error)) {
-    return createTransformError("ABORTED", readErrorMessage(error), {
+    return createTransformError('ABORTED', readErrorMessage(error), {
       retryable: true,
-      details: { reason: "timeout" },
+      details: { reason: 'timeout' },
     });
   }
 
   if (isAbortLikeError(error)) {
-    return createTransformError("ABORTED", readErrorMessage(error), {
+    return createTransformError('ABORTED', readErrorMessage(error), {
       retryable: true,
-      details: { reason: "aborted" },
+      details: { reason: 'aborted' },
     });
   }
 
   if (error instanceof McpError) {
     return createInternalError(
       error.message,
-      isRetryableTransportError(error.code),
+      isRetryableTransportError(error.code)
     );
   }
 

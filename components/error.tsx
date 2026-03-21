@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
-import { Component, type ReactNode } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
+import { Component, type ReactNode } from 'react';
+
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 export interface ResettableErrorProps {
   error: Error & { digest?: string };
@@ -26,10 +27,10 @@ export function ErrorState({
   return (
     <Box
       sx={{
-        display: "flex",
+        display: 'flex',
         minHeight,
-        alignItems: "center",
-        justifyContent: "center",
+        alignItems: 'center',
+        justifyContent: 'center',
         p: 4,
       }}
     >

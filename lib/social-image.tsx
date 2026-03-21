@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode } from 'react';
 
 interface SocialImagePalette {
   accentBackground: string;
@@ -24,39 +24,39 @@ interface SocialFeaturePillProps {
 const FONT_STACK = "'Geist Variable', sans-serif";
 
 const ROOT_STYLE: CSSProperties = {
-  display: "flex",
-  height: "100%",
-  width: "100%",
+  display: 'flex',
+  height: '100%',
+  width: '100%',
   padding: 48,
   fontFamily: FONT_STACK,
 };
 
 const CARD_STYLE: CSSProperties = {
-  display: "flex",
-  width: "100%",
-  height: "100%",
-  flexDirection: "column",
-  justifyContent: "space-between",
+  display: 'flex',
+  width: '100%',
+  height: '100%',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
   borderRadius: 32,
-  padding: "44px 48px",
+  padding: '44px 48px',
 };
 
 const CONTENT_STACK_STYLE: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
+  display: 'flex',
+  flexDirection: 'column',
   gap: 18,
 };
 
 const TITLE_STYLE: CSSProperties = {
-  display: "flex",
+  display: 'flex',
   fontSize: 74,
   fontWeight: 700,
   lineHeight: 1.05,
-  letterSpacing: "-0.05em",
+  letterSpacing: '-0.05em',
 };
 
 const FEATURE_LIST_STYLE: CSSProperties = {
-  display: "flex",
+  display: 'flex',
   gap: 16,
 };
 
@@ -104,23 +104,23 @@ export function SocialImageContent({
 export function SocialEyebrow({
   label,
   palette,
-  variant = "filled",
+  variant = 'filled',
 }: {
   label: string;
   palette: SocialImagePalette;
-  variant?: "filled" | "outlined";
+  variant?: 'filled' | 'outlined';
 }) {
   return (
     <p
       style={{
-        display: "flex",
-        alignSelf: "flex-start",
+        display: 'flex',
+        alignSelf: 'flex-start',
         borderRadius: 999,
-        padding: "10px 18px",
+        padding: '10px 18px',
         fontSize: 24,
         fontWeight: 600,
-        letterSpacing: "-0.02em",
-        ...(variant === "filled"
+        letterSpacing: '-0.02em',
+        ...(variant === 'filled'
           ? {
               backgroundColor: palette.accentBackground,
               color: palette.accentColor,
@@ -150,7 +150,7 @@ export function SocialBody({
   return (
     <p
       style={{
-        display: "flex",
+        display: 'flex',
         fontSize: 32,
         lineHeight: 1.3,
         color,
@@ -167,15 +167,15 @@ export function SocialFeatureList({ children }: { children: ReactNode }) {
 
 export function SocialFeaturePill({
   backgroundColor,
-  color = "#0f172a",
+  color = '#0f172a',
   label,
 }: SocialFeaturePillProps) {
   return (
     <li
       style={{
-        display: "flex",
+        display: 'flex',
         borderRadius: 999,
-        padding: "12px 22px",
+        padding: '12px 22px',
         fontSize: 26,
         fontWeight: 500,
         lineHeight: 1,
@@ -189,21 +189,21 @@ export function SocialFeaturePill({
 }
 
 export const LIGHT_SOCIAL_PALETTE: SocialImagePalette = {
-  accentBackground: "#0f172a",
-  accentColor: "#f8fafc",
-  background: "#ebebeb",
-  bodyColor: "#334155",
-  cardBackground: "#ffffff",
-  cardBorder: "rgba(15, 23, 42, 0.08)",
-  textColor: "#0f172a",
+  accentBackground: '#0f172a',
+  accentColor: '#f8fafc',
+  background: '#ebebeb',
+  bodyColor: '#334155',
+  cardBackground: '#ffffff',
+  cardBorder: 'rgba(15, 23, 42, 0.08)',
+  textColor: '#0f172a',
 };
 
 export const DARK_SOCIAL_PALETTE: SocialImagePalette = {
-  accentBackground: "#1d4ed8",
-  accentColor: "#eff6ff",
-  background: "#202020",
-  bodyColor: "#cbd5e1",
-  cardBackground: "#111827",
-  cardBorder: "rgba(255, 255, 255, 0.14)",
-  textColor: "#f8fafc",
+  accentBackground: '#1d4ed8',
+  accentColor: '#eff6ff',
+  background: '#202020',
+  bodyColor: '#cbd5e1',
+  cardBackground: '#111827',
+  cardBorder: 'rgba(255, 255, 255, 0.14)',
+  textColor: '#f8fafc',
 };

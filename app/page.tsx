@@ -1,40 +1,43 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import type { Metadata } from "next";
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import Toolbar from "@mui/material/Toolbar";
-import Tooltip from "@mui/material/Tooltip";
-import GitHubIcon from "@mui/icons-material/GitHub";
-import HomeClient from "@/components/home-client";
-import AboutDialog from "@/components/about-dialog";
+import type { Metadata } from 'next';
+
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import GitHubIcon from '@mui/icons-material/GitHub';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+
+import AboutDialog from '@/components/about-dialog';
+import HomeClient from '@/components/home-client';
+import ThemeToggle from '@/components/theme-toggle';
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_REPOSITORY_URL,
   SITE_TAGLINE,
-} from "@/lib/site";
-import ThemeToggle from "@/components/theme-toggle";
+} from '@/lib/site';
 
-const PUBLIC_DIRECTORY = join(process.cwd(), "public");
-const GITHUB_ICON_SX = { fontSize: { xs: "1.25rem", sm: "1.5rem" } } as const;
+const PUBLIC_DIRECTORY = join(process.cwd(), 'public');
+const GITHUB_ICON_SX = { fontSize: { xs: '1.25rem', sm: '1.5rem' } } as const;
 const HOME_MARKDOWN_FILES = {
-  about: "about.md",
-  howItWorks: "how-it-works.md",
+  about: 'about.md',
+  howItWorks: 'how-it-works.md',
 } as const;
 
 export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   alternates: {
-    canonical: "/",
+    canonical: '/',
   },
   openGraph: {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    url: "/",
+    url: '/',
   },
   twitter: {
     title: SITE_NAME,
@@ -43,7 +46,7 @@ export const metadata: Metadata = {
 };
 
 function readPublicMarkdown(fileName: string): Promise<string> {
-  return readFile(join(PUBLIC_DIRECTORY, fileName), "utf-8");
+  return readFile(join(PUBLIC_DIRECTORY, fileName), 'utf-8');
 }
 
 async function readHomePageMarkdown() {
@@ -59,10 +62,10 @@ export default async function Home() {
   const { aboutMarkdown, howItWorksMarkdown } = await readHomePageMarkdown();
 
   return (
-    <Box sx={{ minHeight: "100dvh", py: { xs: 2, sm: 4, md: 6 } }}>
+    <Box sx={{ minHeight: '100dvh', py: { xs: 2, sm: 4, md: 6 } }}>
       <Container maxWidth="lg">
         <Stack spacing={{ xs: 3, sm: 4 }}>
-          <Toolbar disableGutters sx={{ alignItems: "flex-start" }}>
+          <Toolbar disableGutters sx={{ alignItems: 'flex-start' }}>
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="h4" component="h1" gutterBottom>
                 {SITE_NAME}

@@ -1,27 +1,29 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useReducer, useRef } from "react";
-import Alert from "@mui/material/Alert";
-import AlertTitle from "@mui/material/AlertTitle";
-import Collapse from "@mui/material/Collapse";
-import TransformForm, { type TransformFormHandle } from "@/components/form";
-import TransformResultPanel from "@/components/result";
-import { TransformProgress } from "@/components/loading";
+import { useCallback, useEffect, useReducer, useRef } from 'react';
+
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Collapse from '@mui/material/Collapse';
+
+import TransformForm, { type TransformFormHandle } from '@/components/form';
+import { TransformProgress } from '@/components/loading';
+import TransformResultPanel from '@/components/result';
 import type {
+  StreamProgressEvent,
   TransformError,
   TransformResult,
-  StreamProgressEvent,
-} from "@/lib/api";
+} from '@/lib/api';
 import {
   isTerminalStreamProgressEvent,
   normalizeStreamProgressEvent,
-} from "@/lib/api";
+} from '@/lib/api';
 import {
   createClientTransformSignal,
   isAbortError,
   mapClientTransformError,
   submitTransformRequest,
-} from "@/lib/client-transform";
+} from '@/lib/client-transform';
 
 interface State {
   result: TransformResult | null;
@@ -36,11 +38,11 @@ interface RequestSession {
 }
 
 type Action =
-  | { type: "submit" }
-  | { type: "progress"; event: StreamProgressEvent }
-  | { type: "result"; result: TransformResult }
-  | { type: "error"; error: TransformError }
-  | { type: "dismiss_error" };
+  | { type: 'submit' }
+  | { type: 'progress'; event: StreamProgressEvent }
+  | { type: 'result'; result: TransformResult }
+  | { type: 'error'; error: TransformError }
+  | { type: 'dismiss_error' };
 
 const initialState: State = {
   result: null,
@@ -51,9 +53,9 @@ const initialState: State = {
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "submit":
+    case 'submit':
       return { ...initialState, loading: true };
-    case "progress":
+    case 'progress':
       if (state.progress && isTerminalStreamProgressEvent(state.progress)) {
         return state;
       }
@@ -62,11 +64,11 @@ function reducer(state: State, action: Action): State {
         ...state,
         progress: normalizeStreamProgressEvent(action.event, state.progress),
       };
-    case "result":
+    case 'result':
       return { ...initialState, result: action.result };
-    case "error":
+    case 'error':
       return { ...initialState, error: action.error };
-    case "dismiss_error":
+    case 'dismiss_error':
       return { ...state, error: null };
   }
 }
@@ -82,7 +84,7 @@ export default function HomeClient() {
   const showResult = !loading && result !== null;
 
   function dismissError() {
-    dispatch({ type: "dismiss_error" });
+    dispatch({ type: 'dismiss_error' });
   }
 
   function invalidateActiveRequest(): void {
@@ -115,11 +117,11 @@ export default function HomeClient() {
 
   function dispatchIfRequestActive(
     session: RequestSession,
-    action: Exclude<Action, { type: "submit" | "dismiss_error" }>,
+    action: Exclude<Action, { type: 'submit' | 'dismiss_error' }>
   ): void {
     if (isActiveRequest(session)) {
       dispatch(action);
-      if (action.type === "result" || action.type === "error") {
+      if (action.type === 'result' || action.type === 'error') {
         clearInput();
       }
     }
@@ -137,32 +139,32 @@ export default function HomeClient() {
   function createRequestHandlers(session: RequestSession) {
     return {
       onProgress(event: StreamProgressEvent) {
-        dispatchIfRequestActive(session, { type: "progress", event });
+        dispatchIfRequestActive(session, { type: 'progress', event });
       },
       onResult(result: TransformResult) {
-        dispatchIfRequestActive(session, { type: "result", result });
+        dispatchIfRequestActive(session, { type: 'result', result });
       },
       onError(error: TransformError) {
-        dispatchIfRequestActive(session, { type: "error", error });
+        dispatchIfRequestActive(session, { type: 'error', error });
       },
     };
   }
 
   function handleSubmit(url: string) {
     const session = createRequestSession();
-    dispatch({ type: "submit" });
+    dispatch({ type: 'submit' });
 
     void submitTransformRequest(
       url,
       createRequestHandlers(session),
-      createClientTransformSignal(session.abortController),
+      createClientTransformSignal(session.abortController)
     )
       .catch((error) => {
         if (!isActiveRequest(session) || isAbortError(error)) {
           return;
         }
 
-        dispatch({ type: "error", error: mapClientTransformError(error) });
+        dispatch({ type: 'error', error: mapClientTransformError(error) });
         clearInput();
       })
       .finally(() => {
@@ -196,7 +198,7 @@ export default function HomeClient() {
             <Alert severity="error" onClose={dismissError}>
               <AlertTitle>{error.message}</AlertTitle>
               Code: {error.code}
-              {error.retryable && " · Retryable"}
+              {error.retryable && ' · Retryable'}
             </Alert>
           )}
         </Collapse>

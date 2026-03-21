@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { parseMcpResult } from "@/lib/mcp";
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { describe, expect, it } from 'vitest';
+
 import {
   createStreamProgressEvent,
   createTransformError,
@@ -8,29 +9,29 @@ import {
   isTransformErrorResponse,
   normalizeStreamProgressEvent,
   STREAM_PROGRESS_TOTAL,
-} from "@/lib/api";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+} from '@/lib/api';
+import { parseMcpResult } from '@/lib/mcp';
 
 type ParsedResult = ReturnType<typeof parseMcpResult>;
-type ParsedErrorResult = Extract<ParsedResult, { ok: false }>["error"];
+type ParsedErrorResult = Extract<ParsedResult, { ok: false }>['error'];
 
-function textContent(text: string): CallToolResult["content"] {
-  return [{ type: "text", text }] satisfies CallToolResult["content"];
+function textContent(text: string): CallToolResult['content'] {
+  return [{ type: 'text', text }] satisfies CallToolResult['content'];
 }
 
 function errorResult(
   code: string,
   message: string,
-  extra: Record<string, unknown> = {},
+  extra: Record<string, unknown> = {}
 ): CallToolResult {
   return {
     content: textContent(
       JSON.stringify({
         error: message,
         code,
-        url: "https://example.com",
+        url: 'https://example.com',
         ...extra,
-      }),
+      })
     ),
     isError: true,
   };
@@ -39,71 +40,71 @@ function errorResult(
 function expectErrorResult(parsed: ParsedResult): ParsedErrorResult {
   expect(parsed.ok).toBe(false);
   if (parsed.ok) {
-    throw new Error("Expected parseMcpResult to return an error result.");
+    throw new Error('Expected parseMcpResult to return an error result.');
   }
 
   return parsed.error;
 }
 
-describe("error mapper", () => {
+describe('error mapper', () => {
   it.each([
     {
-      code: "VALIDATION_ERROR",
-      message: "Blocked",
-      expectedCode: "VALIDATION_ERROR",
+      code: 'VALIDATION_ERROR',
+      message: 'Blocked',
+      expectedCode: 'VALIDATION_ERROR',
       retryable: false,
     },
     {
-      code: "FETCH_ERROR",
-      message: "Network",
-      expectedCode: "FETCH_ERROR",
+      code: 'FETCH_ERROR',
+      message: 'Network',
+      expectedCode: 'FETCH_ERROR',
       retryable: true,
     },
     {
-      code: "HTTP_503",
-      message: "Service Unavailable",
-      expectedCode: "HTTP_ERROR",
+      code: 'HTTP_503',
+      message: 'Service Unavailable',
+      expectedCode: 'HTTP_ERROR',
       retryable: true,
       statusCode: 503,
     },
     {
-      code: "HTTP_404",
-      message: "Not Found",
-      expectedCode: "HTTP_ERROR",
+      code: 'HTTP_404',
+      message: 'Not Found',
+      expectedCode: 'HTTP_ERROR',
       retryable: false,
       statusCode: 404,
     },
     {
-      code: "HTTP_429",
-      message: "Too many requests",
-      expectedCode: "HTTP_ERROR",
+      code: 'HTTP_429',
+      message: 'Too many requests',
+      expectedCode: 'HTTP_ERROR',
       retryable: false,
       statusCode: 429,
       details: { retryAfter: 60 },
     },
     {
-      code: "ABORTED",
-      message: "Cancelled",
-      expectedCode: "ABORTED",
+      code: 'ABORTED',
+      message: 'Cancelled',
+      expectedCode: 'ABORTED',
       retryable: true,
     },
     {
-      code: "queue_full",
-      message: "Worker pool busy",
-      expectedCode: "QUEUE_FULL",
+      code: 'queue_full',
+      message: 'Worker pool busy',
+      expectedCode: 'QUEUE_FULL',
       retryable: true,
     },
     {
-      code: "SOMETHING_ELSE",
-      message: "Unknown",
-      expectedCode: "INTERNAL_ERROR",
+      code: 'SOMETHING_ELSE',
+      message: 'Unknown',
+      expectedCode: 'INTERNAL_ERROR',
       retryable: false,
     },
   ])(
-    "maps $code to $expectedCode",
+    'maps $code to $expectedCode',
     ({ code, message, expectedCode, retryable, statusCode, details }) => {
       const error = expectErrorResult(
-        parseMcpResult(errorResult(code, message, { statusCode, details })),
+        parseMcpResult(errorResult(code, message, { statusCode, details }))
       );
 
       expect(error.code).toBe(expectedCode);
@@ -116,96 +117,96 @@ describe("error mapper", () => {
       if (details !== undefined) {
         expect(error.details).toEqual(details);
       }
-    },
+    }
   );
 
-  it("handles unparseable error response gracefully", () => {
+  it('handles unparseable error response gracefully', () => {
     const raw: CallToolResult = {
-      content: textContent("not json at all"),
+      content: textContent('not json at all'),
       isError: true,
     };
     const error = expectErrorResult(parseMcpResult(raw));
-    expect(error.code).toBe("INTERNAL_ERROR");
+    expect(error.code).toBe('INTERNAL_ERROR');
   });
 
-  it("reads machine-readable error payloads from structuredContent", () => {
+  it('reads machine-readable error payloads from structuredContent', () => {
     const raw: CallToolResult = {
       content: [],
       isError: true,
       structuredContent: {
-        error: "Upstream unavailable",
-        code: "FETCH_ERROR",
-        url: "https://example.com",
-        details: { reason: "timeout", timeout: 30_000 },
+        error: 'Upstream unavailable',
+        code: 'FETCH_ERROR',
+        url: 'https://example.com',
+        details: { reason: 'timeout', timeout: 30_000 },
       },
     };
 
     const error = expectErrorResult(parseMcpResult(raw));
-    expect(error.code).toBe("FETCH_ERROR");
+    expect(error.code).toBe('FETCH_ERROR');
     expect(error.retryable).toBe(true);
-    expect(error.details).toEqual({ reason: "timeout", timeout: 30_000 });
+    expect(error.details).toEqual({ reason: 'timeout', timeout: 30_000 });
   });
 
-  it("defaults streamed progress events to the shared total", () => {
+  it('defaults streamed progress events to the shared total', () => {
     expect(createStreamProgressEvent(3)).toEqual({
-      type: "progress",
+      type: 'progress',
       progress: 3,
       total: STREAM_PROGRESS_TOTAL,
-      message: "",
+      message: '',
     });
   });
 
-  it("normalizes progress monotonically against the previous event", () => {
+  it('normalizes progress monotonically against the previous event', () => {
     const previous = createStreamProgressEvent(
       5,
       STREAM_PROGRESS_TOTAL,
-      "Step 5",
+      'Step 5'
     );
     const normalized = normalizeStreamProgressEvent(
-      createStreamProgressEvent(3, 0, "Stale step"),
-      previous,
+      createStreamProgressEvent(3, 0, 'Stale step'),
+      previous
     );
 
     expect(normalized).toEqual({
-      type: "progress",
+      type: 'progress',
       progress: 5,
       total: STREAM_PROGRESS_TOTAL,
-      message: "Stale step",
+      message: 'Stale step',
     });
   });
 
-  it("detects terminal streamed progress events", () => {
+  it('detects terminal streamed progress events', () => {
     expect(
       isTerminalStreamProgressEvent(
-        createStreamProgressEvent(STREAM_PROGRESS_TOTAL, STREAM_PROGRESS_TOTAL),
-      ),
+        createStreamProgressEvent(STREAM_PROGRESS_TOTAL, STREAM_PROGRESS_TOTAL)
+      )
     ).toBe(true);
     expect(isTerminalStreamProgressEvent(createStreamProgressEvent(7, 8))).toBe(
-      false,
+      false
     );
   });
 
-  it("recognizes valid transform error objects", () => {
+  it('recognizes valid transform error objects', () => {
     expect(
-      isTransformError(createTransformError("FETCH_ERROR", "Upstream failed")),
+      isTransformError(createTransformError('FETCH_ERROR', 'Upstream failed'))
     ).toBe(true);
-    expect(isTransformError({ code: "FETCH_ERROR", retryable: true })).toBe(
-      false,
+    expect(isTransformError({ code: 'FETCH_ERROR', retryable: true })).toBe(
+      false
     );
   });
 
-  it("recognizes valid transform error responses", () => {
+  it('recognizes valid transform error responses', () => {
     expect(
       isTransformErrorResponse({
         ok: false,
-        error: createTransformError("VALIDATION_ERROR", "Invalid URL"),
-      }),
+        error: createTransformError('VALIDATION_ERROR', 'Invalid URL'),
+      })
     ).toBe(true);
     expect(
       isTransformErrorResponse({
         ok: false,
-        error: { code: "VALIDATION_ERROR" },
-      }),
+        error: { code: 'VALIDATION_ERROR' },
+      })
     ).toBe(false);
   });
 });

@@ -1,10 +1,10 @@
 export type TransformErrorCode =
-  | "VALIDATION_ERROR"
-  | "FETCH_ERROR"
-  | "HTTP_ERROR"
-  | "ABORTED"
-  | "QUEUE_FULL"
-  | "INTERNAL_ERROR";
+  | 'VALIDATION_ERROR'
+  | 'FETCH_ERROR'
+  | 'HTTP_ERROR'
+  | 'ABORTED'
+  | 'QUEUE_FULL'
+  | 'INTERNAL_ERROR';
 
 export interface TransformError {
   code: TransformErrorCode;
@@ -55,30 +55,30 @@ export type TransformResponse =
   | TransformErrorResponse;
 
 export interface StreamProgressEvent {
-  type: "progress";
+  type: 'progress';
   progress: number;
   total: number;
   message: string;
 }
 
-export type StreamResultEvent = { type: "result" } & TransformResponse;
+export type StreamResultEvent = { type: 'result' } & TransformResponse;
 
 export type StreamEvent = StreamProgressEvent | StreamResultEvent;
 
-export const NDJSON_CONTENT_TYPE = "application/x-ndjson";
+export const NDJSON_CONTENT_TYPE = 'application/x-ndjson';
 export const STREAM_PROGRESS_TOTAL = 8;
-const NETWORK_ERROR_MESSAGE = "Network error. Please try again.";
-const UNEXPECTED_RESPONSE_MESSAGE = "Unexpected response format.";
-const EMPTY_STREAM_MESSAGE = "";
+const NETWORK_ERROR_MESSAGE = 'Network error. Please try again.';
+const UNEXPECTED_RESPONSE_MESSAGE = 'Unexpected response format.';
+const EMPTY_STREAM_MESSAGE = '';
 
-type TransformErrorOptions = Omit<TransformError, "code" | "message">;
+type TransformErrorOptions = Omit<TransformError, 'code' | 'message'>;
 
 type JsonRecord = Record<string, unknown>;
 
 export function createTransformError(
   code: TransformErrorCode,
   message: string,
-  options: Partial<TransformErrorOptions> = {},
+  options: Partial<TransformErrorOptions> = {}
 ): TransformError {
   return {
     code,
@@ -93,19 +93,19 @@ export function createTransformError(
 
 export function createInternalError(
   message: string,
-  retryable = false,
+  retryable = false
 ): TransformError {
-  return createTransformError("INTERNAL_ERROR", message, { retryable });
+  return createTransformError('INTERNAL_ERROR', message, { retryable });
 }
 
 export function createNetworkError(): TransformError {
   return createInternalError(NETWORK_ERROR_MESSAGE, true);
 }
 
-const TIMEOUT_ERROR_MESSAGE = "Request timed out. Please try again.";
+const TIMEOUT_ERROR_MESSAGE = 'Request timed out. Please try again.';
 
 export function createTimeoutError(): TransformError {
-  return createTransformError("ABORTED", TIMEOUT_ERROR_MESSAGE, {
+  return createTransformError('ABORTED', TIMEOUT_ERROR_MESSAGE, {
     retryable: true,
   });
 }
@@ -116,7 +116,7 @@ export function createUnexpectedResponseError(): TransformError {
 
 function resolveProgressTotal(
   total: number | undefined,
-  fallback = STREAM_PROGRESS_TOTAL,
+  fallback = STREAM_PROGRESS_TOTAL
 ): number {
   return total !== undefined && total > 0 ? total : fallback;
 }
@@ -124,10 +124,10 @@ function resolveProgressTotal(
 export function createStreamProgressEvent(
   progress: number,
   total?: number,
-  message?: string,
+  message?: string
 ): StreamProgressEvent {
   return {
-    type: "progress",
+    type: 'progress',
     progress,
     total: resolveProgressTotal(total),
     message: message ?? EMPTY_STREAM_MESSAGE,
@@ -136,7 +136,7 @@ export function createStreamProgressEvent(
 
 export function normalizeStreamProgressEvent(
   event: StreamProgressEvent,
-  previous?: StreamProgressEvent | null,
+  previous?: StreamProgressEvent | null
 ): StreamProgressEvent {
   const total = resolveProgressTotal(event.total, previous?.total);
   const progress = Math.max(event.progress, previous?.progress ?? 0);
@@ -145,29 +145,29 @@ export function normalizeStreamProgressEvent(
 }
 
 export function isTerminalStreamProgressEvent(
-  event: StreamProgressEvent,
+  event: StreamProgressEvent
 ): boolean {
   return event.progress >= event.total;
 }
 
 export function hasTransformResult(
-  response: TransformResponse,
+  response: TransformResponse
 ): response is TransformSuccessResponse {
   return response.ok && response.result != null;
 }
 
 export function hasTransformError(
-  response: TransformResponse,
+  response: TransformResponse
 ): response is TransformErrorResponse {
   return !response.ok && response.error != null;
 }
 
 function isRecord(value: unknown): value is JsonRecord {
-  return typeof value === "object" && value !== null;
+  return typeof value === 'object' && value !== null;
 }
 
-function isStreamEventType(type: unknown): type is StreamEvent["type"] {
-  return type === "progress" || type === "result";
+function isStreamEventType(type: unknown): type is StreamEvent['type'] {
+  return type === 'progress' || type === 'result';
 }
 
 export function isStreamEvent(value: unknown): value is StreamEvent {
@@ -180,14 +180,14 @@ export function isTransformError(value: unknown): value is TransformError {
   }
 
   return (
-    typeof value.code === "string" &&
-    typeof value.message === "string" &&
-    typeof value.retryable === "boolean"
+    typeof value.code === 'string' &&
+    typeof value.message === 'string' &&
+    typeof value.retryable === 'boolean'
   );
 }
 
 export function isTransformErrorResponse(
-  value: unknown,
+  value: unknown
 ): value is TransformErrorResponse {
   if (!isRecord(value) || value.ok !== false) {
     return false;

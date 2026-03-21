@@ -1,5 +1,6 @@
-import type { MetadataRoute } from "next";
-import { resolveSiteUrl } from "@/lib/site";
+import type { MetadataRoute } from 'next';
+
+import { resolveSiteUrl } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = resolveSiteUrl();
@@ -7,7 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: siteUrl.toString(),
-      changeFrequency: "weekly",
+      changeFrequency: 'weekly',
       priority: 1,
     },
   ];

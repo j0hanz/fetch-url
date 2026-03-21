@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useColorScheme } from "@mui/material/styles";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import SettingsBrightnessIcon from "@mui/icons-material/SettingsBrightness";
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
+import IconButton from '@mui/material/IconButton';
+import { useColorScheme } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
 
-type Mode = "light" | "dark" | "system";
+type Mode = 'light' | 'dark' | 'system';
 
 const MODE_CYCLE: Record<Mode, Mode> = {
-  light: "dark",
-  dark: "system",
-  system: "light",
+  light: 'dark',
+  dark: 'system',
+  system: 'light',
 };
 
 const MODE_ICON: Record<Mode, typeof DarkModeIcon> = {
@@ -22,14 +22,14 @@ const MODE_ICON: Record<Mode, typeof DarkModeIcon> = {
 };
 
 const MODE_LABEL: Record<Mode, string> = {
-  light: "Light mode",
-  dark: "Dark mode",
-  system: "System mode",
+  light: 'Light mode',
+  dark: 'Dark mode',
+  system: 'System mode',
 };
-const THEME_ICON_SX = { fontSize: { xs: "1.25rem", sm: "1.5rem" } } as const;
+const THEME_ICON_SX = { fontSize: { xs: '1.25rem', sm: '1.5rem' } } as const;
 
 function isMode(value: string | undefined): value is Mode {
-  return value === "light" || value === "dark" || value === "system";
+  return value === 'light' || value === 'dark' || value === 'system';
 }
 
 export default function ThemeToggle() {

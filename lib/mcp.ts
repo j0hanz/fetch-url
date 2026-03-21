@@ -1,24 +1,37 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { readFileSync } from 'node:fs';
+import { findPackageJSON } from 'node:module';
+import path from 'node:path';
+
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type {
   CallToolResult,
   Progress,
-} from "@modelcontextprotocol/sdk/types.js";
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import path from "node:path";
+} from '@modelcontextprotocol/sdk/types.js';
+import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+
 import type {
   TransformError,
   TransformMetadata,
   TransformResult,
-} from "@/lib/api";
-import { createInternalError, createTransformError } from "@/lib/api";
+} from '@/lib/api';
+import { createInternalError, createTransformError } from '@/lib/api';
 
 export interface FetchUrlArgs {
   url: string;
 }
 
-const CLIENT_INFO = { name: "page-converter", version: "1.0.0" };
-const FETCH_URL_TOOL_NAME = "fetch-url";
+function readPackageVersion(): string {
+  const pkgPath = findPackageJSON('..', import.meta.url);
+  if (!pkgPath) return '0.0.0';
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8')) as {
+    version?: string;
+  };
+  return pkg.version ?? '0.0.0';
+}
+
+const CLIENT_INFO = { name: 'page-converter', version: readPackageVersion() };
+const FETCH_URL_TOOL_NAME = 'fetch-url';
 
 export type ProgressCallback = (progress: Progress) => void;
 
@@ -50,7 +63,7 @@ function createTransport(): StdioClientTransport {
   const transport = new StdioClientTransport({
     command,
     args,
-    stderr: "pipe",
+    stderr: 'pipe',
   });
 
   attachTransportDiagnostics(transport);
@@ -125,7 +138,7 @@ function createRequestOptions(options?: FetchUrlCallOptions): {
 
 export async function callFetchUrl(
   args: FetchUrlArgs,
-  options?: FetchUrlCallOptions,
+  options?: FetchUrlCallOptions
 ): Promise<CallToolResult> {
   const client = await getConnectedClient();
 
@@ -136,7 +149,7 @@ export async function callFetchUrl(
         arguments: { url: args.url },
       },
       undefined,
-      createRequestOptions(options),
+      createRequestOptions(options)
     );
 
     return result as CallToolResult;
@@ -149,7 +162,7 @@ export async function callFetchUrl(
 }
 
 function shouldResetInstance(error: unknown): boolean {
-  if (error instanceof Error && error.name === "AbortError") {
+  if (error instanceof Error && error.name === 'AbortError') {
     return false;
   }
 
@@ -166,18 +179,18 @@ function shouldResetInstance(error: unknown): boolean {
 }
 
 export function getFetchUrlTransportConfig(
-  currentWorkingDirectory: string = process.cwd(),
+  currentWorkingDirectory: string = process.cwd()
 ): TransportConfig {
   return {
     command: process.execPath,
     args: [
       path.join(
         currentWorkingDirectory,
-        "node_modules",
-        "@j0hanz",
-        "fetch-url-mcp",
-        "dist",
-        "index.js",
+        'node_modules',
+        '@j0hanz',
+        'fetch-url-mcp',
+        'dist',
+        'index.js'
       ),
     ],
   };
@@ -185,29 +198,29 @@ export function getFetchUrlTransportConfig(
 
 const MAX_STDERR_BUFFER_LENGTH = 4000;
 const MCP_MAX_TOTAL_TIMEOUT = 120_000;
-const HTTP_ERROR_CODE_PREFIX = "HTTP_";
-const UNKNOWN_MCP_ERROR_MESSAGE = "Unknown MCP error";
-const EMPTY_MCP_RESPONSE_MESSAGE = "Empty MCP response";
-const INVALID_MCP_RESPONSE_MESSAGE = "Failed to parse MCP response as JSON";
-const INVALID_MCP_ERROR_RESPONSE_MESSAGE = "Failed to parse MCP error response";
+const HTTP_ERROR_CODE_PREFIX = 'HTTP_';
+const UNKNOWN_MCP_ERROR_MESSAGE = 'Unknown MCP error';
+const EMPTY_MCP_RESPONSE_MESSAGE = 'Empty MCP response';
+const INVALID_MCP_RESPONSE_MESSAGE = 'Failed to parse MCP response as JSON';
+const INVALID_MCP_ERROR_RESPONSE_MESSAGE = 'Failed to parse MCP error response';
 
 const KNOWN_MCP_ERRORS = {
-  VALIDATION_ERROR: { code: "VALIDATION_ERROR", retryable: false },
-  FETCH_ERROR: { code: "FETCH_ERROR", retryable: true },
-  ABORTED: { code: "ABORTED", retryable: true },
-  queue_full: { code: "QUEUE_FULL", retryable: true },
+  VALIDATION_ERROR: { code: 'VALIDATION_ERROR', retryable: false },
+  FETCH_ERROR: { code: 'FETCH_ERROR', retryable: true },
+  ABORTED: { code: 'ABORTED', retryable: true },
+  queue_full: { code: 'QUEUE_FULL', retryable: true },
 } as const;
 
 function attachTransportDiagnostics(transport: StdioClientTransport): void {
   globalForMcp.__mcpLastStderr = undefined;
 
-  transport.stderr?.on("data", (chunk: string | Buffer) => {
+  transport.stderr?.on('data', (chunk: string | Buffer) => {
     globalForMcp.__mcpLastStderr = appendStderrChunk(String(chunk));
   });
 }
 
 function appendStderrChunk(chunk: string): string {
-  const stderr = `${globalForMcp.__mcpLastStderr ?? ""}${chunk}`;
+  const stderr = `${globalForMcp.__mcpLastStderr ?? ''}${chunk}`;
   return stderr.slice(-MAX_STDERR_BUFFER_LENGTH);
 }
 
@@ -224,7 +237,7 @@ function createTransportError(error: unknown): Error {
     const transportError = new McpError(
       error.code,
       transportErrorMessage,
-      error.data,
+      error.data
     );
     if (error.stack) {
       transportError.stack = error.stack;
@@ -247,8 +260,8 @@ type KnownMcpErrorDefinition = (typeof KNOWN_MCP_ERRORS)[KnownMcpErrorCode];
 
 function createOptionalErrorFields(
   statusCode?: number,
-  details?: TransformError["details"],
-): Partial<Pick<TransformError, "details" | "statusCode">> {
+  details?: TransformError['details']
+): Partial<Pick<TransformError, 'details' | 'statusCode'>> {
   return {
     ...(statusCode !== undefined ? { statusCode } : {}),
     ...(details ? { details } : {}),
@@ -267,7 +280,7 @@ function readKnownMcpError(code: string): KnownMcpErrorDefinition | undefined {
  * Maps an MCP error code string to a TransformError.
  */
 function mapMcpError(errorPayload: JsonRecord): TransformError {
-  const code = readString(errorPayload.code) ?? "";
+  const code = readString(errorPayload.code) ?? '';
   const message = readMcpErrorMessage(errorPayload);
   const knownError = readKnownMcpError(code);
   const statusCode = readInteger(errorPayload.statusCode);
@@ -288,17 +301,17 @@ function mapUnknownMcpError(
   code: string,
   message: string,
   statusCode?: number,
-  details?: TransformError["details"],
+  details?: TransformError['details']
 ): TransformError {
   const optionalFields = createOptionalErrorFields(statusCode, details);
   if (!code.startsWith(HTTP_ERROR_CODE_PREFIX)) {
-    return createTransformError("INTERNAL_ERROR", message, {
+    return createTransformError('INTERNAL_ERROR', message, {
       ...optionalFields,
     });
   }
 
   const resolvedStatusCode = statusCode ?? readHttpStatusCode(code);
-  return createTransformError("HTTP_ERROR", message, {
+  return createTransformError('HTTP_ERROR', message, {
     retryable: resolvedStatusCode !== undefined && resolvedStatusCode >= 500,
     ...createOptionalErrorFields(resolvedStatusCode, details),
   });
@@ -307,7 +320,7 @@ function mapUnknownMcpError(
 function readHttpStatusCode(code: string): number | undefined {
   const statusCode = Number.parseInt(
     code.slice(HTTP_ERROR_CODE_PREFIX.length),
-    10,
+    10
   );
   return Number.isNaN(statusCode) ? undefined : statusCode;
 }
@@ -330,12 +343,12 @@ function extractMetadata(data: JsonRecord): TransformMetadata {
 
 function mapToTransformResult(data: JsonRecord): TransformResult {
   return {
-    url: readFirstString(data.url, data.inputUrl) ?? "",
+    url: readFirstString(data.url, data.inputUrl) ?? '',
     resolvedUrl: readString(data.resolvedUrl),
     finalUrl: readString(data.finalUrl),
     title: readString(data.title),
     metadata: extractMetadata(data),
-    markdown: readString(data.markdown) ?? "",
+    markdown: readString(data.markdown) ?? '',
     fromCache: readBoolean(data.fromCache) ?? false,
     fetchedAt: readString(data.fetchedAt) ?? new Date().toISOString(),
     contentSize: readNumber(data.contentSize) ?? 0,
@@ -349,7 +362,7 @@ export type ParsedMcpResult =
 
 export function parseMcpResult(raw: CallToolResult): ParsedMcpResult {
   const payloadState = readPayloadRecord(raw);
-  if (!("payload" in payloadState)) {
+  if (!('payload' in payloadState)) {
     return createPayloadParseFailure(raw.isError === true, payloadState.kind);
   }
 
@@ -359,41 +372,41 @@ export function parseMcpResult(raw: CallToolResult): ParsedMcpResult {
 }
 
 type PayloadReadState =
-  | { kind: "structured" | "text"; payload: JsonRecord }
-  | { kind: "invalid_text" | "missing" };
+  | { kind: 'structured' | 'text'; payload: JsonRecord }
+  | { kind: 'invalid_text' | 'missing' };
 
 function readPayloadRecord(raw: CallToolResult): PayloadReadState {
   const structuredPayload = asRecord(raw.structuredContent);
   if (structuredPayload) {
-    return { kind: "structured", payload: structuredPayload };
+    return { kind: 'structured', payload: structuredPayload };
   }
 
   const text = getFirstTextBlock(raw);
   if (text === null) {
-    return { kind: "missing" };
+    return { kind: 'missing' };
   }
 
   const payload = parseJsonRecord(text);
-  return payload ? { kind: "text", payload } : { kind: "invalid_text" };
+  return payload ? { kind: 'text', payload } : { kind: 'invalid_text' };
 }
 
 function createErrorResult(payload: JsonRecord): ParsedMcpResult {
   return {
     ok: false,
-    error: mapMcpError(unwrapRecord(payload, "error")),
+    error: mapMcpError(unwrapRecord(payload, 'error')),
   };
 }
 
 function createSuccessResult(payload: JsonRecord): ParsedMcpResult {
   return {
     ok: true,
-    result: mapToTransformResult(unwrapRecord(payload, "result")),
+    result: mapToTransformResult(unwrapRecord(payload, 'result')),
   };
 }
 
 function createPayloadParseFailure(
   isError: boolean,
-  kind: Extract<PayloadReadState, { kind: "invalid_text" | "missing" }>["kind"],
+  kind: Extract<PayloadReadState, { kind: 'invalid_text' | 'missing' }>['kind']
 ): ParsedMcpResult {
   if (isError) {
     return {
@@ -402,7 +415,7 @@ function createPayloadParseFailure(
     };
   }
 
-  if (kind === "invalid_text") {
+  if (kind === 'invalid_text') {
     return {
       ok: false,
       error: createInternalError(INVALID_MCP_RESPONSE_MESSAGE),
@@ -417,7 +430,7 @@ function createPayloadParseFailure(
 
 function getFirstTextBlock(raw: CallToolResult): string | null {
   const [firstContent] = raw.content;
-  if (firstContent?.type !== "text") {
+  if (firstContent?.type !== 'text') {
     return null;
   }
 
@@ -436,8 +449,8 @@ function readMcpErrorMessage(errorPayload: JsonRecord): string {
 }
 
 function readErrorDetails(
-  errorPayload: JsonRecord,
-): TransformError["details"] | undefined {
+  errorPayload: JsonRecord
+): TransformError['details'] | undefined {
   const details = asRecord(errorPayload.details);
   if (!details) {
     return undefined;
@@ -448,8 +461,8 @@ function readErrorDetails(
   const reason = readString(details.reason);
   const mappedDetails = omitUndefinedFields({
     retryAfter:
-      typeof retryAfter === "number" ||
-      typeof retryAfter === "string" ||
+      typeof retryAfter === 'number' ||
+      typeof retryAfter === 'string' ||
       retryAfter === null
         ? retryAfter
         : undefined,
@@ -469,7 +482,7 @@ function parseJsonRecord(value: string): JsonRecord | null {
 }
 
 function asRecord(value: unknown): JsonRecord | null {
-  return typeof value === "object" && value !== null
+  return typeof value === 'object' && value !== null
     ? (value as JsonRecord)
     : null;
 }
@@ -480,7 +493,7 @@ function compactMetadata(metadata: TransformMetadata): TransformMetadata {
 
 function omitUndefinedFields<T extends object>(value: T): Partial<T> {
   return Object.fromEntries(
-    Object.entries(value).filter(([, item]) => item !== undefined),
+    Object.entries(value).filter(([, item]) => item !== undefined)
   ) as Partial<T>;
 }
 
@@ -496,15 +509,15 @@ function readFirstString(...values: unknown[]): string | undefined {
 }
 
 function readString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
+  return typeof value === 'string' ? value : undefined;
 }
 
 function readBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
+  return typeof value === 'boolean' ? value : undefined;
 }
 
 function readNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value)
+  return typeof value === 'number' && Number.isFinite(value)
     ? value
     : undefined;
 }

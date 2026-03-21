@@ -1,4 +1,12 @@
-import { ImageResponse } from "next/og";
+import { ImageResponse } from 'next/og';
+
+import {
+  SITE_NAME,
+  SITE_TAGLINE,
+  SOCIAL_IMAGE_ALT,
+  SOCIAL_IMAGE_CONTENT_TYPE,
+  SOCIAL_IMAGE_SIZE,
+} from '@/lib/site';
 import {
   DARK_SOCIAL_PALETTE,
   SocialBody,
@@ -8,14 +16,7 @@ import {
   SocialImageContent,
   SocialImageFrame,
   SocialTitle,
-} from "@/lib/social-image";
-import {
-  SITE_NAME,
-  SITE_TAGLINE,
-  SOCIAL_IMAGE_ALT,
-  SOCIAL_IMAGE_CONTENT_TYPE,
-  SOCIAL_IMAGE_SIZE,
-} from "@/lib/site";
+} from '@/lib/social-image';
 
 export const alt = SOCIAL_IMAGE_ALT;
 export const size = SOCIAL_IMAGE_SIZE;
@@ -23,19 +24,19 @@ export const contentType = SOCIAL_IMAGE_CONTENT_TYPE;
 
 const TWITTER_FEATURES = [
   {
-    label: "Preview",
-    backgroundColor: "rgba(59, 130, 246, 0.2)",
-    color: "#f8fafc",
+    label: 'Preview',
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    color: '#f8fafc',
   },
   {
-    label: "Copy",
-    backgroundColor: "rgba(16, 185, 129, 0.2)",
-    color: "#f8fafc",
+    label: 'Copy',
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    color: '#f8fafc',
   },
   {
-    label: "Download",
-    backgroundColor: "rgba(139, 92, 246, 0.2)",
-    color: "#f8fafc",
+    label: 'Download',
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    color: '#f8fafc',
   },
 ] as const;
 
@@ -60,6 +61,6 @@ export default function TwitterImage() {
         ))}
       </SocialFeatureList>
     </SocialImageFrame>,
-    size,
+    size
   );
 }

@@ -2,12 +2,12 @@ export interface TransformRequest {
   url: string;
 }
 
-const BODY_MUST_BE_OBJECT_MESSAGE = "Request body must be a JSON object.";
+const BODY_MUST_BE_OBJECT_MESSAGE = 'Request body must be a JSON object.';
 const URL_REQUIRED_MESSAGE =
   'Field "url" is required and must be a non-empty string.';
 const URL_INVALID_MESSAGE = 'Field "url" must be a valid URL.';
 const URL_PROTOCOL_MESSAGE = 'Field "url" must use http: or https: scheme.';
-const SUPPORTED_PROTOCOLS = new Set<URL["protocol"]>(["http:", "https:"]);
+const SUPPORTED_PROTOCOLS = new Set<URL['protocol']>(['http:', 'https:']);
 
 type TransformRequestRecord = Record<string, unknown>;
 type TransformRequestField = keyof TransformRequest;
@@ -19,13 +19,13 @@ const TRANSFORM_REQUEST_PARSERS = {
   url: parseValidatedUrl,
 } satisfies TransformRequestParserMap;
 const ALLOWED_FIELDS = new Set<TransformRequestField>(
-  Object.keys(TRANSFORM_REQUEST_PARSERS) as TransformRequestField[],
+  Object.keys(TRANSFORM_REQUEST_PARSERS) as TransformRequestField[]
 );
 
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "ValidationError";
+    this.name = 'ValidationError';
   }
 }
 
@@ -37,7 +37,7 @@ export function validateTransformRequest(body: unknown): TransformRequest {
 }
 
 function parseTransformRequestRecord(
-  record: TransformRequestRecord,
+  record: TransformRequestRecord
 ): TransformRequest {
   return {
     url: TRANSFORM_REQUEST_PARSERS.url(record.url),
@@ -54,7 +54,7 @@ function requireTransformRequestRecord(body: unknown): TransformRequestRecord {
 
 function assertAllowedFields(record: TransformRequestRecord): void {
   const unexpectedField = Object.keys(record).find(
-    (key) => !isAllowedField(key),
+    (key) => !isAllowedField(key)
   );
   if (unexpectedField !== undefined) {
     throw new ValidationError(`Unknown field: "${unexpectedField}".`);
@@ -73,12 +73,12 @@ function parseValidatedUrl(value: unknown): string {
 }
 
 function readRequiredTrimmedString(value: unknown): string {
-  if (typeof value !== "string") {
+  if (typeof value !== 'string') {
     throw new ValidationError(URL_REQUIRED_MESSAGE);
   }
 
   const trimmed = value.trim();
-  if (trimmed === "") {
+  if (trimmed === '') {
     throw new ValidationError(URL_REQUIRED_MESSAGE);
   }
 
@@ -94,10 +94,10 @@ function parseUrl(value: string): URL {
 }
 
 function isRecordObject(value: unknown): value is TransformRequestRecord {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function assertSupportedProtocol(protocol: URL["protocol"]): void {
+function assertSupportedProtocol(protocol: URL['protocol']): void {
   if (!SUPPORTED_PROTOCOLS.has(protocol)) {
     throw new ValidationError(URL_PROTOCOL_MESSAGE);
   }

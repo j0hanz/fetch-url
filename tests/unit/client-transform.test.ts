@@ -1,27 +1,28 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   createClientTransformSignal,
   mapClientTransformError,
   submitTransformRequest,
-} from "@/lib/client-transform";
+} from '@/lib/client-transform';
 
-const VALID_URL = "https://example.com";
+const VALID_URL = 'https://example.com';
 
-describe("client-transform", () => {
+describe('client-transform', () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
-  it("submits a trimmed request body to the transform endpoint", async () => {
+  it('submits a trimmed request body to the transform endpoint', async () => {
     const onError = vi.fn();
     global.fetch = vi.fn().mockResolvedValue({
-      headers: new Headers({ "Content-Type": "application/json" }),
+      headers: new Headers({ 'Content-Type': 'application/json' }),
       json: () =>
         Promise.resolve({
           ok: false,
           error: {
-            code: "VALIDATION_ERROR",
-            message: "Invalid URL",
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid URL',
             retryable: false,
           },
         }),
@@ -30,108 +31,108 @@ describe("client-transform", () => {
     await submitTransformRequest(
       `  ${VALID_URL}  `,
       { onError, onProgress: vi.fn(), onResult: vi.fn() },
-      createClientTransformSignal(new AbortController()),
+      createClientTransformSignal(new AbortController())
     );
 
     const [requestUrl, requestInit] =
       vi.mocked(global.fetch).mock.calls[0] ?? [];
 
-    expect(requestUrl).toBe("/api/transform");
+    expect(requestUrl).toBe('/api/transform');
     expect(requestInit).toMatchObject({
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: VALID_URL }),
     });
     expect(requestInit?.signal).toBeInstanceOf(AbortSignal);
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ code: "VALIDATION_ERROR" }),
+      expect.objectContaining({ code: 'VALIDATION_ERROR' })
     );
   });
 
-  it("forwards streamed progress and final result events", async () => {
+  it('forwards streamed progress and final result events', async () => {
     const onProgress = vi.fn();
     const onResult = vi.fn();
     global.fetch = vi.fn().mockResolvedValue(
       createMockStreamResponse([
-        { type: "progress", progress: 1, total: 8, message: "Fetching" },
+        { type: 'progress', progress: 1, total: 8, message: 'Fetching' },
         {
-          type: "result",
+          type: 'result',
           ok: true,
           result: {
             url: VALID_URL,
-            markdown: "# Example",
+            markdown: '# Example',
             metadata: {},
             fromCache: false,
-            fetchedAt: "2026-03-20T00:00:00.000Z",
+            fetchedAt: '2026-03-20T00:00:00.000Z',
             contentSize: 9,
             truncated: false,
           },
         },
-      ]),
+      ])
     );
 
     await submitTransformRequest(
       VALID_URL,
       { onError: vi.fn(), onProgress, onResult },
-      createClientTransformSignal(new AbortController()),
+      createClientTransformSignal(new AbortController())
     );
 
     expect(onProgress).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "progress", progress: 1 }),
+      expect.objectContaining({ type: 'progress', progress: 1 })
     );
     expect(onResult).toHaveBeenCalledWith(
-      expect.objectContaining({ url: VALID_URL, markdown: "# Example" }),
+      expect.objectContaining({ url: VALID_URL, markdown: '# Example' })
     );
   });
 
-  it("reports truncated streams as unexpected responses", async () => {
+  it('reports truncated streams as unexpected responses', async () => {
     const onError = vi.fn();
     global.fetch = vi
       .fn()
       .mockResolvedValue(
         createMockStreamResponse([
-          { type: "progress", progress: 1, total: 8, message: "Fetching" },
-        ]),
+          { type: 'progress', progress: 1, total: 8, message: 'Fetching' },
+        ])
       );
 
     await submitTransformRequest(
       VALID_URL,
       { onError, onProgress: vi.fn(), onResult: vi.fn() },
-      createClientTransformSignal(new AbortController()),
+      createClientTransformSignal(new AbortController())
     );
 
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({
-        code: "INTERNAL_ERROR",
-        message: "Unexpected response format.",
-      }),
+        code: 'INTERNAL_ERROR',
+        message: 'Unexpected response format.',
+      })
     );
   });
 
-  it("maps timeout errors to retryable abort responses", () => {
+  it('maps timeout errors to retryable abort responses', () => {
     expect(
-      mapClientTransformError(new DOMException("Timed out", "TimeoutError")),
+      mapClientTransformError(new DOMException('Timed out', 'TimeoutError'))
     ).toEqual(
       expect.objectContaining({
-        code: "ABORTED",
+        code: 'ABORTED',
         retryable: true,
-      }),
+      })
     );
   });
 
-  it("maps generic failures to network errors", () => {
-    expect(mapClientTransformError(new Error("Network fail"))).toEqual(
+  it('maps generic failures to network errors', () => {
+    expect(mapClientTransformError(new Error('Network fail'))).toEqual(
       expect.objectContaining({
-        code: "INTERNAL_ERROR",
-        message: "Network error. Please try again.",
+        code: 'INTERNAL_ERROR',
+        message: 'Network error. Please try again.',
         retryable: true,
-      }),
+      })
     );
   });
 });
 
 function createNdjsonStream(lines: unknown[]): ReadableStream<Uint8Array> {
-  const text = lines.map((line) => JSON.stringify(line) + "\n").join("");
+  const text = lines.map((line) => JSON.stringify(line) + '\n').join('');
   const encoded = new TextEncoder().encode(text);
 
   return new ReadableStream({
@@ -144,7 +145,7 @@ function createNdjsonStream(lines: unknown[]): ReadableStream<Uint8Array> {
 
 function createMockStreamResponse(lines: unknown[]) {
   return {
-    headers: new Headers({ "Content-Type": "application/x-ndjson" }),
+    headers: new Headers({ 'Content-Type': 'application/x-ndjson' }),
     body: createNdjsonStream(lines),
   };
 }

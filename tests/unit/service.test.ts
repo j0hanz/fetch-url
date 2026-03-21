@@ -1,14 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  type CallToolResult,
   ErrorCode,
   McpError,
-  type CallToolResult,
-} from "@modelcontextprotocol/sdk/types.js";
-import { transformUrl } from "@/lib/transform";
-import { callFetchUrl } from "@/lib/mcp";
+} from '@modelcontextprotocol/sdk/types.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock("@/lib/mcp", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/mcp")>();
+import { callFetchUrl } from '@/lib/mcp';
+import { transformUrl } from '@/lib/transform';
+
+vi.mock('@/lib/mcp', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/mcp')>();
   return {
     ...actual,
     callFetchUrl: vi.fn(),
@@ -16,30 +17,30 @@ vi.mock("@/lib/mcp", async (importOriginal) => {
 });
 
 const callFetchUrlMock = vi.mocked(callFetchUrl);
-const VALID_REQUEST = { url: "https://example.com" };
+const VALID_REQUEST = { url: 'https://example.com' };
 
 const successResult: CallToolResult = {
   content: [],
   structuredContent: {
-    url: "https://example.com",
-    markdown: "# Example",
+    url: 'https://example.com',
+    markdown: '# Example',
     metadata: {},
     fromCache: false,
-    fetchedAt: "2026-03-11T00:00:00.000Z",
+    fetchedAt: '2026-03-11T00:00:00.000Z',
     contentSize: 9,
     truncated: false,
   },
 };
 
-describe("transformUrl", () => {
+describe('transformUrl', () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
-  it("retries once for retryable MCP transport errors", async () => {
+  it('retries once for retryable MCP transport errors', async () => {
     callFetchUrlMock
       .mockRejectedValueOnce(
-        new McpError(ErrorCode.RequestTimeout, "Request timed out"),
+        new McpError(ErrorCode.RequestTimeout, 'Request timed out')
       )
       .mockResolvedValueOnce(successResult);
 
@@ -49,9 +50,9 @@ describe("transformUrl", () => {
     expect(response.ok).toBe(true);
   });
 
-  it("does not retry non-retryable MCP transport errors", async () => {
+  it('does not retry non-retryable MCP transport errors', async () => {
     callFetchUrlMock.mockRejectedValueOnce(
-      new McpError(ErrorCode.MethodNotFound, "tools/call not supported"),
+      new McpError(ErrorCode.MethodNotFound, 'tools/call not supported')
     );
 
     const response = await transformUrl(VALID_REQUEST);
@@ -59,26 +60,26 @@ describe("transformUrl", () => {
     expect(callFetchUrlMock).toHaveBeenCalledTimes(1);
     expect(response.ok).toBe(false);
     if (response.ok) {
-      throw new Error("Expected transformUrl to return an error response.");
+      throw new Error('Expected transformUrl to return an error response.');
     }
 
-    expect(response.error.code).toBe("INTERNAL_ERROR");
+    expect(response.error.code).toBe('INTERNAL_ERROR');
     expect(response.error.retryable).toBe(false);
   });
 
-  it("forwards the abort signal to the MCP client call", async () => {
+  it('forwards the abort signal to the MCP client call', async () => {
     const abortController = new AbortController();
     callFetchUrlMock.mockResolvedValueOnce(successResult);
 
     const response = await transformUrl(
       VALID_REQUEST,
       undefined,
-      abortController.signal,
+      abortController.signal
     );
 
     expect(callFetchUrlMock).toHaveBeenCalledWith(
       VALID_REQUEST,
-      expect.objectContaining({ signal: abortController.signal }),
+      expect.objectContaining({ signal: abortController.signal })
     );
     expect(response.ok).toBe(true);
   });
