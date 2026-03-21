@@ -1,32 +1,27 @@
-# How Page Converter Works
+# How It Works
 
-Page Converter turns a web page into clean Markdown in four simple steps.
+Page Converter turns a web page into clean, readable text in just a few seconds. Here's what happens when you use it:
 
 ## 1. Paste a Link
 
-Add a public web link and start.
+Copy the address of any public web page and paste it into the input field. Press **Convert** to begin.
 
-## 2. Read the Page
+## 2. The Page Is Cleaned Up
 
-The app gets the page and keeps the main text.
-It removes ads, popups, menus, and other page noise.
+Page Converter reads the web page and extracts the meaningful content — the article text, headings, lists, and tables. Everything else — ads, pop-ups, navigation menus, cookie banners, and other distractions — is automatically removed.
 
-## 3. See Live Progress
+## 3. Follow Along in Real Time
 
-You can follow progress while the page is being converted.
+A live progress indicator shows you each step as it happens, so you always know where things stand.
 
-## 4. Get the Result
+## 4. Your Clean Text Is Ready
 
-Your Markdown is ready right away.
-You can preview it, copy it, or download it as a `.md` file.
+Once processing is complete, you get the result right away. From there, you can:
 
----
+- **Preview** it in a nicely formatted view inside the app.
+- **Copy** it to your clipboard with a single click.
+- **Download** it as a file to keep on your device.
 
-## Tools Used
+## Example
 
-| Part                | Tool                                                            |
-| :------------------ | :-------------------------------------------------------------- |
-| Interface           | [React](https://react.dev) + [Material UI](https://mui.com)     |
-| App platform        | [Next.js](https://nextjs.org)                                   |
-| Background service  | [Model Context Protocol (MCP)](https://modelcontextprotocol.io) |
-| Faster repeat links | Built-in cache                                                  |
+You're researching a topic and want to ask an AI assistant about a specific article. Instead of copying messy text full of menu links and ads, paste the page URL into Page Converter. A few seconds later, you have the clean article text — ready to drop into ChatGPT, Claude, or your notes app with all the formatting intact.
