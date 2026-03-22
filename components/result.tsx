@@ -190,63 +190,6 @@ function useCopyFeedback(markdown: string) {
   };
 }
 
-interface ResultActionsProps {
-  copyStatus: CopyStatus;
-  onCopy: () => void | Promise<void>;
-  onDownload: () => void;
-}
-
-function ResultActions({ copyStatus, onCopy, onDownload }: ResultActionsProps) {
-  return (
-    <Stack direction="row" spacing={1}>
-      <ResultActionButton
-        ariaLabel="Copy Markdown"
-        title="Copy Markdown"
-        onClick={() => {
-          void onCopy();
-        }}
-        color={COPY_STATUS_DETAILS[copyStatus].color}
-      >
-        <ContentCopyIcon fontSize="small" />
-      </ResultActionButton>
-      <ResultActionButton
-        ariaLabel="Download Markdown"
-        title="Download Markdown"
-        onClick={onDownload}
-      >
-        <DownloadIcon fontSize="small" />
-      </ResultActionButton>
-    </Stack>
-  );
-}
-
-interface ResultViewToggleProps {
-  onChange: (
-    event: React.MouseEvent<HTMLElement>,
-    nextViewMode: ViewMode | null
-  ) => void;
-  viewMode: ViewMode;
-}
-
-function ResultViewToggle({ onChange, viewMode }: ResultViewToggleProps) {
-  return (
-    <ToggleButtonGroup
-      value={viewMode}
-      exclusive
-      onChange={onChange}
-      size="small"
-      aria-label="View mode"
-    >
-      <ToggleButton sx={TOGGLE_BUTTON_SX} value="preview" aria-label="Preview">
-        <VisibilityIcon fontSize="small" />
-      </ToggleButton>
-      <ToggleButton sx={TOGGLE_BUTTON_SX} value="code" aria-label="Code">
-        <CodeIcon fontSize="small" />
-      </ToggleButton>
-    </ToggleButtonGroup>
-  );
-}
-
 interface ResultMarkdownPanelProps {
   isPreviewMode: boolean;
   markdown: string;
@@ -272,32 +215,10 @@ function ResultMarkdownPanel({
   );
 }
 
-interface CopyFeedbackSnackbarProps {
-  copyStatus: CopyStatus;
-  onClose: () => void;
-  open: boolean;
-}
-
-function CopyFeedbackSnackbar({
-  copyStatus,
-  onClose,
-  open,
-}: CopyFeedbackSnackbarProps) {
-  return (
-    <Snackbar
-      open={open}
-      autoHideDuration={COPY_FEEDBACK_DELAY_MS}
-      onClose={onClose}
-      message={COPY_STATUS_DETAILS[copyStatus].message}
-    />
-  );
-}
-
-export default function TransformResultPanel({ result }: TransformResultProps) {
+function useResultModel(result: TransformResult) {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
     useCopyFeedback(result.markdown);
-  const isPreviewMode = viewMode === 'preview';
 
   function handleViewModeChange(
     _event: React.MouseEvent<HTMLElement>,
@@ -311,6 +232,31 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
   function handleDownload() {
     downloadMarkdownFile(result.title, result.markdown);
   }
+
+  return {
+    clearCopyFeedback,
+    copyFeedbackOpen,
+    copyStatus,
+    copyStatusDetails: COPY_STATUS_DETAILS[copyStatus],
+    handleCopy,
+    handleDownload,
+    handleViewModeChange,
+    isPreviewMode: viewMode === 'preview',
+    viewMode,
+  };
+}
+
+export default function TransformResultPanel({ result }: TransformResultProps) {
+  const {
+    clearCopyFeedback,
+    copyFeedbackOpen,
+    copyStatusDetails,
+    handleCopy,
+    handleDownload,
+    handleViewModeChange,
+    isPreviewMode,
+    viewMode,
+  } = useResultModel(result);
 
   return (
     <Stack spacing={3}>
@@ -329,15 +275,43 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
           justifyContent="space-between"
           alignItems="center"
         >
-          <ResultViewToggle
-            viewMode={viewMode}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
             onChange={handleViewModeChange}
-          />
-          <ResultActions
-            copyStatus={copyStatus}
-            onCopy={handleCopy}
-            onDownload={handleDownload}
-          />
+            size="small"
+            aria-label="View mode"
+          >
+            <ToggleButton
+              sx={TOGGLE_BUTTON_SX}
+              value="preview"
+              aria-label="Preview"
+            >
+              <VisibilityIcon fontSize="small" />
+            </ToggleButton>
+            <ToggleButton sx={TOGGLE_BUTTON_SX} value="code" aria-label="Code">
+              <CodeIcon fontSize="small" />
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Stack direction="row" spacing={1}>
+            <ResultActionButton
+              ariaLabel="Copy Markdown"
+              title="Copy Markdown"
+              onClick={() => {
+                void handleCopy();
+              }}
+              color={copyStatusDetails.color}
+            >
+              <ContentCopyIcon fontSize="small" />
+            </ResultActionButton>
+            <ResultActionButton
+              ariaLabel="Download Markdown"
+              title="Download Markdown"
+              onClick={handleDownload}
+            >
+              <DownloadIcon fontSize="small" />
+            </ResultActionButton>
+          </Stack>
         </Stack>
         <ResultMarkdownPanel
           isPreviewMode={isPreviewMode}
@@ -345,10 +319,11 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
         />
       </section>
 
-      <CopyFeedbackSnackbar
-        copyStatus={copyStatus}
-        onClose={clearCopyFeedback}
+      <Snackbar
         open={copyFeedbackOpen}
+        autoHideDuration={COPY_FEEDBACK_DELAY_MS}
+        onClose={clearCopyFeedback}
+        message={copyStatusDetails.message}
       />
     </Stack>
   );

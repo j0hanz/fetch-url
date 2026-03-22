@@ -78,6 +78,16 @@ const MARKDOWN_SKELETON_SECTIONS: readonly MarkdownSkeletonSection[] = [
     marginTop: 0.5,
   },
 ] as const;
+type MarkdownSkeletonItem =
+  | { type: 'section'; section: MarkdownSkeletonSection }
+  | { type: 'block' };
+
+const MARKDOWN_SKELETON_LAYOUT: readonly MarkdownSkeletonItem[] = [
+  { type: 'section', section: MARKDOWN_SKELETON_SECTIONS[0] },
+  { type: 'section', section: MARKDOWN_SKELETON_SECTIONS[1] },
+  { type: 'block' },
+  { type: 'section', section: MARKDOWN_SKELETON_SECTIONS[2] },
+] as const;
 
 function TextLine({ width = '100%' }: { width?: string }) {
   return <Skeleton animation="wave" variant="text" width={width} />;
@@ -113,6 +123,21 @@ function renderMarkdownSkeletonSection(
   );
 }
 
+function renderMarkdownSkeletonItem(item: MarkdownSkeletonItem, index: number) {
+  if (item.type === 'block') {
+    return (
+      <Skeleton
+        key={`block-${index}`}
+        animation="wave"
+        variant="rounded"
+        sx={{ flexGrow: 1, minHeight: 80 }}
+      />
+    );
+  }
+
+  return renderMarkdownSkeletonSection(item.section, index);
+}
+
 export function MarkdownSkeleton() {
   return (
     <Stack
@@ -121,15 +146,7 @@ export function MarkdownSkeleton() {
       spacing={1}
       sx={{ height: MARKDOWN_PANEL_MAX_HEIGHT - SKELETON_PADDING_OFFSET }}
     >
-      {MARKDOWN_SKELETON_SECTIONS.slice(0, 2).map(
-        renderMarkdownSkeletonSection
-      )}
-      <Skeleton
-        animation="wave"
-        variant="rounded"
-        sx={{ flexGrow: 1, minHeight: 80 }}
-      />
-      {renderMarkdownSkeletonSection(MARKDOWN_SKELETON_SECTIONS[2], 2)}
+      {MARKDOWN_SKELETON_LAYOUT.map(renderMarkdownSkeletonItem)}
     </Stack>
   );
 }

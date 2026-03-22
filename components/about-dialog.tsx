@@ -13,6 +13,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
@@ -39,13 +40,25 @@ interface AboutTabDefinition {
   content: string;
   id: AboutTabId;
   label: string;
+  panelId: string;
+  tabId: string;
 }
 
 const ABOUT_ICON_SX = { fontSize: { xs: '1.25rem', sm: '1.5rem' } } as const;
 const ABOUT_TABS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'how-it-works', label: 'How It Works' },
-] as const satisfies readonly Pick<AboutTabDefinition, 'id' | 'label'>[];
+  {
+    id: 'overview',
+    label: 'Overview',
+    panelId: 'about-tabpanel-overview',
+    tabId: 'about-tab-overview',
+  },
+  {
+    id: 'how-it-works',
+    label: 'How It Works',
+    panelId: 'about-tabpanel-how-it-works',
+    tabId: 'about-tab-how-it-works',
+  },
+] as const satisfies readonly Omit<AboutTabDefinition, 'content'>[];
 
 interface TabPanelProps {
   children: ReactNode;
@@ -55,7 +68,7 @@ interface TabPanelProps {
 
 function TabPanel({ children, tab, visible }: TabPanelProps) {
   const hasRenderedRef = useRef(visible);
-  const { panelId, tabId } = readTabDomIds(tab);
+  const { panelId, tabId } = getAboutTab(tab);
 
   if (visible && !hasRenderedRef.current) {
     hasRenderedRef.current = true;
@@ -68,20 +81,8 @@ function TabPanel({ children, tab, visible }: TabPanelProps) {
   );
 }
 
-function readTabDomIds(tabId: AboutTabId) {
-  return {
-    panelId: `about-tabpanel-${tabId}`,
-    tabId: `about-tab-${tabId}`,
-  };
-}
-
-function readTabA11yProps(tabId: AboutTabId) {
-  const { panelId, tabId: resolvedTabId } = readTabDomIds(tabId);
-
-  return {
-    id: resolvedTabId,
-    'aria-controls': panelId,
-  };
+function getAboutTab(tabId: AboutTabId) {
+  return ABOUT_TABS.find((tab) => tab.id === tabId) ?? ABOUT_TABS[0];
 }
 
 function MarkdownTabPanel({ children }: { children: string }) {
@@ -161,7 +162,8 @@ export default function AboutDialog({
                 key={tabDefinition.id}
                 value={tabDefinition.id}
                 label={tabDefinition.label}
-                {...readTabA11yProps(tabDefinition.id)}
+                id={tabDefinition.tabId}
+                aria-controls={tabDefinition.panelId}
               />
             ))}
           </Tabs>
@@ -177,9 +179,11 @@ export default function AboutDialog({
             </TabPanel>
           ))}
         </DialogContent>
-        <Button fullWidth size="large" onClick={handleClose}>
-          Close
-        </Button>
+        <DialogActions>
+          <Button fullWidth size="large" onClick={handleClose}>
+            Close
+          </Button>
+        </DialogActions>
       </Dialog>
     </>
   );

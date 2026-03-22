@@ -70,17 +70,20 @@ export type StreamEvent = StreamProgressEvent | StreamResultEvent;
 export const NDJSON_CONTENT_TYPE = 'application/x-ndjson';
 export const STREAM_PROGRESS_TOTAL = 8;
 type TransformErrorOptions = Omit<TransformError, 'code' | 'message'>;
+type OptionalTransformErrorFields = Pick<
+  TransformError,
+  'details' | 'statusCode'
+>;
 
 export type JsonRecord = Record<string, unknown>;
 
-function createOptionalTransformErrorFields(
-  options: Partial<TransformErrorOptions>
-): Partial<Pick<TransformError, 'details' | 'statusCode'>> {
+export function createOptionalTransformErrorFields(
+  statusCode?: number,
+  details?: TransformError['details']
+): Partial<OptionalTransformErrorFields> {
   return {
-    ...(options.statusCode !== undefined
-      ? { statusCode: options.statusCode }
-      : {}),
-    ...(options.details !== undefined ? { details: options.details } : {}),
+    ...(statusCode !== undefined ? { statusCode } : {}),
+    ...(details !== undefined ? { details } : {}),
   };
 }
 
@@ -93,7 +96,7 @@ export function createTransformError(
     code,
     message,
     retryable: options.retryable ?? false,
-    ...createOptionalTransformErrorFields(options),
+    ...createOptionalTransformErrorFields(options.statusCode, options.details),
   };
 }
 
@@ -152,10 +155,32 @@ export function normalizeStreamProgressEvent(
   return createStreamProgressEvent(progress, total, event.message);
 }
 
+export function createStreamResultEvent(
+  response: TransformResponse
+): StreamResultEvent {
+  return { type: 'result', ...response };
+}
+
+export function isNdjsonContentType(contentType: string | null): boolean {
+  return (contentType ?? '').includes(NDJSON_CONTENT_TYPE);
+}
+
 export function isTerminalStreamProgressEvent(
   event: StreamProgressEvent
 ): boolean {
   return event.progress >= event.total;
+}
+
+export function isStreamProgressEvent(
+  event: StreamEvent
+): event is StreamProgressEvent {
+  return event.type === 'progress';
+}
+
+export function isStreamResultEvent(
+  event: StreamEvent
+): event is StreamResultEvent {
+  return event.type === 'result';
 }
 
 export function hasTransformResult(
@@ -174,12 +199,80 @@ function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null;
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === 'string';
+}
+
+function isTransformMetadata(value: unknown): value is TransformMetadata {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    isOptionalString(value.description) &&
+    isOptionalString(value.author) &&
+    isOptionalString(value.publishedAt) &&
+    isOptionalString(value.modifiedAt) &&
+    isOptionalString(value.image) &&
+    isOptionalString(value.favicon)
+  );
+}
+
+function isTransformResult(value: unknown): value is TransformResult {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.url === 'string' &&
+    isOptionalString(value.resolvedUrl) &&
+    isOptionalString(value.finalUrl) &&
+    isOptionalString(value.title) &&
+    isTransformMetadata(value.metadata) &&
+    typeof value.markdown === 'string' &&
+    typeof value.fromCache === 'boolean' &&
+    typeof value.fetchedAt === 'string' &&
+    isFiniteNumber(value.contentSize) &&
+    typeof value.truncated === 'boolean'
+  );
+}
+
 function isStreamEventType(type: unknown): type is StreamEvent['type'] {
   return type === 'progress' || type === 'result';
 }
 
+function isStreamProgressEventPayload(value: JsonRecord): boolean {
+  return (
+    isFiniteNumber(value.progress) &&
+    isFiniteNumber(value.total) &&
+    typeof value.message === 'string'
+  );
+}
+
+function isTransformSuccessResponse(
+  value: unknown
+): value is TransformSuccessResponse {
+  return (
+    isRecord(value) && value.ok === true && isTransformResult(value.result)
+  );
+}
+
+function isTransformResponse(value: unknown): value is TransformResponse {
+  return isTransformSuccessResponse(value) || isTransformErrorResponse(value);
+}
+
 export function isStreamEvent(value: unknown): value is StreamEvent {
-  return isRecord(value) && isStreamEventType(value.type);
+  if (!isRecord(value) || !isStreamEventType(value.type)) {
+    return false;
+  }
+
+  return value.type === 'progress'
+    ? isStreamProgressEventPayload(value)
+    : isTransformResponse(value);
 }
 
 export function isTransformError(value: unknown): value is TransformError {

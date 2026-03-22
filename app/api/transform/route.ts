@@ -2,9 +2,11 @@ import type { Progress } from '@modelcontextprotocol/sdk/types.js';
 
 import {
   createStreamProgressEvent,
+  createStreamResultEvent,
   createTransformError,
   NDJSON_CONTENT_TYPE,
   type StreamProgressEvent,
+  type StreamResultEvent,
   type TransformError,
   type TransformErrorCode,
   type TransformErrorResponse,
@@ -97,10 +99,12 @@ function createErrorResponse(error: TransformError): Response {
 
 function encodeNdjsonEvent(
   encoder: TextEncoder,
-  event: StreamProgressEvent | ({ type: 'result' } & TransformResponse)
+  event: StreamProgressEvent | StreamResultEvent
 ): Uint8Array {
   return encoder.encode(JSON.stringify(event) + '\n');
 }
+
+type WritableNdjsonEvent = StreamProgressEvent | StreamResultEvent;
 
 function createNdjsonStreamWriter(
   request: Request,
@@ -125,9 +129,7 @@ function createNdjsonStreamWriter(
 
   request.signal.addEventListener('abort', close, { once: true });
 
-  function write(
-    event: StreamProgressEvent | ({ type: 'result' } & TransformResponse)
-  ) {
+  function write(event: WritableNdjsonEvent) {
     if (closed) {
       return;
     }
@@ -145,7 +147,7 @@ function createNdjsonStreamWriter(
       write(event);
     },
     writeResult(response) {
-      write({ type: 'result', ...response });
+      write(createStreamResultEvent(response));
     },
   };
 }

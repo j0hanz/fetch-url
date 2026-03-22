@@ -18,12 +18,21 @@ export interface ErrorStateProps extends ResettableErrorProps {
   minHeight: string;
 }
 
-export function ErrorState({
-  error,
-  fallbackMessage,
+interface StatusShellProps {
+  action: ReactNode;
+  children?: ReactNode;
+  message: ReactNode;
+  minHeight: string;
+  title: ReactNode;
+}
+
+export function StatusShell({
+  action,
+  children,
+  message,
   minHeight,
-  reset,
-}: ErrorStateProps) {
+  title,
+}: StatusShellProps) {
   return (
     <Box
       sx={{
@@ -36,7 +45,7 @@ export function ErrorState({
     >
       <Stack spacing={2} alignItems="center">
         <Typography variant="h6" color="error">
-          Something went wrong
+          {title}
         </Typography>
         <Typography
           variant="body2"
@@ -44,18 +53,38 @@ export function ErrorState({
           textAlign="center"
           sx={{ maxWidth: 400 }}
         >
-          {fallbackMessage}
+          {message}
         </Typography>
-        {error.digest && (
-          <Typography variant="caption" color="text.disabled">
-            Ref: {error.digest}
-          </Typography>
-        )}
+        {children}
+        {action}
+      </Stack>
+    </Box>
+  );
+}
+
+export function ErrorState({
+  error,
+  fallbackMessage,
+  minHeight,
+  reset,
+}: ErrorStateProps) {
+  return (
+    <StatusShell
+      title="Something went wrong"
+      message={fallbackMessage}
+      minHeight={minHeight}
+      action={
         <Button variant="contained" onClick={reset}>
           Try again
         </Button>
-      </Stack>
-    </Box>
+      }
+    >
+      {error.digest && (
+        <Typography variant="caption" color="text.disabled">
+          Ref: {error.digest}
+        </Typography>
+      )}
+    </StatusShell>
   );
 }
 

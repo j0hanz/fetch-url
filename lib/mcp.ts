@@ -17,6 +17,7 @@ import type {
 } from '@/lib/api';
 import {
   createInternalError,
+  createOptionalTransformErrorFields,
   createTransformError,
   type JsonRecord,
 } from '@/lib/api';
@@ -142,11 +143,17 @@ async function connectClient(state: McpRuntimeState): Promise<Client> {
     state.instance = { client, transport };
     return client;
   } catch (error) {
-    await transport.close().catch(() => {});
+    await closeTransportQuietly(transport);
     throw createTransportError(error, state);
   } finally {
     state.connecting = undefined;
   }
+}
+
+async function closeTransportQuietly(
+  transport: Pick<StdioClientTransport, 'close'>
+): Promise<void> {
+  await transport.close().catch(() => {});
 }
 
 function createRequestOptions(options?: FetchUrlCallOptions): {
@@ -304,16 +311,6 @@ function createTransportError(error: unknown, state: McpRuntimeState): Error {
 type KnownMcpErrorCode = keyof typeof KNOWN_MCP_ERRORS;
 type KnownMcpErrorDefinition = (typeof KNOWN_MCP_ERRORS)[KnownMcpErrorCode];
 
-function createOptionalErrorFields(
-  statusCode?: number,
-  details?: TransformError['details']
-): Partial<Pick<TransformError, 'details' | 'statusCode'>> {
-  return {
-    ...(statusCode !== undefined ? { statusCode } : {}),
-    ...(details ? { details } : {}),
-  };
-}
-
 function isKnownMcpErrorCode(code: string): code is KnownMcpErrorCode {
   return code in KNOWN_MCP_ERRORS;
 }
@@ -331,7 +328,10 @@ function mapMcpError(errorPayload: JsonRecord): TransformError {
   const knownError = readKnownMcpError(code);
   const statusCode = readInteger(errorPayload.statusCode);
   const details = readErrorDetails(errorPayload);
-  const optionalFields = createOptionalErrorFields(statusCode, details);
+  const optionalFields = createOptionalTransformErrorFields(
+    statusCode,
+    details
+  );
 
   if (knownError) {
     return createTransformError(knownError.code, message, {
@@ -349,7 +349,10 @@ function mapUnknownMcpError(
   statusCode?: number,
   details?: TransformError['details']
 ): TransformError {
-  const optionalFields = createOptionalErrorFields(statusCode, details);
+  const optionalFields = createOptionalTransformErrorFields(
+    statusCode,
+    details
+  );
   if (!code.startsWith(HTTP_ERROR_CODE_PREFIX)) {
     return createTransformError('INTERNAL_ERROR', message, {
       ...optionalFields,
@@ -359,7 +362,7 @@ function mapUnknownMcpError(
   const resolvedStatusCode = statusCode ?? readHttpStatusCode(code);
   return createTransformError('HTTP_ERROR', message, {
     retryable: resolvedStatusCode !== undefined && resolvedStatusCode >= 500,
-    ...createOptionalErrorFields(resolvedStatusCode, details),
+    ...createOptionalTransformErrorFields(resolvedStatusCode, details),
   });
 }
 

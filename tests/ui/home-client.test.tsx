@@ -130,11 +130,13 @@ describe('createRequestController', () => {
     expect(controller.isActiveRequest(firstSession)).toBe(false);
     expect(controller.isActiveRequest(secondSession)).toBe(true);
 
-    controller.dispatchIfActive(firstSession, {
+    controller.pushProgressIfActive(firstSession, {
       type: 'progress',
-      event: { type: 'progress', progress: 1, total: 8, message: 'stale' },
+      progress: 1,
+      total: 8,
+      message: 'stale',
     });
-    controller.dispatchIfActive(firstSession, {
+    controller.finishRequestIfActive(firstSession, {
       type: 'result',
       result: SUCCESS_RESULT,
     });
@@ -149,11 +151,13 @@ describe('createRequestController', () => {
     const controller = createRequestController({ clearInput, dispatch });
     const session = controller.beginRequest();
 
-    controller.dispatchIfActive(session, {
+    controller.pushProgressIfActive(session, {
       type: 'progress',
-      event: { type: 'progress', progress: 1, total: 8, message: 'Loading' },
+      progress: 1,
+      total: 8,
+      message: 'Loading',
     });
-    controller.dispatchIfActive(session, {
+    controller.finishRequestIfActive(session, {
       type: 'error',
       error: {
         code: 'FETCH_ERROR',

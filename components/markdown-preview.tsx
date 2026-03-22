@@ -100,18 +100,29 @@ interface TableCellRendererProps extends MarkdownNodeProps {
   style?: Pick<CSSProperties, 'textAlign'>;
 }
 
+interface HeadingRendererOptions {
+  bordered?: boolean;
+  color?: ComponentProps<typeof Typography>['color'];
+  fontWeight?: ComponentProps<typeof Typography>['fontWeight'];
+}
+
 function createHeadingRenderer(
   variant: ComponentProps<typeof Typography>['variant'],
   marginTop: number,
-  props: Partial<ComponentProps<typeof Typography>> = {}
+  options: HeadingRendererOptions = {}
 ) {
+  const { bordered = false, color, fontWeight } = options;
+
   return function HeadingRenderer({ children }: { children?: ReactNode }) {
     return (
       <Typography
         variant={variant}
         gutterBottom
-        sx={{ mt: marginTop }}
-        {...props}
+        color={color}
+        fontWeight={fontWeight}
+        sx={
+          bordered ? { mt: marginTop, ...HEADING_BORDER_SX } : { mt: marginTop }
+        }
       >
         {children}
       </Typography>
@@ -151,8 +162,8 @@ function createListRenderer(component: 'ul' | 'ol') {
 }
 
 const components: Components = {
-  h1: createHeadingRenderer('h4', 2, { sx: HEADING_BORDER_SX }),
-  h2: createHeadingRenderer('h5', 2, { sx: HEADING_BORDER_SX }),
+  h1: createHeadingRenderer('h4', 2, { bordered: true }),
+  h2: createHeadingRenderer('h5', 2, { bordered: true }),
   h3: createHeadingRenderer('h6', 1.5),
   h4: createHeadingRenderer('subtitle1', 1, { fontWeight: 'bold' }),
   h5: createHeadingRenderer('subtitle2', 0, { fontWeight: 'bold' }),

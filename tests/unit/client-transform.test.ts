@@ -108,6 +108,34 @@ describe('client-transform', () => {
     );
   });
 
+  it('reports malformed stream events as unexpected responses', async () => {
+    const onError = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue(
+      createMockStreamResponse([
+        {
+          type: 'result',
+          ok: true,
+          result: {
+            url: VALID_URL,
+          },
+        },
+      ])
+    );
+
+    await submitTransformRequest(
+      VALID_URL,
+      { onError, onProgress: vi.fn(), onResult: vi.fn() },
+      new AbortController().signal
+    );
+
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 'INTERNAL_ERROR',
+        message: 'Unexpected response format.',
+      })
+    );
+  });
+
   it('maps timeout errors to retryable abort responses', () => {
     expect(
       mapClientTransformError(new DOMException('Timed out', 'TimeoutError'))

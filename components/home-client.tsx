@@ -46,8 +46,15 @@ type TerminalRequestAction = Extract<Action, { type: 'error' | 'result' }>;
 
 export interface RequestController {
   beginRequest: () => RequestSession;
-  dispatchIfActive: (session: RequestSession, action: RequestAction) => void;
+  finishRequestIfActive: (
+    session: RequestSession,
+    action: TerminalRequestAction
+  ) => void;
   isActiveRequest: (session: RequestSession) => boolean;
+  pushProgressIfActive: (
+    session: RequestSession,
+    event: StreamProgressEvent
+  ) => void;
   releaseRequest: (session: RequestSession) => void;
   stopActiveRequest: () => void;
 }
@@ -88,12 +95,6 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-function isTerminalRequestAction(
-  action: RequestAction
-): action is TerminalRequestAction {
-  return action.type === 'result' || action.type === 'error';
-}
-
 export function createRequestController({
   clearInput,
   dispatch,
@@ -113,6 +114,18 @@ export function createRequestController({
     return requestId === session.requestId;
   }
 
+  function dispatchActionIfActive(
+    session: RequestSession,
+    action: RequestAction
+  ): boolean {
+    if (!isActiveRequest(session)) {
+      return false;
+    }
+
+    dispatch(action);
+    return true;
+  }
+
   return {
     beginRequest() {
       stopActiveRequest();
@@ -127,17 +140,15 @@ export function createRequestController({
 
       return session;
     },
-    dispatchIfActive(session, action) {
-      if (!isActiveRequest(session)) {
-        return;
-      }
-
-      dispatch(action);
-      if (isTerminalRequestAction(action)) {
+    finishRequestIfActive(session, action) {
+      if (dispatchActionIfActive(session, action)) {
         clearInput();
       }
     },
     isActiveRequest,
+    pushProgressIfActive(session, event) {
+      dispatchActionIfActive(session, { type: 'progress', event });
+    },
     releaseRequest(session) {
       if (
         isActiveRequest(session) &&
@@ -156,16 +167,19 @@ function createRequestHandlers(
 ) {
   return {
     onProgress(event: StreamProgressEvent) {
-      requestController.dispatchIfActive(session, {
-        type: 'progress',
-        event,
-      });
+      requestController.pushProgressIfActive(session, event);
     },
     onResult(result: TransformResult) {
-      requestController.dispatchIfActive(session, { type: 'result', result });
+      requestController.finishRequestIfActive(session, {
+        type: 'result',
+        result,
+      });
     },
     onError(error: TransformError) {
-      requestController.dispatchIfActive(session, { type: 'error', error });
+      requestController.finishRequestIfActive(session, {
+        type: 'error',
+        error,
+      });
     },
   };
 }
@@ -225,8 +239,10 @@ function useHomeClientModel() {
           return;
         }
 
-        dispatch({ type: 'error', error: mapClientTransformError(error) });
-        clearInput();
+        requestController.finishRequestIfActive(session, {
+          type: 'error',
+          error: mapClientTransformError(error),
+        });
       })
       .finally(() => {
         requestController.releaseRequest(session);

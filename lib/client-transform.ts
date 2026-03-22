@@ -11,11 +11,13 @@ import {
   hasTransformError,
   hasTransformResult,
   isAbortError,
+  isNdjsonContentType,
   isStreamEvent,
+  isStreamProgressEvent,
+  isStreamResultEvent,
   isTimeoutError,
   isTransformError,
   isTransformErrorResponse,
-  NDJSON_CONTENT_TYPE,
 } from '@/lib/api';
 
 interface ClientTransformHandlers {
@@ -28,9 +30,7 @@ const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
 const TRANSFORM_ENDPOINT = '/api/transform';
 
 function isNdjsonResponse(response: Response): boolean {
-  return (response.headers.get('Content-Type') ?? '').includes(
-    NDJSON_CONTENT_TYPE
-  );
+  return isNdjsonContentType(response.headers.get('Content-Type'));
 }
 
 function parseStreamEvent(line: string): StreamEvent {
@@ -89,6 +89,21 @@ function emitParsedStreamEvent(
   return event.type !== 'progress';
 }
 
+function readStreamTerminationError(
+  sawTerminalEvent: boolean,
+  signal: AbortSignal
+): TransformError | null {
+  if (sawTerminalEvent) {
+    return null;
+  }
+
+  if (signal.aborted) {
+    return isTimeoutError(signal.reason) ? createTimeoutError() : null;
+  }
+
+  return createUnexpectedResponseError();
+}
+
 async function readNdjsonStream(
   response: Response,
   signal: AbortSignal,
@@ -113,11 +128,7 @@ async function readNdjsonStream(
     }
 
     const sawTerminalEvent = streamReader.finalize();
-    if (sawTerminalEvent || !signal.aborted) {
-      return sawTerminalEvent ? null : createUnexpectedResponseError();
-    }
-
-    return isTimeoutError(signal.reason) ? createTimeoutError() : null;
+    return readStreamTerminationError(sawTerminalEvent, signal);
   } catch (error) {
     if (isTimeoutError(error)) {
       return createTimeoutError();
@@ -137,8 +148,13 @@ function handleStreamEvent(
   event: StreamEvent,
   handlers: ClientTransformHandlers
 ): void {
-  if (event.type === 'progress') {
+  if (isStreamProgressEvent(event)) {
     handlers.onProgress(event);
+    return;
+  }
+
+  if (!isStreamResultEvent(event)) {
+    handlers.onError(createUnexpectedResponseError());
     return;
   }
 
