@@ -260,7 +260,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
   } = useResultModel(result);
 
   return (
-    <Stack spacing={3} sx={{ flex: 1 }}>
+    <Stack spacing={3}>
       {/* Truncation Warning */}
       {result.truncated && (
         <Alert severity="warning">
@@ -270,7 +270,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
       )}
 
       {/* Markdown Section */}
-      <Stack component="section" sx={{ flex: 1 }}>
+      <Stack gap={0.1} component="section">
         <Stack
           direction="row"
           justifyContent="space-between"
