@@ -96,7 +96,7 @@ export function createInternalError(
   return createTransformError('INTERNAL_ERROR', message, { retryable });
 }
 
-export function createNetworkError(): TransformError {
+function createNetworkError(): TransformError {
   return createInternalError('Network error. Please try again.', true);
 }
 
@@ -276,7 +276,7 @@ export function isTransformError(value: unknown): value is TransformError {
   );
 }
 
-export function isNamedError(error: unknown, name: string): boolean {
+function isNamedError(error: unknown, name: string): boolean {
   if (error instanceof Error && error.name === name) return true;
   // Browser DOMException might not inherit from Error in older environments,
   // but it's an object with a name property.
@@ -284,7 +284,7 @@ export function isNamedError(error: unknown, name: string): boolean {
     typeof error === 'object' &&
     error !== null &&
     'name' in error &&
-    (error as Error).name === name
+    error.name === name
   );
 }
 

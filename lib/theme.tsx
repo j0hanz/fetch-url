@@ -108,5 +108,3 @@ export function AppThemeProviders({ children }: { children: ReactNode }) {
     </>
   );
 }
-
-export default theme;

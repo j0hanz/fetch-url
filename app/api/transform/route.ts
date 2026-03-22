@@ -104,8 +104,6 @@ function encodeNdjsonEvent(
   return encoder.encode(JSON.stringify(event) + '\n');
 }
 
-type WritableNdjsonEvent = StreamProgressEvent | StreamResultEvent;
-
 function createNdjsonStreamWriter(
   request: Request,
   controller: ReadableStreamDefaultController<Uint8Array>,
@@ -129,7 +127,7 @@ function createNdjsonStreamWriter(
 
   request.signal.addEventListener('abort', close, { once: true });
 
-  function write(event: WritableNdjsonEvent) {
+  function write(event: StreamProgressEvent | StreamResultEvent) {
     if (closed) {
       return;
     }

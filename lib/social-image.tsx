@@ -4,7 +4,7 @@ import { ImageResponse } from 'next/og';
 
 import { SOCIAL_IMAGE_SIZE } from '@/lib/site';
 
-export interface SocialImagePalette {
+interface SocialImagePalette {
   accentBackground: string;
   accentColor: string;
   background: string;
@@ -25,7 +25,7 @@ interface SocialFeaturePillProps {
   label: string;
 }
 
-export type SocialImageFeature = SocialFeaturePillProps;
+type SocialImageFeature = SocialFeaturePillProps;
 
 interface SocialImageResponseOptions {
   body: string;
@@ -76,7 +76,7 @@ const FEATURE_LIST_STYLE: CSSProperties = {
   gap: 16,
 };
 
-export function SocialImageFrame({ children, palette }: SocialImageFrameProps) {
+function SocialImageFrame({ children, palette }: SocialImageFrameProps) {
   return (
     <main
       style={{
@@ -98,7 +98,7 @@ export function SocialImageFrame({ children, palette }: SocialImageFrameProps) {
   );
 }
 
-export function SocialImageContent({
+function SocialImageContent({
   children,
   maxWidth,
 }: {
@@ -117,7 +117,7 @@ export function SocialImageContent({
   );
 }
 
-export function SocialEyebrow({
+function SocialEyebrow({
   label,
   palette,
   variant = 'filled',
@@ -152,11 +152,11 @@ export function SocialEyebrow({
   );
 }
 
-export function SocialTitle({ children }: { children: ReactNode }) {
+function SocialTitle({ children }: { children: ReactNode }) {
   return <h1 style={TITLE_STYLE}>{children}</h1>;
 }
 
-export function SocialBody({
+function SocialBody({
   children,
   color,
 }: {
@@ -177,11 +177,11 @@ export function SocialBody({
   );
 }
 
-export function SocialFeatureList({ children }: { children: ReactNode }) {
+function SocialFeatureList({ children }: { children: ReactNode }) {
   return <ul style={FEATURE_LIST_STYLE}>{children}</ul>;
 }
 
-export function SocialFeaturePill({
+function SocialFeaturePill({
   backgroundColor,
   color = '#0f172a',
   label,

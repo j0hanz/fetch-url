@@ -3,7 +3,11 @@
   "entry": [
     "app/**/{layout,page,route,loading,error,not-found,global-error}.{ts,tsx}"
   ],
-  "project": ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.ts"],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}"
+  ],
   "next": true,
   "vitest": true,
   "eslint": true,
