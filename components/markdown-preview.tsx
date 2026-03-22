@@ -68,11 +68,6 @@ const INLINE_CODE_SX = {
 const IMAGE_SX = {
   maxWidth: '100%',
   height: 'auto',
-  my: 2,
-  display: 'block',
-  border: 1,
-  borderColor: 'divider',
-  borderRadius: 1,
 } as const;
 const CODE_BLOCK_WRAPPER_SX = {
   position: 'relative',
