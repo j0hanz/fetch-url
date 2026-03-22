@@ -71,7 +71,7 @@ export const NDJSON_CONTENT_TYPE = 'application/x-ndjson';
 export const STREAM_PROGRESS_TOTAL = 8;
 type TransformErrorOptions = Omit<TransformError, 'code' | 'message'>;
 
-type JsonRecord = Record<string, unknown>;
+export type JsonRecord = Record<string, unknown>;
 
 function createOptionalTransformErrorFields(
   options: Partial<TransformErrorOptions>
@@ -192,6 +192,26 @@ export function isTransformError(value: unknown): value is TransformError {
     typeof value.message === 'string' &&
     typeof value.retryable === 'boolean'
   );
+}
+
+export function isNamedError(error: unknown, name: string): boolean {
+  if (error instanceof Error && error.name === name) return true;
+  // Browser DOMException might not inherit from Error in older environments,
+  // but it's an object with a name property.
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'name' in error &&
+    (error as Error).name === name
+  );
+}
+
+export function isAbortError(error: unknown): boolean {
+  return isNamedError(error, 'AbortError');
+}
+
+export function isTimeoutError(error: unknown): boolean {
+  return isNamedError(error, 'TimeoutError');
 }
 
 export function isTransformErrorResponse(

@@ -6,7 +6,12 @@ import type {
   TransformErrorResponse,
   TransformResponse,
 } from '@/lib/api';
-import { createInternalError, createTransformError } from '@/lib/api';
+import {
+  createInternalError,
+  createTransformError,
+  isAbortError,
+  isTimeoutError,
+} from '@/lib/api';
 import { callFetchUrl, parseMcpResult, type ProgressCallback } from '@/lib/mcp';
 import type { TransformRequest } from '@/lib/validate';
 
@@ -80,20 +85,8 @@ function readErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error';
 }
 
-function hasErrorName(error: unknown, name: string): boolean {
-  return error instanceof Error && error.name === name;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return hasErrorName(error, 'AbortError');
-}
-
-function isTimeoutLikeError(error: unknown): boolean {
-  return hasErrorName(error, 'TimeoutError');
-}
-
 function readTransportErrorPolicy(error: unknown): TransportErrorPolicy {
-  if (isTimeoutLikeError(error)) {
+  if (isTimeoutError(error)) {
     return {
       code: 'ABORTED',
       message: readErrorMessage(error),
@@ -102,7 +95,7 @@ function readTransportErrorPolicy(error: unknown): TransportErrorPolicy {
     };
   }
 
-  if (isAbortLikeError(error)) {
+  if (isAbortError(error)) {
     return {
       code: 'ABORTED',
       message: readErrorMessage(error),

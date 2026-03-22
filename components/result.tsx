@@ -26,6 +26,7 @@ import {
 } from '@/components/loading';
 import MarkdownPreview from '@/components/markdown-preview';
 import type { TransformResult } from '@/lib/api';
+import { MONO_FONT_FAMILY } from '@/lib/theme';
 
 interface TransformResultProps {
   result: TransformResult;
@@ -39,7 +40,6 @@ type ViewMode = 'preview' | 'code';
 
 const COPY_FEEDBACK_DELAY_MS = 2000;
 const DEFAULT_DOWNLOAD_FILE_NAME = 'page';
-const MARKDOWN_FONT_FAMILY = "'Geist Mono Variable', monospace";
 const TOGGLE_BUTTON_SX = { border: 0, minWidth: 50 } as const;
 const MARKDOWN_PANEL_SX = {
   p: { xs: 2, sm: 2.5 },
@@ -50,7 +50,7 @@ const MARKDOWN_PANEL_SX = {
   borderRadius: 1.5,
 } as const;
 const RAW_MARKDOWN_SX = {
-  fontFamily: MARKDOWN_FONT_FAMILY,
+  fontFamily: MONO_FONT_FAMILY,
   fontSize: { xs: '0.8125rem', sm: '0.875rem' },
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',

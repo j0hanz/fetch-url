@@ -10,7 +10,9 @@ import {
   createUnexpectedResponseError,
   hasTransformError,
   hasTransformResult,
+  isAbortError,
   isStreamEvent,
+  isTimeoutError,
   isTransformError,
   isTransformErrorResponse,
   NDJSON_CONTENT_TYPE,
@@ -85,10 +87,6 @@ function emitParsedStreamEvent(
   const event = parseStreamEvent(line);
   onEvent(event);
   return event.type !== 'progress';
-}
-
-function isNamedDomException(error: unknown, name: string): boolean {
-  return error instanceof DOMException && error.name === name;
 }
 
 async function readNdjsonStream(
@@ -216,12 +214,4 @@ export function mapClientTransformError(error: unknown): TransformError {
   }
 
   return createNetworkError();
-}
-
-export function isAbortError(error: unknown): boolean {
-  return isNamedDomException(error, 'AbortError');
-}
-
-function isTimeoutError(error: unknown): boolean {
-  return isNamedDomException(error, 'TimeoutError');
 }

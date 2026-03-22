@@ -15,7 +15,11 @@ import type {
   TransformMetadata,
   TransformResult,
 } from '@/lib/api';
-import { createInternalError, createTransformError } from '@/lib/api';
+import {
+  createInternalError,
+  createTransformError,
+  type JsonRecord,
+} from '@/lib/api';
 
 export interface FetchUrlArgs {
   url: string;
@@ -81,24 +85,22 @@ function createTransport(state: McpRuntimeState): StdioClientTransport {
   return transport;
 }
 
-async function closeTransport(transport?: StdioClientTransport): Promise<void> {
-  await transport?.close().catch(() => {});
-}
-
 async function resetRuntimeState(
-  state: McpRuntimeState = getMcpRuntimeState()
+  state: McpRuntimeState = getMcpRuntimeState(),
+  clearDiagnostics = false
 ): Promise<void> {
-  const instance = state.instance;
+  const { instance } = state;
   state.connecting = undefined;
   state.instance = undefined;
+  if (clearDiagnostics) {
+    state.lastStderr = undefined;
+  }
 
-  await closeTransport(instance?.transport);
+  await instance?.transport?.close().catch(() => {});
 }
 
 export async function resetMcpRuntimeStateForTests(): Promise<void> {
-  const state = getMcpRuntimeState();
-  state.lastStderr = undefined;
-  await resetRuntimeState(state);
+  await resetRuntimeState(getMcpRuntimeState(), true);
 }
 
 function createClient(state: McpRuntimeState): Client {
@@ -140,7 +142,7 @@ async function connectClient(state: McpRuntimeState): Promise<Client> {
     state.instance = { client, transport };
     return client;
   } catch (error) {
-    await closeTransport(transport);
+    await transport.close().catch(() => {});
     throw createTransportError(error, state);
   } finally {
     state.connecting = undefined;
@@ -153,13 +155,17 @@ function createRequestOptions(options?: FetchUrlCallOptions): {
   resetTimeoutOnProgress?: boolean;
   maxTotalTimeout: number;
 } {
-  return {
+  const result: ReturnType<typeof createRequestOptions> = {
     maxTotalTimeout: MCP_MAX_TOTAL_TIMEOUT,
-    ...(options?.onProgress
-      ? { onprogress: options.onProgress, resetTimeoutOnProgress: true }
-      : {}),
-    ...(options?.signal ? { signal: options.signal } : {}),
   };
+  if (options?.onProgress) {
+    result.onprogress = options.onProgress;
+    result.resetTimeoutOnProgress = true;
+  }
+  if (options?.signal) {
+    result.signal = options.signal;
+  }
+  return result;
 }
 
 export async function callFetchUrl(
@@ -295,7 +301,6 @@ function createTransportError(error: unknown, state: McpRuntimeState): Error {
   return transportError;
 }
 
-type JsonRecord = Record<string, unknown>;
 type KnownMcpErrorCode = keyof typeof KNOWN_MCP_ERRORS;
 type KnownMcpErrorDefinition = (typeof KNOWN_MCP_ERRORS)[KnownMcpErrorCode];
 

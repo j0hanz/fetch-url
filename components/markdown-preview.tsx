@@ -19,8 +19,9 @@ import Markdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+import { MONO_FONT_FAMILY } from '@/lib/theme';
+
 const remarkPlugins = [remarkGfm];
-const MONO_FONT_FAMILY = "'Geist Mono Variable', monospace";
 const MARKDOWN_ROOT_SX = {
   '& > :first-of-type': { mt: 0 },
   '& > :last-child': { mb: 0 },

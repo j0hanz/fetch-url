@@ -8,6 +8,8 @@ import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 import { ThemeProvider } from '@mui/material/styles';
 
+export const MONO_FONT_FAMILY = "'Geist Mono Variable', monospace";
+
 const PAPER_ROOT_SX = {
   borderRadius: 16,
   boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
