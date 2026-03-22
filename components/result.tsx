@@ -43,6 +43,7 @@ const DEFAULT_DOWNLOAD_FILE_NAME = 'page';
 const TOGGLE_BUTTON_SX = { border: 0, minWidth: 50 } as const;
 const MARKDOWN_PANEL_SX = {
   p: { xs: 2, sm: 2.5 },
+  flex: 1,
   maxHeight: { xs: 350, sm: 450, md: MARKDOWN_PANEL_MAX_HEIGHT },
   overflow: 'auto',
   border: '1px solid',
@@ -259,7 +260,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
   } = useResultModel(result);
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ flex: 1 }}>
       {/* Truncation Warning */}
       {result.truncated && (
         <Alert severity="warning">
@@ -269,7 +270,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
       )}
 
       {/* Markdown Section */}
-      <section>
+      <Stack component="section" sx={{ flex: 1 }}>
         <Stack
           direction="row"
           justifyContent="space-between"
@@ -317,7 +318,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
           isPreviewMode={isPreviewMode}
           markdown={result.markdown}
         />
-      </section>
+      </Stack>
 
       <Snackbar
         open={copyFeedbackOpen}

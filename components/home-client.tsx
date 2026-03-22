@@ -4,6 +4,7 @@ import { type Dispatch, useEffect, useReducer, useRef } from 'react';
 
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
+import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 
 import TransformForm, { type TransformFormHandle } from '@/components/form';
@@ -258,10 +259,13 @@ export default function HomeClient() {
   const showResult = !loading && result !== null;
 
   return (
-    <>
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <TransformForm ref={formRef} loading={loading} onSubmit={handleSubmit} />
 
-      <div aria-live="polite">
+      <Box
+        aria-live="polite"
+        sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+      >
         <Collapse in={showProgress} unmountOnExit>
           {progress && (
             <TransformProgress
@@ -285,7 +289,7 @@ export default function HomeClient() {
         <Collapse in={showResult} unmountOnExit>
           {result && <TransformResultPanel result={result} />}
         </Collapse>
-      </div>
-    </>
+      </Box>
+    </Box>
   );
 }

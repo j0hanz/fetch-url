@@ -8,7 +8,6 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
-import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
@@ -66,53 +65,52 @@ export default async function Home() {
         pt: { xs: 3, sm: 4 },
       }}
     >
-      <Container maxWidth="lg">
-        <Stack>
-          <Toolbar disableGutters sx={{ alignItems: 'flex-start' }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Stack direction="row" gap={1.5} alignItems="center">
-                <LogoIcon
-                  sx={{
-                    fontSize: {
-                      xs: '1.5rem',
-                      sm: '1.7rem',
-                      md: '1.8rem',
-                      lg: '2rem',
-                    },
-                  }}
-                />
-                <Typography variant="h4" component="h1">
-                  {SITE_NAME}
-                </Typography>
-              </Stack>
-            </Box>
-            <Stack
-              direction="row"
-              spacing={{ xs: 1, sm: 2 }}
-              alignItems="center"
-            >
-              <AboutDialog
-                markdown={aboutMarkdown}
-                howItWorksMarkdown={howItWorksMarkdown}
-              />
-              <Tooltip title="View on GitHub">
-                <IconButton
-                  component="a"
-                  href={SITE_REPOSITORY_URL}
-                  target="_blank"
-                  size="small"
-                  rel="noopener noreferrer"
-                  aria-label="View on GitHub"
-                >
-                  <GitHubIcon sx={GITHUB_ICON_SX} />
-                </IconButton>
-              </Tooltip>
-              <ThemeToggle />
-            </Stack>
-          </Toolbar>
-
-          <HomeClient />
+      <Container
+        maxWidth="lg"
+        sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}
+      >
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Stack direction="row" gap={1.5} alignItems="center">
+            <LogoIcon
+              sx={{
+                fontSize: {
+                  xs: '1.5rem',
+                  sm: '1.7rem',
+                  md: '1.8rem',
+                  lg: '2rem',
+                },
+              }}
+            />
+            <Typography variant="h4" component="h1">
+              {SITE_NAME}
+            </Typography>
+          </Stack>
+          <Stack direction="row" spacing={{ xs: 1, sm: 2 }} alignItems="center">
+            <AboutDialog
+              markdown={aboutMarkdown}
+              howItWorksMarkdown={howItWorksMarkdown}
+            />
+            <Tooltip title="View on GitHub">
+              <IconButton
+                component="a"
+                href={SITE_REPOSITORY_URL}
+                target="_blank"
+                size="small"
+                rel="noopener noreferrer"
+                aria-label="View on GitHub"
+              >
+                <GitHubIcon sx={GITHUB_ICON_SX} />
+              </IconButton>
+            </Tooltip>
+            <ThemeToggle />
+          </Stack>
         </Stack>
+
+        <HomeClient />
       </Container>
     </Box>
   );
