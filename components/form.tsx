@@ -14,7 +14,7 @@ export interface TransformFormHandle {
 interface TransformFormProps {
   ref?: React.Ref<TransformFormHandle>;
   loading: boolean;
-  onSubmit: (url: string) => void;
+  action: (formData: FormData) => void;
 }
 
 const URL_INPUT_SX = { flexGrow: 1, flex: { md: '2 1 0' } } as const;
@@ -26,7 +26,7 @@ const ACTION_BUTTON_SX = {
 export default function TransformForm({
   ref,
   loading,
-  onSubmit,
+  action,
 }: TransformFormProps) {
   const urlInputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,15 +39,8 @@ export default function TransformForm({
     },
   }));
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (inputRef.current) {
-      onSubmit(inputRef.current.value);
-    }
-  }
-
   return (
-    <Box component="form" onSubmit={handleSubmit}>
+    <Box component="form" action={action}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
@@ -56,6 +49,7 @@ export default function TransformForm({
         <TextField
           id={urlInputId}
           inputRef={inputRef}
+          name="url"
           label="Paste a public URL to convert"
           type="url"
           required

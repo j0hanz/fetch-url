@@ -3,6 +3,18 @@ import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach } from 'vitest';
 
+if (
+  typeof window !== 'undefined' &&
+  typeof HTMLFormElement !== 'undefined' &&
+  typeof HTMLFormElement.prototype.requestSubmit !== 'function'
+) {
+  HTMLFormElement.prototype.requestSubmit = function () {
+    this.dispatchEvent(
+      new Event('submit', { cancelable: true, bubbles: true })
+    );
+  };
+}
+
 afterEach(() => {
   cleanup();
 });

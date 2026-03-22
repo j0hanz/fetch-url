@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import HomeClient, { createRequestController } from '@/components/home-client';
+import HomeClient from '@/components/home-client';
 import type { TransformResult } from '@/lib/api';
 import { submitUrlForm } from '@/tests/setup';
 
@@ -114,60 +114,6 @@ describe('HomeClient', () => {
     unmount();
 
     expect(stream.signal?.aborted).toBe(true);
-  });
-});
-
-describe('createRequestController', () => {
-  it('ignores stale events after a replacement request starts', () => {
-    const dispatch = vi.fn();
-    const clearInput = vi.fn();
-    const controller = createRequestController({ clearInput, dispatch });
-
-    const firstSession = controller.beginRequest();
-    const secondSession = controller.beginRequest();
-
-    expect(firstSession.abortController.signal.aborted).toBe(true);
-    expect(controller.isActiveRequest(firstSession)).toBe(false);
-    expect(controller.isActiveRequest(secondSession)).toBe(true);
-
-    controller.pushProgressIfActive(firstSession, {
-      type: 'progress',
-      progress: 1,
-      total: 8,
-      message: 'stale',
-    });
-    controller.finishRequestIfActive(firstSession, {
-      type: 'result',
-      result: SUCCESS_RESULT,
-    });
-
-    expect(dispatch).not.toHaveBeenCalled();
-    expect(clearInput).not.toHaveBeenCalled();
-  });
-
-  it('clears input only for active terminal actions', () => {
-    const dispatch = vi.fn();
-    const clearInput = vi.fn();
-    const controller = createRequestController({ clearInput, dispatch });
-    const session = controller.beginRequest();
-
-    controller.pushProgressIfActive(session, {
-      type: 'progress',
-      progress: 1,
-      total: 8,
-      message: 'Loading',
-    });
-    controller.finishRequestIfActive(session, {
-      type: 'error',
-      error: {
-        code: 'FETCH_ERROR',
-        message: 'Failed',
-        retryable: true,
-      },
-    });
-
-    expect(dispatch).toHaveBeenCalledTimes(2);
-    expect(clearInput).toHaveBeenCalledTimes(1);
   });
 });
 

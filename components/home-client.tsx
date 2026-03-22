@@ -1,6 +1,6 @@
 'use client';
 
-import { type Dispatch, useEffect, useReducer, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -25,222 +25,98 @@ import {
   submitTransformRequest,
 } from '@/lib/client-transform';
 
-interface State {
-  result: TransformResult | null;
-  error: TransformError | null;
-  loading: boolean;
-  progress: StreamProgressEvent | null;
-}
+function useHomeClientModel() {
+  const [result, setResult] = useState<TransformResult | null>(null);
+  const [error, setError] = useState<TransformError | null>(null);
+  const [progress, setProgress] = useState<StreamProgressEvent | null>(null);
+  const [loading, setLoading] = useState(false);
 
-interface RequestSession {
-  abortController: AbortController;
-  requestId: number;
-}
-
-interface RequestControllerOptions {
-  clearInput: () => void;
-  dispatch: Dispatch<Action>;
-}
-
-type RequestAction = Exclude<Action, { type: 'submit' | 'dismiss_error' }>;
-type TerminalRequestAction = Extract<Action, { type: 'error' | 'result' }>;
-
-export interface RequestController {
-  beginRequest: () => RequestSession;
-  finishRequestIfActive: (
-    session: RequestSession,
-    action: TerminalRequestAction
-  ) => void;
-  isActiveRequest: (session: RequestSession) => boolean;
-  pushProgressIfActive: (
-    session: RequestSession,
-    event: StreamProgressEvent
-  ) => void;
-  releaseRequest: (session: RequestSession) => void;
-  stopActiveRequest: () => void;
-}
-
-type Action =
-  | { type: 'submit' }
-  | { type: 'progress'; event: StreamProgressEvent }
-  | { type: 'result'; result: TransformResult }
-  | { type: 'error'; error: TransformError }
-  | { type: 'dismiss_error' };
-
-const initialState: State = {
-  result: null,
-  error: null,
-  loading: false,
-  progress: null,
-};
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case 'submit':
-      return { ...initialState, loading: true };
-    case 'progress':
-      if (state.progress && isTerminalStreamProgressEvent(state.progress)) {
-        return state;
-      }
-
-      return {
-        ...state,
-        progress: normalizeStreamProgressEvent(action.event, state.progress),
-      };
-    case 'result':
-      return { ...initialState, result: action.result };
-    case 'error':
-      return { ...initialState, error: action.error };
-    case 'dismiss_error':
-      return { ...state, error: null };
-  }
-}
-
-export function createRequestController({
-  clearInput,
-  dispatch,
-}: RequestControllerOptions): RequestController {
-  let requestId = 0;
-  let abortController: AbortController | null = null;
-
-  function stopActiveRequest() {
-    requestId += 1;
-
-    const activeAbortController = abortController;
-    abortController = null;
-    activeAbortController?.abort();
-  }
-
-  function isActiveRequest(session: RequestSession): boolean {
-    return requestId === session.requestId;
-  }
-
-  function dispatchActionIfActive(
-    session: RequestSession,
-    action: RequestAction
-  ): boolean {
-    if (!isActiveRequest(session)) {
-      return false;
-    }
-
-    dispatch(action);
-    return true;
-  }
-
-  return {
-    beginRequest() {
-      stopActiveRequest();
-
-      const session: RequestSession = {
-        abortController: new AbortController(),
-        requestId,
-      };
-
-      abortController = session.abortController;
-
-      return session;
-    },
-    finishRequestIfActive(session, action) {
-      if (dispatchActionIfActive(session, action)) {
-        clearInput();
-      }
-    },
-    isActiveRequest,
-    pushProgressIfActive(session, event) {
-      dispatchActionIfActive(session, { type: 'progress', event });
-    },
-    releaseRequest(session) {
-      if (
-        isActiveRequest(session) &&
-        abortController === session.abortController
-      ) {
-        abortController = null;
-      }
-    },
-    stopActiveRequest,
-  };
-}
-
-function useRequestController(
-  clearInput: () => void,
-  dispatch: Dispatch<Action>
-): RequestController {
-  const requestControllerRef = useRef<RequestController | null>(null);
-
-  if (!requestControllerRef.current) {
-    requestControllerRef.current = createRequestController({
-      clearInput,
-      dispatch,
-    });
-  }
-
-  const requestController = requestControllerRef.current;
+  const formRef = useRef<TransformFormHandle>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     return () => {
-      requestController.stopActiveRequest();
+      abortControllerRef.current?.abort();
     };
-  }, [requestController]);
+  }, []);
 
-  return requestController;
-}
+  function handleAction(formData: FormData) {
+    const url = formData.get('url') as string;
+    if (!url) {
+      return;
+    }
 
-function useHomeClientModel() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const formRef = useRef<TransformFormHandle>(null);
+    abortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
-  function clearInput() {
-    formRef.current?.clear();
-  }
-
-  const requestController = useRequestController(clearInput, dispatch);
-
-  function dismissError() {
-    dispatch({ type: 'dismiss_error' });
-  }
-
-  function handleSubmit(url: string) {
-    const session = requestController.beginRequest();
-    dispatch({ type: 'submit' });
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    setProgress(null);
 
     const handlers = {
       onProgress(event: StreamProgressEvent) {
-        requestController.pushProgressIfActive(session, event);
-      },
-      onResult(result: TransformResult) {
-        requestController.finishRequestIfActive(session, {
-          type: 'result',
-          result,
+        if (abortControllerRef.current !== abortController) {
+          return;
+        }
+
+        setProgress((prev) => {
+          if (prev && isTerminalStreamProgressEvent(prev)) {
+            return prev;
+          }
+          return normalizeStreamProgressEvent(event, prev);
         });
       },
-      onError(error: TransformError) {
-        requestController.finishRequestIfActive(session, {
-          type: 'error',
-          error,
-        });
+      onResult(res: TransformResult) {
+        if (abortControllerRef.current !== abortController) {
+          return;
+        }
+
+        setResult(res);
+        setProgress(null);
+        setLoading(false);
+        formRef.current?.clear();
+      },
+      onError(err: TransformError) {
+        if (abortControllerRef.current !== abortController) {
+          return;
+        }
+
+        setError(err);
+        setProgress(null);
+        setLoading(false);
       },
     };
 
-    void submitTransformRequest(url, handlers, session.abortController.signal)
-      .catch((error) => {
+    void submitTransformRequest(url, handlers, abortController.signal).catch(
+      (err) => {
         if (
-          !requestController.isActiveRequest(session) ||
-          isAbortError(error)
+          abortControllerRef.current !== abortController ||
+          isAbortError(err)
         ) {
           return;
         }
 
-        requestController.finishRequestIfActive(session, {
-          type: 'error',
-          error: mapClientTransformError(error),
-        });
-      })
-      .finally(() => {
-        requestController.releaseRequest(session);
-      });
+        setError(mapClientTransformError(err));
+        setLoading(false);
+      }
+    );
   }
 
-  return { dismissError, formRef, handleSubmit, ...state };
+  function dismissError() {
+    setError(null);
+  }
+
+  return {
+    dismissError,
+    error,
+    formRef,
+    handleAction,
+    loading,
+    progress,
+    result,
+  };
 }
 
 export default function HomeClient() {
@@ -248,18 +124,19 @@ export default function HomeClient() {
     dismissError,
     error,
     formRef,
-    handleSubmit,
+    handleAction,
     loading,
     progress,
     result,
   } = useHomeClientModel();
+
   const showProgress = loading && progress !== null;
   const showError = !loading && error !== null;
   const showResult = !loading && result !== null;
 
   return (
     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TransformForm ref={formRef} loading={loading} onSubmit={handleSubmit} />
+      <TransformForm ref={formRef} loading={loading} action={handleAction} />
 
       <Box
         aria-live="polite"

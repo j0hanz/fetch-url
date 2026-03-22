@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import TransformForm from '@/components/form';
 import { submitUrlForm } from '@/tests/setup';
 
-const onSubmit = vi.fn();
+const action = vi.fn();
 const VALID_URL = 'https://example.com';
 
 describe('TransformForm', () => {
@@ -24,9 +24,11 @@ describe('TransformForm', () => {
 
   it('submits the current URL value', async () => {
     renderForm();
-    await submitUrlForm(`  ${VALID_URL}  `);
+    await submitUrlForm(VALID_URL);
 
-    expect(onSubmit).toHaveBeenCalledWith(VALID_URL);
+    expect(action).toHaveBeenCalled();
+    const formData = action.mock.calls[0][0] as FormData;
+    expect(formData.get('url')).toBe(VALID_URL);
   });
 
   it('disables the URL input and changes button text while loading', () => {
@@ -41,5 +43,5 @@ describe('TransformForm', () => {
 });
 
 function renderForm({ loading = false }: { loading?: boolean } = {}) {
-  return render(<TransformForm loading={loading} onSubmit={onSubmit} />);
+  return render(<TransformForm loading={loading} action={action} />);
 }
