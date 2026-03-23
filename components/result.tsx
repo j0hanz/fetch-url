@@ -312,18 +312,9 @@ function ResultDetailDialog({
       scroll="paper"
     >
       <DialogTitle id="result-detail-title">
-        <Stack direction="row" gap={1.5} alignItems="center">
-          <Avatar
-            src={metadata.favicon || undefined}
-            sx={{ width: 28, height: 28 }}
-            alt={title ?? url}
-          >
-            {title?.[0]}
-          </Avatar>
-          <Typography variant="subtitle1" noWrap sx={{ minWidth: 0 }}>
-            {title ?? 'Page Details'}
-          </Typography>
-        </Stack>
+        <Typography variant="subtitle1" sx={{ minWidth: 0 }}>
+          {title ?? 'Page Details'}
+        </Typography>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
