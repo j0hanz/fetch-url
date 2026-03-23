@@ -57,16 +57,13 @@ const RAW_MARKDOWN_SX = {
 } as const;
 
 const RESULT_URL_TITLE = {
-  color: 'text.primary',
   overflow: 'hidden',
-  whiteSpace: 'nowrap',
   maxWidth: { xs: '30ch', sm: '50ch', md: '70ch' },
 } as const;
 const RESULT_URL_SX = {
-  color: 'text.secondary',
+  color: 'text.disabled',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
   maxWidth: { xs: '30ch', sm: '50ch', md: '70ch' },
 } as const;
 
@@ -233,7 +230,7 @@ function ResultHeader({ result }: TransformResultProps) {
   const { title, url, metadata, fromCache } = result;
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" gap={1.5} alignItems="flex-start">
       <Tooltip title={fromCache ? 'Served from cache' : 'Freshly fetched'}>
         <Badge
           variant="dot"
@@ -241,7 +238,11 @@ function ResultHeader({ result }: TransformResultProps) {
           invisible={!fromCache}
           overlap="circular"
         >
-          <Avatar src={metadata.favicon} alt={title ?? url}>
+          <Avatar
+            src={metadata.favicon}
+            sx={{ width: 32, height: 32 }}
+            alt={title ?? url}
+          >
             {title?.[0]}
           </Avatar>
         </Badge>
@@ -252,7 +253,7 @@ function ResultHeader({ result }: TransformResultProps) {
             {title}
           </Typography>
         )}
-        <Typography variant="caption" sx={RESULT_URL_SX}>
+        <Typography variant="caption" sx={RESULT_URL_SX} noWrap>
           {url}
         </Typography>
       </Stack>

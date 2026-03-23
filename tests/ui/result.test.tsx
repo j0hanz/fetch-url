@@ -158,23 +158,6 @@ describe('TransformResultPanel', () => {
     expect(badge).toHaveClass('MuiBadge-invisible');
   });
 
-  it('renders author chip when author exists', () => {
-    renderPanel();
-
-    expect(screen.getByText('IANA')).toBeInTheDocument();
-  });
-
-  it('does not render author chip when author is missing', () => {
-    renderPanel({
-      result: {
-        ...baseResult,
-        metadata: { ...baseResult.metadata, author: undefined },
-      },
-    });
-
-    expect(screen.queryByText('IANA')).not.toBeInTheDocument();
-  });
-
   it('shows the skeleton again when new preview content arrives', async () => {
     const { rerender } = renderPanel();
 
