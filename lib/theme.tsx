@@ -90,12 +90,14 @@ export const sx = {
   codeBlockWrapper: { position: 'relative' },
   langChip: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 4,
+    right: 4,
     fontFamily: tokens.fonts.mono,
     height: tokens.sizes.chipHeight,
-    opacity: 0.7,
+    opacity: 0.6,
     zIndex: 1,
+    fontSize: '0.7rem',
+    backgroundColor: 'unset',
   },
   link: {
     textUnderlineOffset: '0.18em',
@@ -179,13 +181,13 @@ export const theme = responsiveFontSizes(
     colorSchemes: {
       light: {
         palette: {
-          background: { default: '#ffffff', paper: '#ffffff' },
+          background: { default: '#F8F1F6', paper: '#ffffff' },
           brand: { primary: '#202020', secondary: '#FFFCD4' },
         },
       },
       dark: {
         palette: {
-          background: { default: '#0F1214', paper: '#0b0f13' },
+          background: { default: '#1C1B1D', paper: '#181818' },
           brand: { primary: '#FFFCD4', secondary: '#202020' },
         },
       },

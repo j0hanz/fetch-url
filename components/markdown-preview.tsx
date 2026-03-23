@@ -111,14 +111,7 @@ const components: Components = {
       const language = className?.replace('language-', '');
       return (
         <Box sx={sx.codeBlockWrapper}>
-          {language && (
-            <Chip
-              label={language}
-              size="small"
-              variant="outlined"
-              sx={sx.langChip}
-            />
-          )}
+          {language && <Chip label={language} size="small" sx={sx.langChip} />}
           <Paper variant="outlined" component="pre" sx={sx.codeBlock}>
             <code>{children}</code>
           </Paper>
