@@ -10,12 +10,7 @@ import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
 import Fade from '@mui/material/Fade';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
@@ -26,8 +21,8 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import useMediaQuery from '@mui/material/useMediaQuery';
 
+import { BaseDialog } from '@/components/dialog';
 import { MarkdownErrorBoundary } from '@/components/error';
 import { MarkdownSkeleton } from '@/components/loading';
 import MarkdownPreview from '@/components/markdown-preview';
@@ -286,48 +281,36 @@ function ResultDetailDialog({
   result,
 }: ResultDetailDialogProps) {
   const { title, url, metadata, contentSize, truncated } = result;
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Dialog
+    <BaseDialog
       open={open}
       onClose={onClose}
-      aria-labelledby="result-detail-title"
-      fullWidth
-      fullScreen={fullScreen}
-      maxWidth="sm"
-      scroll="paper"
-    >
-      <DialogTitle id="result-detail-title">
+      titleId="result-detail-title"
+      title={
         <Typography variant="subtitle1" sx={{ minWidth: 0 }}>
           {title ?? 'Page Details'}
         </Typography>
-      </DialogTitle>
-      <DialogContent dividers>
-        <Stack gap={2}>
-          <DetailRow label="URL:" value={url} />
-          {metadata.description && (
-            <DetailRow label="Info:" value={metadata.description} />
-          )}
-          <DetailRow label="Size:" value={formatBytes(contentSize)} />
-          {truncated && <DetailRow label="Truncated:" value="Yes" />}
-          {metadata.image && (
-            <Box
-              component="img"
-              src={metadata.image}
-              alt="Page preview"
-              sx={{ maxWidth: '100%', borderRadius: 1 }}
-            />
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button fullWidth size="large" onClick={onClose}>
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+      }
+      maxWidth="sm"
+    >
+      <Stack gap={2}>
+        <DetailRow label="URL:" value={url} />
+        {metadata.description && (
+          <DetailRow label="Info:" value={metadata.description} />
+        )}
+        <DetailRow label="Size:" value={formatBytes(contentSize)} />
+        {truncated && <DetailRow label="Truncated:" value="Yes" />}
+        {metadata.image && (
+          <Box
+            component="img"
+            src={metadata.image}
+            alt="Page preview"
+            sx={{ maxWidth: '100%', borderRadius: 1 }}
+          />
+        )}
+      </Stack>
+    </BaseDialog>
   );
 }
 

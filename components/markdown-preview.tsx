@@ -1,11 +1,6 @@
 'use client';
 
-import type {
-  ComponentProps,
-  CSSProperties,
-  ElementType,
-  ReactNode,
-} from 'react';
+import type { ComponentProps, ElementType, ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
@@ -13,18 +8,13 @@ import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 
 import Markdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+import { markdownTableComponents } from '@/components/table';
 import { MONO_FONT_FAMILY } from '@/lib/theme';
 
 const remarkPlugins = [remarkGfm];
@@ -101,18 +91,8 @@ const HEADING_BORDER_SX = {
   borderBottom: 1,
   borderColor: 'divider',
 } as const;
-const TABLE_CONTAINER_SX = { my: 2, overflowX: 'auto' } as const;
-const TABLE_ROW_SX = {
-  '&:nth-of-type(odd)': { bgcolor: 'action.selected' },
-  '&:last-child td, &:last-child th': { border: 0 },
-} as const;
-
 interface MarkdownNodeProps {
   children?: ReactNode;
-}
-
-interface TableCellRendererProps extends MarkdownNodeProps {
-  style?: Pick<CSSProperties, 'textAlign'>;
 }
 
 interface HeadingRendererOptions {
@@ -147,27 +127,6 @@ function createHeadingRenderer(
   };
 }
 
-function createTableCellRenderer(
-  fontWeight?: ComponentProps<typeof Typography>['fontWeight']
-) {
-  return function TableCellRenderer({
-    children,
-    style,
-  }: TableCellRendererProps) {
-    return (
-      <TableCell
-        sx={{
-          verticalAlign: 'top',
-          ...(fontWeight && { fontWeight }),
-          textAlign: style?.textAlign,
-        }}
-      >
-        {children}
-      </TableCell>
-    );
-  };
-}
-
 function createListRenderer(component: 'ul' | 'ol') {
   return function ListRenderer({ children }: MarkdownNodeProps) {
     return (
@@ -179,6 +138,7 @@ function createListRenderer(component: 'ul' | 'ol') {
 }
 
 const components: Components = {
+  ...markdownTableComponents,
   h1: createHeadingRenderer('h4', 2, { bordered: true, component: 'h1' }),
   h2: createHeadingRenderer('h5', 2, { bordered: true, component: 'h2' }),
   h3: createHeadingRenderer('h6', 1.5, { component: 'h3' }),
@@ -269,28 +229,6 @@ const components: Components = {
       sx={IMAGE_SX}
     />
   ),
-  table: ({ children }) => (
-    <TableContainer
-      component={Paper}
-      variant="outlined"
-      sx={TABLE_CONTAINER_SX}
-    >
-      <Table size="small" aria-label="data table">
-        {children}
-      </Table>
-    </TableContainer>
-  ),
-  thead: ({ children }) => (
-    <TableHead sx={{ bgcolor: 'action.hover' }}>{children}</TableHead>
-  ),
-  tbody: ({ children }) => <TableBody>{children}</TableBody>,
-  tr: ({ children }) => (
-    <TableRow hover sx={TABLE_ROW_SX}>
-      {children}
-    </TableRow>
-  ),
-  th: createTableCellRenderer('bold'),
-  td: createTableCellRenderer(),
   ul: createListRenderer('ul'),
   ol: createListRenderer('ol'),
   li: ({ children }) => (

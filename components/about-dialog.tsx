@@ -11,19 +11,12 @@ import {
 
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
-import { useTheme } from '@mui/material/styles';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { visuallyHidden } from '@mui/utils';
 
+import { BaseDialog } from '@/components/dialog';
 import { MarkdownErrorBoundary } from '@/components/error';
 import { MarkdownSkeleton } from '@/components/loading';
 import { HEADER_ICON_SX } from '@/lib/theme';
@@ -105,8 +98,6 @@ export default function AboutDialog({
 }: AboutDialogProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<AboutTabId>('overview');
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const tabs = createAboutTabDefinitions({
     overview: markdown,
     'how-it-works': howItWorksMarkdown,
@@ -136,52 +127,43 @@ export default function AboutDialog({
         </IconButton>
       </Tooltip>
 
-      <Dialog
+      <BaseDialog
         open={open}
         onClose={handleClose}
-        aria-labelledby="about-dialog-title"
-        fullWidth
-        fullScreen={fullScreen}
-        scroll="paper"
-      >
-        <DialogTitle id="about-dialog-title" sx={visuallyHidden}>
-          About
-        </DialogTitle>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs
-            value={tab}
-            onChange={handleTabChange}
-            variant="fullWidth"
-            aria-label="About dialog tabs"
-          >
-            {tabs.map((tabDefinition) => (
-              <Tab
-                key={tabDefinition.id}
-                value={tabDefinition.id}
-                label={tabDefinition.label}
-                id={tabDefinition.tabId}
-                aria-controls={tabDefinition.panelId}
-              />
-            ))}
-          </Tabs>
-        </Box>
-        <DialogContent dividers>
-          {tabs.map((tabDefinition) => (
-            <TabPanel
-              key={tabDefinition.id}
-              tab={tabDefinition.id}
-              visible={tab === tabDefinition.id}
+        titleId="about-dialog-title"
+        title="About"
+        hiddenTitle
+        header={
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs
+              value={tab}
+              onChange={handleTabChange}
+              variant="fullWidth"
+              aria-label="About dialog tabs"
             >
-              <MarkdownTabPanel>{tabDefinition.content}</MarkdownTabPanel>
-            </TabPanel>
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button fullWidth size="large" onClick={handleClose}>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+              {tabs.map((tabDefinition) => (
+                <Tab
+                  key={tabDefinition.id}
+                  value={tabDefinition.id}
+                  label={tabDefinition.label}
+                  id={tabDefinition.tabId}
+                  aria-controls={tabDefinition.panelId}
+                />
+              ))}
+            </Tabs>
+          </Box>
+        }
+      >
+        {tabs.map((tabDefinition) => (
+          <TabPanel
+            key={tabDefinition.id}
+            tab={tabDefinition.id}
+            visible={tab === tabDefinition.id}
+          >
+            <MarkdownTabPanel>{tabDefinition.content}</MarkdownTabPanel>
+          </TabPanel>
+        ))}
+      </BaseDialog>
     </>
   );
 }
