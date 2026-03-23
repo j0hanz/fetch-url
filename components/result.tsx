@@ -263,15 +263,11 @@ function ResultMarkdownPanel({
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <Stack direction="row" spacing={1} alignItems="baseline">
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{ minWidth: 100, flexShrink: 0 }}
-      >
+    <Stack direction="row" gap={2.5}>
+      <Typography variant="body2" color="text.secondary">
         {label}
       </Typography>
-      <Typography variant="body2" sx={{ wordBreak: 'break-all', minWidth: 0 }}>
+      <Typography variant="body2" sx={{ wordBreak: 'break-word', minWidth: 0 }}>
         {value}
       </Typography>
     </Stack>
@@ -289,15 +285,7 @@ function ResultDetailDialog({
   onClose,
   result,
 }: ResultDetailDialogProps) {
-  const {
-    title,
-    url,
-    resolvedUrl,
-    finalUrl,
-    metadata,
-    contentSize,
-    truncated,
-  } = result;
+  const { title, url, metadata, contentSize, truncated } = result;
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -317,28 +305,13 @@ function ResultDetailDialog({
         </Typography>
       </DialogTitle>
       <DialogContent dividers>
-        <Stack spacing={2}>
-          <Stack spacing={1}>
-            <DetailRow label="URL:" value={url} />
-            {resolvedUrl && resolvedUrl !== url && (
-              <DetailRow label="Resolved URL:" value={resolvedUrl} />
-            )}
-            {finalUrl && finalUrl !== url && finalUrl !== resolvedUrl && (
-              <DetailRow label="Final URL:" value={finalUrl} />
-            )}
-          </Stack>
-          <Stack spacing={1}>
-            {metadata.description && (
-              <DetailRow label="Description:" value={metadata.description} />
-            )}
-            {metadata.author && (
-              <DetailRow label="Author:" value={metadata.author} />
-            )}
-          </Stack>
-          <Stack spacing={1}>
-            <DetailRow label="Size:" value={formatBytes(contentSize)} />
-            {truncated && <DetailRow label="Truncated:" value="Yes" />}
-          </Stack>
+        <Stack gap={2}>
+          <DetailRow label="URL:" value={url} />
+          {metadata.description && (
+            <DetailRow label="Info:" value={metadata.description} />
+          )}
+          <DetailRow label="Size:" value={formatBytes(contentSize)} />
+          {truncated && <DetailRow label="Truncated:" value="Yes" />}
           {metadata.image && (
             <Box
               component="img"
