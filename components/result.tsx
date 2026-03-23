@@ -10,7 +10,6 @@ import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import Fade from '@mui/material/Fade';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
@@ -257,12 +256,6 @@ function ResultHeader({ result }: TransformResultProps) {
           {url}
         </Typography>
       </Stack>
-      {metadata.author && (
-        <Chip
-          avatar={<Avatar>{metadata.author[0]}</Avatar>}
-          label={metadata.author}
-        />
-      )}
     </Stack>
   );
 }
