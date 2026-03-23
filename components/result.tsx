@@ -34,45 +34,73 @@ import MarkdownPreview from '@/components/markdown-preview';
 import type { TransformResult } from '@/lib/api';
 import { MONO_FONT_FAMILY } from '@/lib/theme';
 
+// ============================================================================
+// Types & Interfaces
+// ============================================================================
+
 interface TransformResultProps {
   result: TransformResult;
 }
 
-interface PreviewContentProps {
-  markdown: string;
-}
-
 type ViewMode = 'preview' | 'code';
+type CopyStatus = 'idle' | 'copied' | 'failed';
+type IconButtonColor = React.ComponentProps<typeof IconButton>['color'];
 
-const COPY_FEEDBACK_DELAY_MS = 2000;
-const DEFAULT_DOWNLOAD_FILE_NAME = 'page';
-const TOGGLE_BUTTON_SX = { border: 0 } as const;
-const MARKDOWN_PANEL_SX = {
-  p: { xs: 1.5, sm: 2.5 },
-  flex: 1,
-  maxHeight: { xs: '50dvh', sm: '55dvh', md: '60dvh' },
-  overflow: 'auto',
-  border: '1px solid',
-  borderColor: 'divider',
-  borderRadius: 1.5,
-} as const;
-const RAW_MARKDOWN_SX = {
-  fontFamily: MONO_FONT_FAMILY,
-  fontSize: { xs: '0.8125rem', sm: '0.875rem' },
-  whiteSpace: 'pre-wrap',
-  wordBreak: 'break-word',
+// ============================================================================
+// Constants & Styles
+// ============================================================================
+
+const CONFIG = {
+  COPY_FEEDBACK_DELAY_MS: 2000,
+  DEFAULT_DOWNLOAD_FILE_NAME: 'page',
 } as const;
 
-const RESULT_URL_TITLE = {
-  overflow: 'hidden',
-  maxWidth: { xs: '30ch', sm: '50ch', md: '70ch' },
+const COPY_STATUS_DETAILS: Record<
+  CopyStatus,
+  { color: IconButtonColor; message?: string }
+> = {
+  idle: { color: 'default' },
+  copied: { color: 'success', message: 'Copied to clipboard' },
+  failed: { color: 'error', message: 'Failed to copy' },
+};
+
+const STYLES = {
+  toggleButton: { border: 0 },
+  markdownPanel: {
+    p: { xs: 1.5, sm: 2.5 },
+    flex: 1,
+    maxHeight: { xs: '50dvh', sm: '55dvh', md: '60dvh' },
+    overflow: 'auto',
+    border: '1px solid',
+    borderColor: 'divider',
+    borderRadius: 1.5,
+  },
+  rawMarkdown: {
+    fontFamily: MONO_FONT_FAMILY,
+    fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+  },
+  resultUrlTitle: {
+    overflow: 'hidden',
+    maxWidth: { xs: '30ch', sm: '50ch', md: '70ch' },
+  },
+  resultUrl: {
+    color: 'text.disabled',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: { xs: '30ch', sm: '50ch', md: '70ch' },
+  },
+  headerButton: {
+    justifyContent: 'flex-start',
+    textAlign: 'left',
+    width: '100%',
+  },
 } as const;
-const RESULT_URL_SX = {
-  color: 'text.disabled',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  maxWidth: { xs: '30ch', sm: '50ch', md: '70ch' },
-} as const;
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
 
 function downloadMarkdownFile(title: string | undefined, markdown: string) {
   const blob = new Blob([markdown], { type: 'text/markdown' });
@@ -82,7 +110,7 @@ function downloadMarkdownFile(title: string | undefined, markdown: string) {
 
   try {
     link.href = url;
-    link.download = `${title || DEFAULT_DOWNLOAD_FILE_NAME}.md`;
+    link.download = `${title || CONFIG.DEFAULT_DOWNLOAD_FILE_NAME}.md`;
     document.body.appendChild(link);
     attached = true;
     link.click();
@@ -90,22 +118,70 @@ function downloadMarkdownFile(title: string | undefined, markdown: string) {
     if (attached) {
       link.remove();
     }
-
     URL.revokeObjectURL(url);
   }
 }
 
-type CopyStatus = 'idle' | 'copied' | 'failed';
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
 
-type IconButtonColor = React.ComponentProps<typeof IconButton>['color'];
-const COPY_STATUS_DETAILS: Record<
-  CopyStatus,
-  { color: IconButtonColor; message?: string }
-> = {
-  idle: { color: 'default' },
-  copied: { color: 'success', message: 'Copied to clipboard' },
-  failed: { color: 'error', message: 'Failed to copy' },
-};
+// ============================================================================
+// Hooks
+// ============================================================================
+
+function usePreviewMarkdown(markdown: string) {
+  const theme = useTheme();
+  const [previewMarkdown, setPreviewMarkdown] = useState<string | null>(null);
+  const isPending = previewMarkdown !== markdown;
+  const previewTransitionDuration = theme.transitions.duration.shortest;
+  const previewRevealDelay = theme.transitions.duration.shorter;
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      startTransition(() => {
+        setPreviewMarkdown(markdown);
+      });
+    }, previewRevealDelay);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [markdown, previewRevealDelay]);
+
+  return { isPending, previewMarkdown, previewTransitionDuration };
+}
+
+function useCopyFeedback() {
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
+
+  async function handleCopy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('failed');
+    }
+  }
+
+  function clearCopyFeedback() {
+    setCopyStatus('idle');
+  }
+
+  return {
+    clearCopyFeedback,
+    copyFeedbackOpen: copyStatus !== 'idle',
+    copyStatus,
+    handleCopy,
+  };
+}
+
+// ============================================================================
+// Sub-Components
+// ============================================================================
 
 interface ResultActionButtonProps {
   ariaLabel: string;
@@ -131,7 +207,7 @@ function ResultActionButton({
   );
 }
 
-function PreviewContent({ markdown }: PreviewContentProps) {
+function PreviewContent({ markdown }: { markdown: string }) {
   const { isPending, previewMarkdown, previewTransitionDuration } =
     usePreviewMarkdown(markdown);
 
@@ -162,70 +238,22 @@ function PreviewContent({ markdown }: PreviewContentProps) {
   );
 }
 
-function usePreviewMarkdown(markdown: string) {
-  const theme = useTheme();
-  const [previewMarkdown, setPreviewMarkdown] = useState<string | null>(null);
-  const isPending = previewMarkdown !== markdown;
-  const previewTransitionDuration = theme.transitions.duration.shortest;
-  const previewRevealDelay = theme.transitions.duration.shorter;
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      startTransition(() => {
-        setPreviewMarkdown(markdown);
-      });
-    }, previewRevealDelay);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [markdown, previewRevealDelay]);
-
-  return { isPending, previewMarkdown, previewTransitionDuration };
-}
-
-function useCopyFeedback(markdown: string) {
-  const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(markdown);
-      setCopyStatus('copied');
-    } catch {
-      setCopyStatus('failed');
-    }
-  }
-
-  function clearCopyFeedback() {
-    setCopyStatus('idle');
-  }
-
-  return {
-    clearCopyFeedback,
-    copyFeedbackOpen: copyStatus !== 'idle',
-    copyStatus,
-    handleCopy,
-  };
-}
-
-interface ResultMarkdownPanelProps {
-  isPreviewMode: boolean;
-  markdown: string;
-}
-
 function ResultMarkdownPanel({
   isPreviewMode,
   markdown,
-}: ResultMarkdownPanelProps) {
+}: {
+  isPreviewMode: boolean;
+  markdown: string;
+}) {
   return (
-    <Paper sx={MARKDOWN_PANEL_SX}>
+    <Paper sx={STYLES.markdownPanel}>
       <Box sx={{ display: isPreviewMode ? 'block' : 'none' }}>
         <MarkdownErrorBoundary resetKey={markdown}>
           <PreviewContent markdown={markdown} />
         </MarkdownErrorBoundary>
       </Box>
       <Box sx={{ display: !isPreviewMode ? 'block' : 'none' }}>
-        <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
+        <Typography component="pre" variant="body2" sx={STYLES.rawMarkdown}>
           {markdown}
         </Typography>
       </Box>
@@ -233,19 +261,7 @@ function ResultMarkdownPanel({
   );
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const kb = bytes / 1024;
-  if (kb < 1024) return `${kb.toFixed(1)} KB`;
-  return `${(kb / 1024).toFixed(1)} MB`;
-}
-
-interface DetailRowProps {
-  label: string;
-  value: ReactNode;
-}
-
-function DetailRow({ label, value }: DetailRowProps) {
+function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <Stack direction="row" spacing={1} alignItems="baseline">
       <Typography
@@ -298,7 +314,7 @@ function ResultDetailDialog({
       <DialogTitle id="result-detail-title">
         <Stack direction="row" gap={1.5} alignItems="center">
           <Avatar
-            src={metadata.favicon}
+            src={metadata.favicon || undefined}
             sx={{ width: 28, height: 28 }}
             alt={title ?? url}
           >
@@ -311,7 +327,6 @@ function ResultDetailDialog({
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
-          {/* URLs */}
           <Stack spacing={1}>
             <DetailRow label="URL:" value={url} />
             {resolvedUrl && resolvedUrl !== url && (
@@ -321,8 +336,6 @@ function ResultDetailDialog({
               <DetailRow label="Final URL:" value={finalUrl} />
             )}
           </Stack>
-
-          {/* Metadata */}
           <Stack spacing={1}>
             {metadata.description && (
               <DetailRow label="Description:" value={metadata.description} />
@@ -354,63 +367,136 @@ function ResultDetailDialog({
   );
 }
 
-const RESULT_HEADER_BUTTON_SX = {
-  justifyContent: 'flex-start',
-  textAlign: 'left',
-  width: '100%',
-} as const;
-
-interface ResultHeaderProps extends TransformResultProps {
-  onClick: () => void;
-}
-
-function ResultHeader({ result, onClick }: ResultHeaderProps) {
+function ResultHeaderWithDetails({ result }: TransformResultProps) {
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const { title, url, metadata, fromCache } = result;
 
   return (
-    <Tooltip title="View page details">
-      <ButtonBase
-        onClick={onClick}
-        disableRipple={true}
-        sx={RESULT_HEADER_BUTTON_SX}
-        aria-label="View page details"
-      >
-        <Stack direction="row" gap={1.5} alignItems="center">
-          <Badge
-            variant="dot"
-            color="success"
-            invisible={!fromCache}
-            overlap="circular"
-          >
-            <Avatar
-              src={metadata.favicon}
-              sx={{ width: 32, height: 32 }}
-              alt={title ?? url}
+    <>
+      <Tooltip title="View page details">
+        <ButtonBase
+          onClick={() => setDetailDialogOpen(true)}
+          disableRipple={true}
+          sx={STYLES.headerButton}
+          aria-label="View page details"
+        >
+          <Stack direction="row" gap={1.5} alignItems="center">
+            <Badge
+              variant="dot"
+              color="success"
+              invisible={!fromCache}
+              overlap="circular"
             >
-              {title?.[0]}
-            </Avatar>
-          </Badge>
-          <Stack>
-            {title && (
-              <Typography variant="caption" sx={RESULT_URL_TITLE} noWrap>
-                {title}
+              <Avatar
+                src={metadata.favicon || undefined}
+                sx={{ width: 32, height: 32 }}
+                alt={title ?? url}
+              >
+                {title?.[0]}
+              </Avatar>
+            </Badge>
+            <Stack>
+              {title && (
+                <Typography variant="caption" sx={STYLES.resultUrlTitle} noWrap>
+                  {title}
+                </Typography>
+              )}
+              <Typography variant="caption" sx={STYLES.resultUrl} noWrap>
+                {url}
               </Typography>
-            )}
-            <Typography variant="caption" sx={RESULT_URL_SX} noWrap>
-              {url}
-            </Typography>
+            </Stack>
           </Stack>
-        </Stack>
-      </ButtonBase>
-    </Tooltip>
+        </ButtonBase>
+      </Tooltip>
+      <ResultDetailDialog
+        open={detailDialogOpen}
+        onClose={() => setDetailDialogOpen(false)}
+        result={result}
+      />
+    </>
   );
 }
 
-function useResultModel(result: TransformResult) {
-  const [viewMode, setViewMode] = useState<ViewMode>('preview');
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+interface ResultActionBarProps {
+  viewMode: ViewMode;
+  onViewModeChange: (
+    event: React.MouseEvent<HTMLElement>,
+    newMode: ViewMode | null
+  ) => void;
+  result: TransformResult;
+}
+
+function ResultActionBar({
+  viewMode,
+  onViewModeChange,
+  result,
+}: ResultActionBarProps) {
   const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
-    useCopyFeedback(result.markdown);
+    useCopyFeedback();
+  const copyStatusDetails = COPY_STATUS_DETAILS[copyStatus];
+
+  function handleDownload() {
+    downloadMarkdownFile(result.title, result.markdown);
+  }
+
+  return (
+    <>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={onViewModeChange}
+          size="small"
+          aria-label="View mode"
+        >
+          <ToggleButton
+            sx={STYLES.toggleButton}
+            value="preview"
+            aria-label="Preview"
+          >
+            <VisibilityIcon fontSize="small" />
+          </ToggleButton>
+          <ToggleButton sx={STYLES.toggleButton} value="code" aria-label="Code">
+            <CodeIcon fontSize="small" />
+          </ToggleButton>
+        </ToggleButtonGroup>
+        <Stack direction="row" spacing={1}>
+          <ResultActionButton
+            ariaLabel="Copy Markdown"
+            title="Copy Markdown"
+            onClick={() => handleCopy(result.markdown)}
+            color={copyStatusDetails.color}
+          >
+            <ContentCopyIcon fontSize="small" />
+          </ResultActionButton>
+          <ResultActionButton
+            ariaLabel="Download Markdown"
+            title="Download Markdown"
+            onClick={handleDownload}
+          >
+            <Badge variant="dot" color="warning" invisible={!result.truncated}>
+              <DownloadIcon fontSize="small" />
+            </Badge>
+          </ResultActionButton>
+        </Stack>
+      </Stack>
+
+      <Snackbar
+        open={copyFeedbackOpen}
+        autoHideDuration={CONFIG.COPY_FEEDBACK_DELAY_MS}
+        onClose={clearCopyFeedback}
+        message={copyStatusDetails.message}
+      />
+    </>
+  );
+}
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
+export default function TransformResultPanel({ result }: TransformResultProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('preview');
 
   function handleViewModeChange(
     _event: React.MouseEvent<HTMLElement>,
@@ -421,52 +507,8 @@ function useResultModel(result: TransformResult) {
     }
   }
 
-  function handleDownload() {
-    downloadMarkdownFile(result.title, result.markdown);
-  }
-
-  function handleOpenDetailDialog() {
-    setDetailDialogOpen(true);
-  }
-
-  function handleCloseDetailDialog() {
-    setDetailDialogOpen(false);
-  }
-
-  return {
-    clearCopyFeedback,
-    copyFeedbackOpen,
-    copyStatus,
-    copyStatusDetails: COPY_STATUS_DETAILS[copyStatus],
-    detailDialogOpen,
-    handleCloseDetailDialog,
-    handleCopy,
-    handleDownload,
-    handleOpenDetailDialog,
-    handleViewModeChange,
-    isPreviewMode: viewMode === 'preview',
-    viewMode,
-  };
-}
-
-export default function TransformResultPanel({ result }: TransformResultProps) {
-  const {
-    clearCopyFeedback,
-    copyFeedbackOpen,
-    copyStatusDetails,
-    detailDialogOpen,
-    handleCloseDetailDialog,
-    handleCopy,
-    handleDownload,
-    handleOpenDetailDialog,
-    handleViewModeChange,
-    isPreviewMode,
-    viewMode,
-  } = useResultModel(result);
-
   return (
     <Stack spacing={3}>
-      {/* Truncation Warning */}
       {result.truncated && (
         <Alert severity="warning">
           Content was truncated. The full page may be too large to return in one
@@ -474,77 +516,19 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
         </Alert>
       )}
 
-      {/* Result Header */}
-      <ResultHeader result={result} onClick={handleOpenDetailDialog} />
-      <ResultDetailDialog
-        open={detailDialogOpen}
-        onClose={handleCloseDetailDialog}
-        result={result}
-      />
+      <ResultHeaderWithDetails result={result} />
 
-      {/* Markdown Section */}
       <Stack gap={0.2} sx={{ pt: 1 }} component="section">
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={handleViewModeChange}
-            size="small"
-            aria-label="View mode"
-          >
-            <ToggleButton
-              sx={TOGGLE_BUTTON_SX}
-              value="preview"
-              aria-label="Preview"
-            >
-              <VisibilityIcon fontSize="small" />
-            </ToggleButton>
-            <ToggleButton sx={TOGGLE_BUTTON_SX} value="code" aria-label="Code">
-              <CodeIcon fontSize="small" />
-            </ToggleButton>
-          </ToggleButtonGroup>
-          <Stack direction="row" spacing={1}>
-            <ResultActionButton
-              ariaLabel="Copy Markdown"
-              title="Copy Markdown"
-              onClick={() => {
-                void handleCopy();
-              }}
-              color={copyStatusDetails.color}
-            >
-              <ContentCopyIcon fontSize="small" />
-            </ResultActionButton>
-            <ResultActionButton
-              ariaLabel="Download Markdown"
-              title="Download Markdown"
-              onClick={handleDownload}
-            >
-              <Badge
-                variant="dot"
-                color="warning"
-                invisible={!result.truncated}
-              >
-                <DownloadIcon fontSize="small" />
-              </Badge>
-            </ResultActionButton>
-          </Stack>
-        </Stack>
+        <ResultActionBar
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          result={result}
+        />
         <ResultMarkdownPanel
-          isPreviewMode={isPreviewMode}
+          isPreviewMode={viewMode === 'preview'}
           markdown={result.markdown}
         />
       </Stack>
-
-      <Snackbar
-        open={copyFeedbackOpen}
-        autoHideDuration={COPY_FEEDBACK_DELAY_MS}
-        onClose={clearCopyFeedback}
-        message={copyStatusDetails.message}
-      />
     </Stack>
   );
 }
