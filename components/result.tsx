@@ -10,6 +10,12 @@ import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import ButtonBase from '@mui/material/ButtonBase';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import Fade from '@mui/material/Fade';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
@@ -20,6 +26,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { MarkdownErrorBoundary } from '@/components/error';
 import { MarkdownSkeleton } from '@/components/loading';
@@ -226,43 +233,182 @@ function ResultMarkdownPanel({
   );
 }
 
-function ResultHeader({ result }: TransformResultProps) {
-  const { title, url, metadata, fromCache } = result;
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
+
+interface DetailRowProps {
+  label: string;
+  value: ReactNode;
+}
+
+function DetailRow({ label, value }: DetailRowProps) {
+  return (
+    <Stack direction="row" spacing={1} alignItems="baseline">
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ minWidth: 100, flexShrink: 0 }}
+      >
+        {label}
+      </Typography>
+      <Typography variant="body2" sx={{ wordBreak: 'break-all', minWidth: 0 }}>
+        {value}
+      </Typography>
+    </Stack>
+  );
+}
+
+interface ResultDetailDialogProps {
+  open: boolean;
+  onClose: () => void;
+  result: TransformResult;
+}
+
+function ResultDetailDialog({
+  open,
+  onClose,
+  result,
+}: ResultDetailDialogProps) {
+  const {
+    title,
+    url,
+    resolvedUrl,
+    finalUrl,
+    metadata,
+    contentSize,
+    truncated,
+  } = result;
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Stack direction="row" gap={1.5} alignItems="center">
-      <Tooltip title={fromCache ? 'Served from cache' : 'Freshly fetched'}>
-        <Badge
-          variant="dot"
-          color="success"
-          invisible={!fromCache}
-          overlap="circular"
-        >
+    <Dialog
+      open={open}
+      onClose={onClose}
+      aria-labelledby="result-detail-title"
+      fullWidth
+      fullScreen={fullScreen}
+      maxWidth="sm"
+      scroll="paper"
+    >
+      <DialogTitle id="result-detail-title">
+        <Stack direction="row" gap={1.5} alignItems="center">
           <Avatar
             src={metadata.favicon}
-            sx={{ width: 32, height: 32 }}
+            sx={{ width: 28, height: 28 }}
             alt={title ?? url}
           >
             {title?.[0]}
           </Avatar>
-        </Badge>
-      </Tooltip>
-      <Stack>
-        {title && (
-          <Typography variant="caption" sx={RESULT_URL_TITLE} noWrap>
-            {title}
+          <Typography variant="subtitle1" noWrap sx={{ minWidth: 0 }}>
+            {title ?? 'Page Details'}
           </Typography>
-        )}
-        <Typography variant="caption" sx={RESULT_URL_SX} noWrap>
-          {url}
-        </Typography>
-      </Stack>
-    </Stack>
+        </Stack>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Stack spacing={2}>
+          {/* URLs */}
+          <Stack spacing={1}>
+            <DetailRow label="URL:" value={url} />
+            {resolvedUrl && resolvedUrl !== url && (
+              <DetailRow label="Resolved URL:" value={resolvedUrl} />
+            )}
+            {finalUrl && finalUrl !== url && finalUrl !== resolvedUrl && (
+              <DetailRow label="Final URL:" value={finalUrl} />
+            )}
+          </Stack>
+
+          {/* Metadata */}
+          <Stack spacing={1}>
+            {metadata.description && (
+              <DetailRow label="Description:" value={metadata.description} />
+            )}
+            {metadata.author && (
+              <DetailRow label="Author:" value={metadata.author} />
+            )}
+          </Stack>
+          <Stack spacing={1}>
+            <DetailRow label="Size:" value={formatBytes(contentSize)} />
+            {truncated && <DetailRow label="Truncated:" value="Yes" />}
+          </Stack>
+          {metadata.image && (
+            <Box
+              component="img"
+              src={metadata.image}
+              alt="Page preview"
+              sx={{ maxWidth: '100%', borderRadius: 1 }}
+            />
+          )}
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button fullWidth size="large" onClick={onClose}>
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+const RESULT_HEADER_BUTTON_SX = {
+  justifyContent: 'flex-start',
+  textAlign: 'left',
+  width: '100%',
+} as const;
+
+interface ResultHeaderProps extends TransformResultProps {
+  onClick: () => void;
+}
+
+function ResultHeader({ result, onClick }: ResultHeaderProps) {
+  const { title, url, metadata, fromCache } = result;
+
+  return (
+    <Tooltip title="View page details">
+      <ButtonBase
+        onClick={onClick}
+        disableRipple={true}
+        sx={RESULT_HEADER_BUTTON_SX}
+        aria-label="View page details"
+      >
+        <Stack direction="row" gap={1.5} alignItems="center">
+          <Badge
+            variant="dot"
+            color="success"
+            invisible={!fromCache}
+            overlap="circular"
+          >
+            <Avatar
+              src={metadata.favicon}
+              sx={{ width: 32, height: 32 }}
+              alt={title ?? url}
+            >
+              {title?.[0]}
+            </Avatar>
+          </Badge>
+          <Stack>
+            {title && (
+              <Typography variant="caption" sx={RESULT_URL_TITLE} noWrap>
+                {title}
+              </Typography>
+            )}
+            <Typography variant="caption" sx={RESULT_URL_SX} noWrap>
+              {url}
+            </Typography>
+          </Stack>
+        </Stack>
+      </ButtonBase>
+    </Tooltip>
   );
 }
 
 function useResultModel(result: TransformResult) {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
     useCopyFeedback(result.markdown);
 
@@ -279,13 +425,24 @@ function useResultModel(result: TransformResult) {
     downloadMarkdownFile(result.title, result.markdown);
   }
 
+  function handleOpenDetailDialog() {
+    setDetailDialogOpen(true);
+  }
+
+  function handleCloseDetailDialog() {
+    setDetailDialogOpen(false);
+  }
+
   return {
     clearCopyFeedback,
     copyFeedbackOpen,
     copyStatus,
     copyStatusDetails: COPY_STATUS_DETAILS[copyStatus],
+    detailDialogOpen,
+    handleCloseDetailDialog,
     handleCopy,
     handleDownload,
+    handleOpenDetailDialog,
     handleViewModeChange,
     isPreviewMode: viewMode === 'preview',
     viewMode,
@@ -297,8 +454,11 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
     clearCopyFeedback,
     copyFeedbackOpen,
     copyStatusDetails,
+    detailDialogOpen,
+    handleCloseDetailDialog,
     handleCopy,
     handleDownload,
+    handleOpenDetailDialog,
     handleViewModeChange,
     isPreviewMode,
     viewMode,
@@ -315,7 +475,12 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
       )}
 
       {/* Result Header */}
-      <ResultHeader result={result} />
+      <ResultHeader result={result} onClick={handleOpenDetailDialog} />
+      <ResultDetailDialog
+        open={detailDialogOpen}
+        onClose={handleCloseDetailDialog}
+        result={result}
+      />
 
       {/* Markdown Section */}
       <Stack gap={0.2} sx={{ pt: 1 }} component="section">
