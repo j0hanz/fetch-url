@@ -11,6 +11,20 @@ function textContent(text: string): CallToolResult['content'] {
   return [{ type: 'text', text }] satisfies CallToolResult['content'];
 }
 
+function multiTextContent(...texts: string[]): CallToolResult['content'] {
+  return texts.map((text) => ({
+    type: 'text',
+    text,
+  })) satisfies CallToolResult['content'];
+}
+
+function contentWithLeadingImage(text: string): CallToolResult['content'] {
+  return [
+    { type: 'image', data: 'AA==', mimeType: 'image/png' },
+    { type: 'text', text },
+  ] as CallToolResult['content'];
+}
+
 function expectSuccessResult(parsed: ParsedResult): ParsedSuccessResult {
   expect(parsed.ok).toBe(true);
   if (!parsed.ok) {
@@ -90,6 +104,29 @@ describe('parseMcpResult', () => {
   it('falls back to text content parsing when structuredContent is absent', () => {
     const raw: CallToolResult = {
       content: textContent(JSON.stringify(sampleStructuredContent)),
+    };
+
+    const result = expectSuccessResult(parseMcpResult(raw));
+    expect(result.url).toBe('https://example.com');
+    expect(result.markdown).toBe('# Example\n\nThis is an example.');
+  });
+
+  it('falls back to the first parseable text block when earlier text blocks are invalid', () => {
+    const raw: CallToolResult = {
+      content: multiTextContent(
+        'not json',
+        JSON.stringify(sampleStructuredContent)
+      ),
+    };
+
+    const result = expectSuccessResult(parseMcpResult(raw));
+    expect(result.url).toBe('https://example.com');
+    expect(result.markdown).toBe('# Example\n\nThis is an example.');
+  });
+
+  it('falls back to later text blocks after leading non-text content', () => {
+    const raw: CallToolResult = {
+      content: contentWithLeadingImage(JSON.stringify(sampleStructuredContent)),
     };
 
     const result = expectSuccessResult(parseMcpResult(raw));

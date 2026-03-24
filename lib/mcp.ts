@@ -86,10 +86,20 @@ function createTransport(state: McpRuntimeState): StdioClientTransport {
   return transport;
 }
 
+interface ResetRuntimeStateOptions {
+  clearDiagnostics?: boolean;
+  expectedClient?: Client;
+}
+
 async function resetRuntimeState(
   state: McpRuntimeState = getMcpRuntimeState(),
-  clearDiagnostics = false
+  options: ResetRuntimeStateOptions = {}
 ): Promise<void> {
+  const { clearDiagnostics = false, expectedClient } = options;
+  if (expectedClient && state.instance?.client !== expectedClient) {
+    return;
+  }
+
   const { instance } = state;
   state.connecting = undefined;
   state.instance = undefined;
@@ -101,18 +111,18 @@ async function resetRuntimeState(
 }
 
 export async function resetMcpRuntimeStateForTests(): Promise<void> {
-  await resetRuntimeState(getMcpRuntimeState(), true);
+  await resetRuntimeState(getMcpRuntimeState(), { clearDiagnostics: true });
 }
 
 function createClient(state: McpRuntimeState): Client {
   const client = new Client(CLIENT_INFO);
 
   client.onerror = () => {
-    void resetRuntimeState(state);
+    void resetRuntimeState(state, { expectedClient: client });
   };
 
   client.onclose = () => {
-    void resetRuntimeState(state);
+    void resetRuntimeState(state, { expectedClient: client });
   };
 
   return client;
@@ -211,7 +221,7 @@ export async function callFetchUrl(
     return result as CallToolResult;
   } catch (error) {
     if (shouldResetInstance(error)) {
-      await resetRuntimeState();
+      await resetRuntimeState(getMcpRuntimeState(), { expectedClient: client });
     }
     throw createTransportError(error, getMcpRuntimeState());
   }
@@ -446,13 +456,7 @@ function readPayloadRecord(raw: CallToolResult): PayloadReadState {
     return { kind: 'structured', payload: structuredPayload };
   }
 
-  const text = getFirstTextBlock(raw);
-  if (text === null) {
-    return { kind: 'missing' };
-  }
-
-  const payload = parseJsonRecord(text);
-  return payload ? { kind: 'text', payload } : { kind: 'invalid_text' };
+  return readTextPayloadRecord(raw);
 }
 
 function createErrorResult(payload: JsonRecord): ParsedMcpResult {
@@ -493,13 +497,22 @@ function createPayloadParseFailure(
   };
 }
 
-function getFirstTextBlock(raw: CallToolResult): string | null {
-  const [firstContent] = raw.content;
-  if (firstContent?.type !== 'text') {
-    return null;
+function readTextPayloadRecord(raw: CallToolResult): PayloadReadState {
+  let sawText = false;
+
+  for (const content of raw.content) {
+    if (content.type !== 'text') {
+      continue;
+    }
+
+    sawText = true;
+    const payload = parseJsonRecord(content.text);
+    if (payload) {
+      return { kind: 'text', payload };
+    }
   }
 
-  return firstContent.text;
+  return sawText ? { kind: 'invalid_text' } : { kind: 'missing' };
 }
 
 function unwrapRecord(record: JsonRecord, key: string): JsonRecord {

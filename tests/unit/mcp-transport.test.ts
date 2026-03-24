@@ -162,4 +162,32 @@ describe('callFetchUrl runtime lifecycle', () => {
     expect(clients).toHaveLength(2);
     expect(clients[1]?.connect).toHaveBeenCalledTimes(1);
   });
+
+  it('ignores stale lifecycle callbacks from a replaced client', async () => {
+    const { ErrorCode, FakeMcpError, callFetchUrl, clients } =
+      await loadMcpModuleWithMocks();
+
+    await callFetchUrl({ url: 'https://example.com' });
+
+    clients[0]?.callTool.mockRejectedValueOnce(
+      new FakeMcpError(ErrorCode.ConnectionClosed, 'Connection closed')
+    );
+
+    await expect(
+      callFetchUrl({ url: 'https://example.com/retry' })
+    ).rejects.toMatchObject({
+      code: ErrorCode.ConnectionClosed,
+      message: 'Connection closed',
+    });
+
+    await callFetchUrl({ url: 'https://example.com/recovered' });
+
+    clients[0]?.onclose?.();
+
+    await callFetchUrl({ url: 'https://example.com/still-active' });
+
+    expect(clients).toHaveLength(2);
+    expect(clients[1]?.close).not.toHaveBeenCalled();
+    expect(clients[1]?.callTool).toHaveBeenCalledTimes(2);
+  });
 });
