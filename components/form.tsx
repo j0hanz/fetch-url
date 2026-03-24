@@ -23,32 +23,28 @@ export default function TransformForm({
   action,
 }: TransformFormProps) {
   const urlInputId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useImperativeHandle(ref, () => ({
     clear() {
-      if (inputRef.current) {
-        inputRef.current.value = '';
-      }
+      formRef.current?.reset();
     },
   }));
 
   return (
-    <Box component="form" action={action}>
+    <Box component="form" ref={formRef} action={action}>
       <Grid container spacing={1} sx={{ mb: 1.5 }}>
         <Grid size={{ xs: 12, sm: 8 }}>
           <TextField
             id={urlInputId}
-            inputRef={inputRef}
             name="url"
             label="Enter URL to convert"
             type="url"
+            autoComplete="url"
             required
             fullWidth
             placeholder="https://..."
-            defaultValue=""
             disabled={loading}
-            variant="outlined"
             size="small"
           />
         </Grid>
