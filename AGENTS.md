@@ -5,15 +5,34 @@ Fetch URL is a Next.js web client for [`@j0hanz/fetch-url-mcp`](https://github.c
 ## Tooling
 
 - **Manager**: npm
-- **Frameworks**: react, next, typescript, vitest, eslint, @modelcontextprotocol/sdk, @emotion/react, @mui/material
+- **Runtime**: Node.js `>=24`
+- **Core Stack**: Next.js 16 App Router, React 19, TypeScript 5
+- **UI**: MUI 7 with Emotion, `@mui/material-nextjs` App Router cache provider, Geist variable fonts
+- **Content Rendering**: `react-markdown` with `remark-gfm`
+- **MCP Integration**: `@modelcontextprotocol/sdk` client + `@j0hanz/fetch-url-mcp` stdio transport
+- **Quality Tooling**: ESLint flat config (`@eslint/js`, `typescript-eslint`, `@next/next` core-web-vitals, `unused-imports`, `de-morgan`, `depend`), Prettier + `@trivago/prettier-plugin-sort-imports`, Knip
+- **Build Flags**: React Compiler enabled in `next.config.ts`; output tracing explicitly includes the fetch-url MCP package tree for `/api/transform`
+- **Testing Tooling**: Vitest 4, `@vitejs/plugin-react`, Testing Library, `@testing-library/user-event`, jsdom
 
 ## Architecture
 
-- API layer, App Router, Component-based
+- **Rendering Model**: App Router with server-first entrypoints in `app/layout.tsx` and `app/page.tsx`
+- **Home Page Flow**: `app/page.tsx` reads static markdown content from `public/` on the server and passes it into client components for interaction
+- **Client State Boundary**: `components/home-client.tsx` owns form submission, request cancellation, streamed progress state, error display, and final result rendering
+- **API Layer**: `app/api/transform/route.ts` runs on the Node.js runtime, validates JSON input, and returns either JSON errors or streamed NDJSON progress/result events
+- **Service Layer**: `lib/transform.ts` handles retry behavior and transport-level error mapping before returning normalized API responses
+- **MCP Transport Layer**: `lib/mcp.ts` manages MCP client lifecycle, stdio transport creation, tool discovery, reconnect/reset behavior, and fetch-url tool invocation
+- **Shared Contracts**: `lib/api.ts` and `lib/validate.ts` centralize request validation, response typing, stream event helpers, and error construction
+- **Presentation Layer**: MUI theming is wired through `lib/theme-provider.tsx`, with route metadata, sitemap/robots assets, and social image generation kept under `app/` and `lib/`
 
 ## Testing Strategy
 
-- Config: vitest.config.ts, Dedicated test directory, Integration test directory, 8 test files found
+- **Runner Config**: `vitest.config.ts` uses `@vitejs/plugin-react`, the `@` path alias, `tests/setup.ts`, and a default `node` environment
+- **Test Layout**: `tests/unit` covers service, transport, parsing, and site helpers; `tests/ui` covers rendered component behavior; `tests/integration` exists as a placeholder directory but currently has no checked-in specs
+- **UI Test Pattern**: UI specs opt into `// @vitest-environment jsdom` per file and use Testing Library plus shared helpers from `tests/setup.ts`
+- **Mocking Strategy**: Unit tests mock MCP SDK clients/transports and network boundaries to verify retry logic, connection lifecycle, abort handling, and error mapping without starting external processes
+- **Current Footprint**: 12 test files total, split across 7 unit tests and 5 UI tests
+- **Behavior Under Test**: form submission, streamed progress transitions, result/error presentation, MCP transport lifecycle, request parsing, transform retries, and site metadata helpers
 
 ## Commands
 
@@ -40,7 +59,8 @@ Fetch URL is a Next.js web client for [`@j0hanz/fetch-url-mcp`](https://github.c
 ├── memory_db/
 ├── public/
 ├── tests/              # test suites
-├── AGENTS.md           # agent guidance
+├── .prettierignore     # formatter config
+├── .prettierrc         # formatter config
 ├── eslint.config.mjs   # lint config
 ├── package.json        # scripts and dependencies
 ├── README.md           # usage and setup docs
@@ -50,7 +70,7 @@ Fetch URL is a Next.js web client for [`@j0hanz/fetch-url-mcp`](https://github.c
 ## Navigation
 
 - **Entry Points**: `package.json`, `README.md`
-- **Key Configs**: `tsconfig.json`, `vitest.config.ts`
+- **Key Configs**: `.prettierrc`, `tsconfig.json`, `vitest.config.ts`
 
 ## Don'ts
 
