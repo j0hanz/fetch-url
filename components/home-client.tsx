@@ -38,6 +38,7 @@ function useHomeClientModel() {
   useEffect(() => {
     return () => {
       abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
     };
   }, []);
 

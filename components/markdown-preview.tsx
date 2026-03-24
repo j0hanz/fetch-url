@@ -106,7 +106,8 @@ const components: Components = {
   code: ({ className, children, node }) => {
     const isBlock =
       className?.startsWith('language-') ||
-      node?.position?.start.line !== node?.position?.end.line;
+      (node?.position != null &&
+        node.position.end.line - node.position.start.line >= 2);
     if (isBlock) {
       const language = className?.replace('language-', '');
       return (

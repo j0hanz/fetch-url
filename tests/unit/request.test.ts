@@ -153,7 +153,7 @@ describe('POST /api/transform', () => {
       ok: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: 'Request body too large.',
+        message: 'Invalid request.',
         retryable: false,
       },
     });
