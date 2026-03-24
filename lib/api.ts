@@ -78,15 +78,21 @@ export function createTransformError(
   message: string,
   options: Partial<TransformErrorOptions> = {}
 ): TransformError {
-  return {
+  const error: TransformError = {
     code,
     message,
     retryable: options.retryable ?? false,
-    ...(options.statusCode !== undefined
-      ? { statusCode: options.statusCode }
-      : {}),
-    ...(options.details !== undefined ? { details: options.details } : {}),
   };
+
+  if (options.statusCode !== undefined) {
+    error.statusCode = options.statusCode;
+  }
+
+  if (options.details !== undefined) {
+    error.details = options.details;
+  }
+
+  return error;
 }
 
 export function createInternalError(
@@ -272,7 +278,9 @@ export function isTransformError(value: unknown): value is TransformError {
   return (
     typeof value.code === 'string' &&
     typeof value.message === 'string' &&
-    typeof value.retryable === 'boolean'
+    typeof value.retryable === 'boolean' &&
+    (value.statusCode === undefined || typeof value.statusCode === 'number') &&
+    (value.details === undefined || isRecord(value.details))
   );
 }
 
