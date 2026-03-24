@@ -25,4 +25,40 @@ describe('MarkdownPreview', () => {
       screen.getByRole('cell', { name: 'Clean Markdown' })
     ).toBeInTheDocument();
   });
+
+  it('renders safe https images and blocks data: URI images', () => {
+    render(
+      <MarkdownPreview>
+        {`![safe](https://example.com/img.png)\n\n![unsafe](data:image/svg+xml,<svg></svg>)`}
+      </MarkdownPreview>
+    );
+
+    const images = screen.queryAllByRole('img');
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute('src', 'https://example.com/img.png');
+  });
+
+  it('renders safe links and downgrades javascript: href to plain text', () => {
+    render(
+      <MarkdownPreview>
+        {`[safe](https://example.com)\n\n[unsafe](javascript:alert(1))`}
+      </MarkdownPreview>
+    );
+
+    const links = screen.queryAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', 'https://example.com');
+
+    expect(screen.getByText('unsafe')).toBeInTheDocument();
+    expect(screen.getByText('unsafe').closest('a')).toBeNull();
+  });
+
+  it('renders mailto: links as clickable', () => {
+    render(
+      <MarkdownPreview>{`[email](mailto:user@example.com)`}</MarkdownPreview>
+    );
+
+    const link = screen.getByRole('link', { name: 'email' });
+    expect(link).toHaveAttribute('href', 'mailto:user@example.com');
+  });
 });

@@ -19,6 +19,27 @@ import { sx } from '@/lib/theme';
 
 const remarkPlugins = [remarkGfm];
 
+const SAFE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+
+function isSafeImageSrc(src: unknown): src is string {
+  if (typeof src !== 'string') return false;
+  try {
+    const { protocol } = new URL(src);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function isSafeHref(href: unknown): href is string {
+  if (typeof href !== 'string') return false;
+  try {
+    return SAFE_LINK_PROTOCOLS.has(new URL(href).protocol);
+  } catch {
+    return false;
+  }
+}
+
 interface MarkdownNodeProps {
   children?: ReactNode;
 }
@@ -87,17 +108,22 @@ const components: Components = {
       {children}
     </Typography>
   ),
-  a: ({ href, children }) => (
-    <Link
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      underline="hover"
-      sx={sx.link}
-    >
-      {children}
-    </Link>
-  ),
+  a: ({ href, children }) =>
+    isSafeHref(href) ? (
+      <Link
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="hover"
+        sx={sx.link}
+      >
+        {children}
+      </Link>
+    ) : (
+      <Typography component="span" variant="inherit">
+        {children}
+      </Typography>
+    ),
   blockquote: ({ children }) => (
     <Box component="blockquote" sx={sx.blockquote}>
       {children}
@@ -141,16 +167,17 @@ const components: Components = {
     />
   ),
   hr: () => <Divider sx={{ my: 2 }} />,
-  img: ({ src, alt }) => (
-    <Box
-      component="img"
-      src={typeof src === 'string' ? src : undefined}
-      alt={alt ?? ''}
-      loading="lazy"
-      decoding="async"
-      sx={sx.image}
-    />
-  ),
+  img: ({ src, alt }) =>
+    isSafeImageSrc(src) ? (
+      <Box
+        component="img"
+        src={src}
+        alt={alt ?? ''}
+        loading="lazy"
+        decoding="async"
+        sx={sx.image}
+      />
+    ) : null,
   ul: createListRenderer('ul'),
   ol: createListRenderer('ol'),
   li: ({ children }) => (

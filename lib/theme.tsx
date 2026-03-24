@@ -86,7 +86,7 @@ export const sx = {
     border: 1,
     borderColor: 'divider',
   },
-  image: { maxWidth: '100%', height: 'auto' },
+  image: { maxWidth: '100%', height: 'auto', maxHeight: '60vh' },
   codeBlockWrapper: { position: 'relative' },
   langChip: {
     position: 'absolute',
