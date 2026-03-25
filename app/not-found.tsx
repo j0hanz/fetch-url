@@ -1,6 +1,6 @@
 import Button from '@mui/material/Button';
 
-import { StatusShell } from '@/components/error';
+import { StatusShell } from '@/components/ui/error';
 
 export default function NotFound() {
   return (

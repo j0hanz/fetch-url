@@ -13,10 +13,10 @@ import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-import AboutDialog from '@/components/about-dialog';
-import HomeClient from '@/components/home-client';
-import LogoIcon from '@/components/logo-icon';
-import ThemeToggle from '@/components/theme-toggle';
+import AboutDialog from '@/components/features/about-dialog';
+import HomeClient from '@/components/features/home-client';
+import LogoIcon from '@/components/ui/logo-icon';
+import ThemeToggle from '@/components/ui/theme-toggle';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_REPOSITORY_URL } from '@/lib/site';
 import { HEADER_ICON_SX, responsive } from '@/lib/theme';
 

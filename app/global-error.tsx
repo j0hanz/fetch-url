@@ -1,6 +1,6 @@
 'use client';
 
-import { ErrorState, type ResettableErrorProps } from '@/components/error';
+import { ErrorState, type ResettableErrorProps } from '@/components/ui/error';
 import { AppThemeProviders } from '@/lib/theme-provider';
 
 export default function GlobalError({ error, reset }: ResettableErrorProps) {

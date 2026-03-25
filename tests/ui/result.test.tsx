@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import TransformResultPanel from '@/components/result';
+import TransformResultPanel from '@/components/features/result';
 import type { TransformResult } from '@/lib/api';
 
 const baseResult: TransformResult = {

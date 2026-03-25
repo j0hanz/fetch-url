@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, startTransition, useEffect, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import CodeIcon from '@mui/icons-material/Code';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -16,16 +16,20 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
-import { useTheme } from '@mui/material/styles';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-import { BaseDialog } from '@/components/dialog';
-import { MarkdownErrorBoundary } from '@/components/error';
-import { MarkdownSkeleton, ResultHeaderSkeleton } from '@/components/loading';
-import MarkdownPreview from '@/components/markdown-preview';
+import { BaseDialog } from '@/components/ui/dialog';
+import { MarkdownErrorBoundary } from '@/components/ui/error';
+import {
+  MarkdownSkeleton,
+  ResultHeaderSkeleton,
+} from '@/components/ui/loading';
+import MarkdownPreview from '@/components/ui/markdown-preview';
+import { type CopyStatus, useFeedback } from '@/hooks/use-feedback';
+import { usePreview } from '@/hooks/use-preview';
 import type { TransformResult } from '@/lib/api';
 import { sx, tokens } from '@/lib/theme';
 
@@ -38,7 +42,6 @@ interface TransformResultProps {
 }
 
 type ViewMode = 'preview' | 'code';
-type CopyStatus = 'idle' | 'copied' | 'failed';
 type IconButtonColor = React.ComponentProps<typeof IconButton>['color'];
 
 // ============================================================================
@@ -98,56 +101,6 @@ function formatBytes(bytes: number): string {
   const kb = bytes / 1024;
   if (kb < 1024) return `${kb.toFixed(1)} KB`;
   return `${(kb / 1024).toFixed(1)} MB`;
-}
-
-// ============================================================================
-// Hooks
-// ============================================================================
-
-function usePreviewMarkdown(markdown: string) {
-  const theme = useTheme();
-  const [previewMarkdown, setPreviewMarkdown] = useState<string | null>(null);
-  const isPending = previewMarkdown !== markdown;
-  const previewTransitionDuration = theme.transitions.duration.shortest;
-  const previewRevealDelay = theme.transitions.duration.shorter;
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      startTransition(() => {
-        setPreviewMarkdown(markdown);
-      });
-    }, previewRevealDelay);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [markdown, previewRevealDelay]);
-
-  return { isPending, previewMarkdown, previewTransitionDuration };
-}
-
-function useCopyFeedback() {
-  const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
-
-  async function handleCopy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopyStatus('copied');
-    } catch {
-      setCopyStatus('failed');
-    }
-  }
-
-  function clearCopyFeedback() {
-    setCopyStatus('idle');
-  }
-
-  return {
-    clearCopyFeedback,
-    copyFeedbackOpen: copyStatus !== 'idle',
-    copyStatus,
-    handleCopy,
-  };
 }
 
 // ============================================================================
@@ -411,7 +364,7 @@ function ResultActionBar({
   result,
 }: ResultActionBarProps) {
   const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
-    useCopyFeedback();
+    useFeedback();
   const copyStatusDetails = COPY_STATUS_DETAILS[copyStatus];
 
   function handleDownload() {
@@ -476,8 +429,9 @@ function ResultActionBar({
 
 export default function TransformResultPanel({ result }: TransformResultProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
-  const { isPending, previewMarkdown, previewTransitionDuration } =
-    usePreviewMarkdown(result.markdown);
+  const { isPending, previewMarkdown, previewTransitionDuration } = usePreview(
+    result.markdown
+  );
 
   function handleViewModeChange(
     _event: React.MouseEvent<HTMLElement>,

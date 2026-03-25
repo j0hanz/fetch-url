@@ -2,7 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import MarkdownPreview from '@/components/markdown-preview';
+import MarkdownPreview from '@/components/ui/markdown-preview';
 
 describe('MarkdownPreview', () => {
   it('renders GFM tables and callouts for richer informational content', () => {

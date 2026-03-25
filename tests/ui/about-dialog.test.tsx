@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import AboutDialog from '@/components/about-dialog';
+import AboutDialog from '@/components/features/about-dialog';
 
 describe('AboutDialog', () => {
   it('exposes an accessible dialog name', async () => {
