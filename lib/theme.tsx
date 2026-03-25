@@ -126,9 +126,6 @@ export const sx = {
     flex: 1,
     maxHeight: responsive.panelMaxHeight,
     overflow: 'auto',
-    border: '1px solid',
-    borderColor: 'divider',
-    borderRadius: 1.5,
   },
   rawMarkdown: {
     fontFamily: tokens.fonts.mono,
