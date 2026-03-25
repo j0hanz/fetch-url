@@ -16,20 +16,20 @@ export const tokens = {
     mono: "'Geist Mono Variable', monospace",
     sans: "'Geist Variable', sans-serif",
   },
-  radius: { panel: 16, code: 1 },
-  blur: { paper: '12.3px', dialog: '17.5px' },
+  radius: { panel: 6, code: 1 },
+  blur: { paper: '12.5px', dialog: '12.5px' },
   sizes: { avatar: 32, chipHeight: 20, loader: 32 },
   scrollbar: { width: 'none' as const },
 } as const;
 
 // ── Responsive value maps ───────────────────────────────────────
 export const responsive = {
-  pagePt: { xs: 2, sm: 3, md: 4 },
+  pagePt: { xs: 1, sm: 2, md: 3 },
   containerGap: { xs: 1.5, sm: 2 },
   panelPadding: { xs: 1.5, sm: 2.5 },
   codeFontSize: { xs: '0.8125rem', sm: '0.875rem' },
   truncateWidth: { xs: '30ch', sm: '50ch', md: '70ch' },
-  panelMaxHeight: { xs: '50dvh', sm: '55dvh', md: '60dvh' },
+  panelMaxHeight: { xs: '55dvh', sm: '60dvh', md: '65dvh' },
   paragraphMb: { xs: 1, sm: 1.5 },
   listItemMb: { xs: 0.5, sm: 1 },
   logoSize: { xs: '1.5rem', sm: '2rem' },
