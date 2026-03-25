@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 
-import { tokens } from '@/lib/theme';
+import { responsive, tokens } from '@/lib/theme';
 
 const INTRO_LINE_WIDTHS = ['100%', '100%', '75%'] as const;
 const BODY_LINE_WIDTHS = ['100%', '90%', '100%', '60%'] as const;
@@ -20,18 +20,18 @@ interface MarkdownSkeletonSection {
 
 const MARKDOWN_SKELETON_SECTIONS: readonly MarkdownSkeletonSection[] = [
   {
-    heading: { fontSize: '2rem', width: '50%' },
+    heading: { fontSize: '2.125rem', width: '50%' },
     lineWidths: INTRO_LINE_WIDTHS,
   },
   {
     heading: { fontSize: '1.5rem', width: '35%' },
     lineWidths: BODY_LINE_WIDTHS,
-    marginTop: 1,
+    marginTop: 1.5,
   },
   {
     heading: { fontSize: '1.5rem', width: '40%' },
     lineWidths: OUTRO_LINE_WIDTHS,
-    marginTop: 0.5,
+    marginTop: 1.5,
   },
 ] as const;
 type MarkdownSkeletonItem =
@@ -86,7 +86,7 @@ function renderMarkdownSkeletonItem(item: MarkdownSkeletonItem, index: number) {
         key={`block-${index}`}
         animation="wave"
         variant="rounded"
-        sx={{ flexGrow: 1, minHeight: 80 }}
+        sx={{ flexGrow: 1, minHeight: 80, mt: responsive.paragraphMb }}
       />
     );
   }
@@ -94,13 +94,18 @@ function renderMarkdownSkeletonItem(item: MarkdownSkeletonItem, index: number) {
   return renderMarkdownSkeletonSection(item.section, index);
 }
 
+const skeletonMinHeight = {
+  xs: `calc(${responsive.panelMaxHeight.xs} - 24px)`,
+  sm: `calc(${responsive.panelMaxHeight.sm} - 40px)`,
+  md: `calc(${responsive.panelMaxHeight.md} - 40px)`,
+} as const;
+
 export function MarkdownSkeleton() {
   return (
     <Stack
       role="status"
       aria-label="Markdown preview loading"
-      spacing={1}
-      sx={{ maxHeight: '70dvh', overflow: 'hidden' }}
+      sx={{ minHeight: skeletonMinHeight }}
     >
       {MARKDOWN_SKELETON_LAYOUT.map(renderMarkdownSkeletonItem)}
     </Stack>
