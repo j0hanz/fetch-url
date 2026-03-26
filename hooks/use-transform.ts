@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import type { TransformFormHandle } from '@/components/features/form';
-import type { TransformError, TransformResult } from '@/lib/api';
+import type {
+  StreamProgressEvent,
+  TransformError,
+  TransformResult,
+} from '@/lib/api';
 import { isAbortError } from '@/lib/api';
 import {
   mapClientTransformError,
@@ -26,10 +30,12 @@ export function deriveViewState(
 export function useTransform() {
   const [result, setResult] = useState<TransformResult | null>(null);
   const [error, setError] = useState<TransformError | null>(null);
+  const [progress, setProgress] = useState<StreamProgressEvent | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const formRef = useRef<TransformFormHandle>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -73,11 +79,8 @@ export function useTransform() {
     });
   }
 
-  function handleAction(formData: FormData) {
-    const url = formData.get('url');
-    if (typeof url !== 'string' || url === '') {
-      return;
-    }
+  function submitUrl(url: string) {
+    lastUrlRef.current = url;
 
     startTransition(async () => {
       abortControllerRef.current?.abort();
@@ -86,9 +89,12 @@ export function useTransform() {
 
       setError(null);
       setResult(null);
+      setProgress(null);
 
       const handlers = {
-        onProgress() {},
+        onProgress(event: StreamProgressEvent) {
+          if (isActiveRequest(abortController)) setProgress(event);
+        },
         onResult(res: TransformResult) {
           handleRequestResult(abortController, res);
         },
@@ -109,6 +115,21 @@ export function useTransform() {
     });
   }
 
+  function handleAction(formData: FormData) {
+    const url = formData.get('url');
+    if (typeof url !== 'string' || url === '') {
+      return;
+    }
+
+    submitUrl(url);
+  }
+
+  function retry() {
+    if (lastUrlRef.current) {
+      submitUrl(lastUrlRef.current);
+    }
+  }
+
   function dismissError() {
     setError(null);
   }
@@ -119,6 +140,8 @@ export function useTransform() {
     formRef,
     handleAction,
     isPending,
+    progress,
     result,
+    retry,
   };
 }

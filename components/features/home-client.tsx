@@ -3,8 +3,10 @@
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Fade from '@mui/material/Fade';
 import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
 
 import TransformForm from '@/components/features/form';
 import TransformResultPanel from '@/components/features/result';
@@ -14,8 +16,16 @@ import { deriveViewState, useTransform } from '@/hooks/use-transform';
 import { sx } from '@/lib/theme';
 
 export default function HomeClient() {
-  const { dismissError, error, formRef, handleAction, isPending, result } =
-    useTransform();
+  const {
+    dismissError,
+    error,
+    formRef,
+    handleAction,
+    isPending,
+    progress,
+    result,
+    retry,
+  } = useTransform();
 
   const viewState = deriveViewState(isPending, error, result);
 
@@ -32,6 +42,15 @@ export default function HomeClient() {
 
         <Fade in={viewState === 'loading'} mountOnEnter unmountOnExit>
           <Paper sx={{ ...sx.markdownPanel, ...sx.transitionCell }}>
+            {progress?.message && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block' }}
+              >
+                {progress.message}...
+              </Typography>
+            )}
             <MarkdownSkeleton />
           </Paper>
         </Fade>
@@ -42,7 +61,19 @@ export default function HomeClient() {
               <Alert severity="error" onClose={dismissError}>
                 <AlertTitle>{error.message}</AlertTitle>
                 Code: {error.code}
-                {error.retryable && ' · Retryable'}
+                {error.retryable && (
+                  <>
+                    {' · Retryable '}
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={retry}
+                      sx={{ ml: 1, textDecoration: 'underline' }}
+                    >
+                      Retry
+                    </Button>
+                  </>
+                )}
               </Alert>
             )}
           </Box>
