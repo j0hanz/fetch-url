@@ -20,7 +20,7 @@ import ThemeToggle from '@/components/ui/theme-toggle';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_REPOSITORY_URL } from '@/lib/site';
 import { HEADER_ICON_SX, responsive } from '@/lib/theme';
 
-const PUBLIC_DIRECTORY = join(process.cwd(), 'public');
+const CONTENT_DIRECTORY = join(process.cwd(), 'content');
 const HOME_MARKDOWN_FILES = {
   about: 'about.md',
   howItWorks: 'how-it-works.md',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
 
 async function readPublicMarkdown(fileName: string): Promise<string> {
   try {
-    return await readFile(join(PUBLIC_DIRECTORY, fileName), 'utf-8');
+    return await readFile(join(CONTENT_DIRECTORY, fileName), 'utf-8');
   } catch (error) {
     console.error(`Failed to read markdown file: ${fileName}`, error);
     return '';

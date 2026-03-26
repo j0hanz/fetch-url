@@ -14,14 +14,14 @@ import { deriveViewState, useTransform } from '@/hooks/use-transform';
 import { sx } from '@/lib/theme';
 
 export default function HomeClient() {
-  const { dismissError, error, formRef, handleAction, loading, result } =
+  const { dismissError, error, formRef, handleAction, isPending, result } =
     useTransform();
 
-  const viewState = deriveViewState(loading, error, result);
+  const viewState = deriveViewState(isPending, error, result);
 
   return (
     <Box sx={sx.flexColumn}>
-      <TransformForm ref={formRef} loading={loading} action={handleAction} />
+      <TransformForm ref={formRef} action={handleAction} />
 
       <Box aria-live="polite" sx={sx.transitionGrid}>
         <Fade in={viewState === 'idle'} mountOnEnter unmountOnExit>

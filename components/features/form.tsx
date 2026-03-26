@@ -7,21 +7,28 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 
+import { useFormStatus } from 'react-dom';
+
 export interface TransformFormHandle {
   clear: () => void;
 }
 
 interface TransformFormProps {
   ref?: React.Ref<TransformFormHandle>;
-  loading: boolean;
   action: (formData: FormData) => void;
 }
 
-export default function TransformForm({
-  ref,
-  loading,
-  action,
-}: TransformFormProps) {
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" variant="contained" fullWidth loading={pending}>
+      Convert
+    </Button>
+  );
+}
+
+export default function TransformForm({ ref, action }: TransformFormProps) {
   const urlInputId = useId();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -44,14 +51,11 @@ export default function TransformForm({
             required
             fullWidth
             placeholder="https://..."
-            disabled={loading}
             size="small"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Button type="submit" variant="contained" fullWidth loading={loading}>
-            Convert
-          </Button>
+          <SubmitButton />
         </Grid>
       </Grid>
     </Box>

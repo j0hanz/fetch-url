@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
 import type { TransformFormHandle } from '@/components/features/form';
 import type { TransformError, TransformResult } from '@/lib/api';
@@ -13,20 +13,20 @@ import {
 export type ViewState = 'idle' | 'loading' | 'error' | 'result';
 
 export function deriveViewState(
-  loading: boolean,
+  isPending: boolean,
   error: TransformError | null,
   result: TransformResult | null
 ): ViewState {
-  if (!loading && result !== null) return 'result';
-  if (!loading && error !== null) return 'error';
-  if (loading) return 'loading';
+  if (!isPending && result !== null) return 'result';
+  if (!isPending && error !== null) return 'error';
+  if (isPending) return 'loading';
   return 'idle';
 }
 
 export function useTransform() {
   const [result, setResult] = useState<TransformResult | null>(null);
   const [error, setError] = useState<TransformError | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const formRef = useRef<TransformFormHandle>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -60,7 +60,6 @@ export function useTransform() {
   ) {
     completeRequest(requestController, () => {
       setResult(nextResult);
-      setLoading(false);
       formRef.current?.clear();
     });
   }
@@ -71,7 +70,6 @@ export function useTransform() {
   ) {
     completeRequest(requestController, () => {
       setError(nextError);
-      setLoading(false);
     });
   }
 
@@ -81,33 +79,34 @@ export function useTransform() {
       return;
     }
 
-    abortControllerRef.current?.abort();
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
+    startTransition(async () => {
+      abortControllerRef.current?.abort();
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
-    setLoading(true);
-    setError(null);
-    setResult(null);
+      setError(null);
+      setResult(null);
 
-    const handlers = {
-      onProgress() {},
-      onResult(res: TransformResult) {
-        handleRequestResult(abortController, res);
-      },
-      onError(err: TransformError) {
-        handleRequestError(abortController, err);
-      },
-    };
+      const handlers = {
+        onProgress() {},
+        onResult(res: TransformResult) {
+          handleRequestResult(abortController, res);
+        },
+        onError(err: TransformError) {
+          handleRequestError(abortController, err);
+        },
+      };
 
-    void submitTransformRequest(url, handlers, abortController.signal).catch(
-      (err) => {
+      try {
+        await submitTransformRequest(url, handlers, abortController.signal);
+      } catch (err) {
         if (isAbortError(err) || !isActiveRequest(abortController)) {
           return;
         }
 
         handleRequestError(abortController, mapClientTransformError(err));
       }
-    );
+    });
   }
 
   function dismissError() {
@@ -119,7 +118,7 @@ export function useTransform() {
     error,
     formRef,
     handleAction,
-    loading,
+    isPending,
     result,
   };
 }
