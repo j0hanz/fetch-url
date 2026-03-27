@@ -29,7 +29,7 @@ import {
   SITE_NAME,
   SITE_REPOSITORY_URL,
 } from '@/lib/site';
-import { HEADER_ICON_SX, responsive } from '@/lib/theme';
+import { HEADER_ICON_SX, responsive, sx } from '@/lib/theme';
 import { AppThemeProviders } from '@/lib/theme-provider';
 
 const metadataBase = resolveSiteUrl();
@@ -205,7 +205,7 @@ export default function RootLayout({
                 </Toolbar>
               </AppBar>
 
-              <Box component="main" id="main-content">
+              <Box component="main" id="main-content" sx={sx.flexColumn}>
                 {children}
               </Box>
             </Container>

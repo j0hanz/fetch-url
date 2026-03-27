@@ -7,7 +7,7 @@ import type {
   TransformError,
   TransformResult,
 } from '@/lib/api';
-import { isAbortError, normalizeStreamProgressEvent } from '@/lib/api';
+import { isAbortError } from '@/lib/api';
 import {
   mapClientTransformError,
   submitTransformRequest,
@@ -35,7 +35,6 @@ export function deriveViewState(
 export function useTransform() {
   const [result, setResult] = useState<TransformResult | null>(null);
   const [error, setError] = useState<TransformError | null>(null);
-  const [progress, setProgress] = useState<StreamProgressEvent | null>(null);
   const [isPending, setIsPending] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -52,7 +51,6 @@ export function useTransform() {
   function resetRequestState(): void {
     setError(null);
     setResult(null);
-    setProgress(null);
   }
 
   function isActiveRequest(requestController: AbortController): boolean {
@@ -104,14 +102,9 @@ export function useTransform() {
     requestController: AbortController
   ): TransformRequestHandlers {
     return {
-      onProgress(event) {
-        if (!isActiveRequest(requestController)) {
-          return;
-        }
-
-        setProgress((previous) =>
-          normalizeStreamProgressEvent(event, previous)
-        );
+      onProgress() {
+        // Progress events are consumed by the NDJSON stream reader;
+        // no client-side state update needed.
       },
       onResult(result) {
         handleRequestResult(requestController, result);
@@ -164,7 +157,6 @@ export function useTransform() {
     formRef,
     handleAction,
     isPending,
-    progress,
     result,
     retry,
   };
