@@ -13,6 +13,7 @@ import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import { markdownTableComponents } from '@/components/ui/table';
+
 import { sx } from '@/lib/theme';
 
 const remarkPlugins = [remarkGfm];

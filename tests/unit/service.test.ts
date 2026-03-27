@@ -1,9 +1,10 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   type CallToolResult,
   ErrorCode,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { callFetchUrl } from '@/lib/mcp';
 import { transformUrl } from '@/lib/transform';

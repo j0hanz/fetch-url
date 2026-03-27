@@ -1,5 +1,6 @@
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { describe, expect, it } from 'vitest';
+
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 
 import { parseMcpResult } from '@/lib/mcp';
 

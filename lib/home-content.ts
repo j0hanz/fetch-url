@@ -1,7 +1,7 @@
+import 'server-only';
+
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import 'server-only';
 
 const CONTENT_DIRECTORY = join(process.cwd(), 'content');
 const HOME_MARKDOWN_FILES = {

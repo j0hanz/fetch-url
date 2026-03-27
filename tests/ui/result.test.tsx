@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import TransformResultPanel from '@/components/features/result';
+
 import type { TransformResult } from '@/lib/api';
 
 const baseResult: TransformResult = {

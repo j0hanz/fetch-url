@@ -4,7 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import HomeClient from '@/components/features/home-client';
+
 import type { TransformResult } from '@/lib/api';
+
 import { submitUrlForm } from '@/tests/setup';
 
 const VALID_URL = 'https://example.com';

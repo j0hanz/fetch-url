@@ -14,6 +14,7 @@ import AboutDialog from '@/components/features/about-dialog';
 import HomeClient from '@/components/features/home-client';
 import LogoIcon from '@/components/ui/logo-icon';
 import ThemeToggle from '@/components/ui/theme-toggle';
+
 import { readHomePageMarkdown } from '@/lib/home-content';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_REPOSITORY_URL } from '@/lib/site';
 import { HEADER_ICON_SX, responsive } from '@/lib/theme';

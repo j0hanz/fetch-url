@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { readFileSync } from 'node:fs';
 import { findPackageJSON } from 'node:module';
 import path from 'node:path';
@@ -9,7 +11,6 @@ import type {
   Progress,
 } from '@modelcontextprotocol/sdk/types.js';
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
-import 'server-only';
 
 import type {
   TransformError,
