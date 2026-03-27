@@ -2,15 +2,13 @@
 
 import type { ReactNode } from 'react';
 
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Fade from '@mui/material/Fade';
 import Paper from '@mui/material/Paper';
 
 import TransformForm from '@/components/features/form';
 import TransformResultPanel from '@/components/features/result';
+import CenterMessage from '@/components/ui/center-message';
 import { MarkdownSkeleton } from '@/components/ui/loading';
 import PreviewPlaceholder from '@/components/ui/preview-placeholder';
 
@@ -38,15 +36,7 @@ function ViewStateSection({
 }
 
 export default function HomeClient() {
-  const {
-    dismissError,
-    error,
-    formRef,
-    handleAction,
-    isPending,
-    result,
-    retry,
-  } = useTransform();
+  const { error, formRef, handleAction, isPending, result } = useTransform();
 
   const viewState = deriveViewState(isPending, error, result);
 
@@ -75,23 +65,11 @@ export default function HomeClient() {
 
         <ViewStateSection state={viewState} visibleState="error">
           {error && (
-            <Alert severity="error" onClose={dismissError}>
-              <AlertTitle>{error.message}</AlertTitle>
-              Code: {error.code}
-              {error.retryable && (
-                <>
-                  {' · Retryable '}
-                  <Button
-                    color="inherit"
-                    size="small"
-                    onClick={retry}
-                    sx={{ ml: 1, textDecoration: 'underline' }}
-                  >
-                    Retry
-                  </Button>
-                </>
-              )}
-            </Alert>
+            <CenterMessage
+              message={error.message}
+              secondaryText={`Code: ${error.code}`}
+              color="error.main"
+            />
           )}
         </ViewStateSection>
 

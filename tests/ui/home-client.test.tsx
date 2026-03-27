@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import HomeClient from '@/components/features/home-client';
@@ -41,7 +40,7 @@ describe('HomeClient', () => {
     });
   });
 
-  it('shows skeleton loading then transitions to an error and allows dismissing it', async () => {
+  it('shows skeleton loading then transitions to an error', async () => {
     const stream = createControlledStreamResponse();
     global.fetch = vi.fn().mockResolvedValue(stream.response);
 
@@ -68,14 +67,6 @@ describe('HomeClient', () => {
     await waitFor(() => {
       expect(screen.getByText('Upstream unavailable')).toBeInTheDocument();
     });
-
-    await userEvent.setup().click(screen.getByLabelText(/close/i));
-
-    await waitFor(() => {
-      expect(
-        screen.queryByText('Upstream unavailable')
-      ).not.toBeInTheDocument();
-    });
   });
 
   it('shows a retryable error when the network request fails', async () => {
@@ -87,7 +78,6 @@ describe('HomeClient', () => {
     expect(
       await screen.findByText('Network error. Please try again.')
     ).toBeInTheDocument();
-    expect(screen.getByText(/retryable/i)).toBeInTheDocument();
   });
 
   it('aborts the active request when the component unmounts', async () => {

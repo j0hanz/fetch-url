@@ -11,7 +11,6 @@ import CodeIcon from '@mui/icons-material/Code';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
@@ -463,13 +462,6 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
 
   return (
     <Stack spacing={2}>
-      {result.truncated && (
-        <Alert severity="warning">
-          Content was truncated. The full page may be too large to return in one
-          response.
-        </Alert>
-      )}
-
       <ResultHeaderWithDetails result={result} />
 
       <Stack

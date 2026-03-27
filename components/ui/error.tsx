@@ -2,10 +2,10 @@
 
 import { Component, type ReactNode } from 'react';
 
-import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
+import CenterMessage from '@/components/ui/center-message';
 import { StatusShell } from '@/components/ui/status-shell';
 
 export interface ResettableErrorProps {
@@ -71,7 +71,12 @@ export class MarkdownErrorBoundary extends Component<
 
   override render() {
     if (this.state.hasError) {
-      return <Alert severity="error">Failed to render markdown preview.</Alert>;
+      return (
+        <CenterMessage
+          message="Failed to render markdown preview."
+          color="error.main"
+        />
+      );
     }
 
     return this.props.children;

@@ -42,18 +42,6 @@ describe('TransformResultPanel', () => {
     expect(pre?.textContent).toContain('This is an example.');
   });
 
-  it('shows truncation warning when truncated', () => {
-    renderPanel({ result: { ...baseResult, truncated: true } });
-    expect(screen.getByText(/content was truncated/i)).toBeInTheDocument();
-  });
-
-  it('does not show truncation warning when not truncated', () => {
-    renderPanel();
-    expect(
-      screen.queryByText(/content was truncated/i)
-    ).not.toBeInTheDocument();
-  });
-
   it('shows copy markdown button', () => {
     renderPanel();
     expect(
