@@ -6,108 +6,75 @@ import Stack from '@mui/material/Stack';
 
 import { responsive, tokens } from '@/lib/theme';
 
-const INTRO_LINE_WIDTHS = ['100%', '100%', '75%'] as const;
-const BODY_LINE_WIDTHS = ['100%', '90%', '100%', '60%'] as const;
-const OUTRO_LINE_WIDTHS = ['100%', '85%', '50%'] as const;
-interface MarkdownSkeletonSection {
-  heading: {
-    fontSize: string;
-    width: string;
-  };
-  lineWidths: readonly string[];
-  marginTop?: number;
+interface SkeletonSection {
+  headingSize: string;
+  headingWidth: string;
+  lines: readonly string[];
+  mt?: number;
 }
 
-const MARKDOWN_SKELETON_SECTIONS: readonly MarkdownSkeletonSection[] = [
+const SECTIONS: readonly SkeletonSection[] = [
   {
-    heading: { fontSize: '2.125rem', width: '50%' },
-    lineWidths: INTRO_LINE_WIDTHS,
+    headingSize: '2.125rem',
+    headingWidth: '50%',
+    lines: ['100%', '100%', '75%'],
   },
   {
-    heading: { fontSize: '1.5rem', width: '35%' },
-    lineWidths: BODY_LINE_WIDTHS,
-    marginTop: 1.5,
+    headingSize: '1.5rem',
+    headingWidth: '35%',
+    lines: ['100%', '90%', '100%', '60%'],
+    mt: 1.5,
   },
   {
-    heading: { fontSize: '1.5rem', width: '40%' },
-    lineWidths: OUTRO_LINE_WIDTHS,
-    marginTop: 1.5,
+    headingSize: '1.5rem',
+    headingWidth: '40%',
+    lines: ['100%', '85%', '50%'],
+    mt: 1.5,
   },
-] as const;
-type MarkdownSkeletonItem =
-  | { type: 'section'; section: MarkdownSkeletonSection }
-  | { type: 'block' };
+];
 
-const MARKDOWN_SKELETON_LAYOUT: readonly MarkdownSkeletonItem[] = [
-  { type: 'section', section: MARKDOWN_SKELETON_SECTIONS[0] },
-  { type: 'section', section: MARKDOWN_SKELETON_SECTIONS[1] },
-  { type: 'block' },
-  { type: 'section', section: MARKDOWN_SKELETON_SECTIONS[2] },
-] as const;
-
-function TextLine({ width = '100%' }: { width?: string }) {
-  return <Skeleton animation="wave" variant="text" width={width} />;
-}
-
-function Heading({ fontSize, width }: { fontSize: string; width: string }) {
-  return (
-    <Skeleton animation="wave" variant="text" width={width} sx={{ fontSize }} />
-  );
-}
-
-function renderTextLines(widths: readonly string[]) {
-  return widths.map((width, index) => (
-    <TextLine key={`${width}-${index}`} width={width} />
-  ));
-}
-
-function renderMarkdownSkeletonSection(
-  section: MarkdownSkeletonSection,
-  index: number
-) {
-  return (
-    <Box
-      key={`${section.heading.width}-${index}`}
-      sx={section.marginTop ? { mt: section.marginTop } : undefined}
-    >
-      <Heading
-        fontSize={section.heading.fontSize}
-        width={section.heading.width}
-      />
-      {renderTextLines(section.lineWidths)}
-    </Box>
-  );
-}
-
-function renderMarkdownSkeletonItem(item: MarkdownSkeletonItem, index: number) {
-  if (item.type === 'block') {
-    return (
-      <Skeleton
-        key={`block-${index}`}
-        animation="wave"
-        variant="rounded"
-        sx={{ flexGrow: 1, minHeight: 80, mt: responsive.paragraphMb }}
-      />
-    );
-  }
-
-  return renderMarkdownSkeletonSection(item.section, index);
-}
-
-const skeletonMinHeight = {
+const SKELETON_MIN_HEIGHT = {
   xs: `calc(${responsive.panelMaxHeight.xs} - 24px)`,
   sm: `calc(${responsive.panelMaxHeight.sm} - 40px)`,
   md: `calc(${responsive.panelMaxHeight.md} - 40px)`,
 } as const;
+
+function SectionSkeleton({
+  headingSize,
+  headingWidth,
+  lines,
+  mt,
+}: SkeletonSection) {
+  return (
+    <Box sx={mt ? { mt } : undefined}>
+      <Skeleton
+        animation="wave"
+        variant="text"
+        width={headingWidth}
+        sx={{ fontSize: headingSize }}
+      />
+      {lines.map((width, i) => (
+        <Skeleton key={i} animation="wave" variant="text" width={width} />
+      ))}
+    </Box>
+  );
+}
 
 export function MarkdownSkeleton() {
   return (
     <Stack
       role="status"
       aria-label="Markdown preview loading"
-      sx={{ minHeight: skeletonMinHeight }}
+      sx={{ minHeight: SKELETON_MIN_HEIGHT }}
     >
-      {MARKDOWN_SKELETON_LAYOUT.map(renderMarkdownSkeletonItem)}
+      <SectionSkeleton {...SECTIONS[0]} />
+      <SectionSkeleton {...SECTIONS[1]} />
+      <Skeleton
+        animation="wave"
+        variant="rounded"
+        sx={{ flexGrow: 1, minHeight: 80, mt: responsive.paragraphMb }}
+      />
+      <SectionSkeleton {...SECTIONS[2]} />
     </Stack>
   );
 }
