@@ -6,6 +6,11 @@ import type { TransformResponse } from '@/lib/api';
 import { transformUrl } from '@/lib/transform';
 import { validateTransformRequest, ValidationError } from '@/lib/validate';
 
+vi.mock('next/server', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next/server')>();
+  return { ...actual, after: vi.fn() };
+});
+
 vi.mock('@/lib/transform', () => ({
   transformUrl: vi.fn(),
 }));

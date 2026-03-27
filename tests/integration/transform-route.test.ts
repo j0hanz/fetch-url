@@ -5,6 +5,11 @@ import { POST } from '@/app/api/transform/route';
 import type { StreamEvent, TransformResponse } from '@/lib/api';
 import { callFetchUrl, parseMcpResult } from '@/lib/mcp';
 
+vi.mock('next/server', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next/server')>();
+  return { ...actual, after: vi.fn() };
+});
+
 // Mock the MCP transport layer to avoid starting actual node processes
 vi.mock('@/lib/mcp', () => {
   return {

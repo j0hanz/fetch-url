@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+
 import type { Progress } from '@modelcontextprotocol/sdk/types.js';
 
 import {
@@ -12,14 +14,17 @@ import {
   type TransformErrorResponse,
   type TransformResponse,
 } from '@/lib/api';
+import {
+  createTransformLog,
+  createValidationLog,
+  logTransformOutcome,
+} from '@/lib/request-logger';
 import { transformUrl } from '@/lib/transform';
 import {
   type TransformRequest,
   validateTransformRequest,
   ValidationError,
 } from '@/lib/validate';
-
-export const runtime = 'nodejs';
 
 const HTTP_STATUS_BY_ERROR_CODE: Record<TransformErrorCode, number> = {
   VALIDATION_ERROR: 400,
@@ -273,6 +278,8 @@ function createStreamingTransformResponse(
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const startTime = Date.now();
+
   try {
     const validated = await parseTransformRequest(request);
     const progressEmitter = createBufferedProgressEmitter();
@@ -286,8 +293,25 @@ export async function POST(request: Request): Promise<Response> {
     const initialOutcome =
       await progressEmitter.waitForFirstProgressOrResponse(responsePromise);
     if (shouldReturnImmediateErrorResponse(initialOutcome, progressEmitter)) {
+      after(() =>
+        logTransformOutcome(
+          createTransformLog(
+            request,
+            validated.url,
+            startTime,
+            initialOutcome.response
+          )
+        )
+      );
       return createErrorResponse(initialOutcome.response.error);
     }
+
+    after(async () => {
+      const response = await responsePromise;
+      logTransformOutcome(
+        createTransformLog(request, validated.url, startTime, response)
+      );
+    });
 
     return createStreamingTransformResponse(
       request,
@@ -295,6 +319,7 @@ export async function POST(request: Request): Promise<Response> {
       progressEmitter
     );
   } catch (error) {
+    after(() => logTransformOutcome(createValidationLog(request, startTime)));
     return createValidationErrorResponse(readValidationErrorMessage(error));
   }
 }
