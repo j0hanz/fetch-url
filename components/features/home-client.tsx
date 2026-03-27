@@ -61,7 +61,11 @@ export default function HomeClient() {
         isPending={isPending}
       />
 
-      <Box aria-live="polite" sx={sx.transitionGrid}>
+      <Box
+        aria-live="polite"
+        aria-busy={viewState === 'loading'}
+        sx={sx.transitionGrid}
+      >
         <ViewStateSection state={viewState} visibleState="idle">
           <PreviewPlaceholder />
         </ViewStateSection>

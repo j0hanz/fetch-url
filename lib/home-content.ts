@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { cache } from 'react';
+
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -19,7 +21,7 @@ async function readMarkdownFile(fileName: string): Promise<string> {
   }
 }
 
-export async function readHomePageMarkdown(): Promise<{
+async function readHomePageMarkdownImpl(): Promise<{
   aboutMarkdown: string;
   howItWorksMarkdown: string;
 }> {
@@ -30,3 +32,5 @@ export async function readHomePageMarkdown(): Promise<{
 
   return { aboutMarkdown, howItWorksMarkdown };
 }
+
+export const readHomePageMarkdown = cache(readHomePageMarkdownImpl);

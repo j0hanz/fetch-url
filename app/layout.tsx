@@ -1,8 +1,25 @@
+import { Suspense } from 'react';
+
 import type { Metadata, Viewport } from 'next';
 
+import GitHubIcon from '@mui/icons-material/GitHub';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import IconButton from '@mui/material/IconButton';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
+import Stack from '@mui/material/Stack';
+import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+
+import AboutDialog from '@/components/features/about-dialog';
+import LogoIcon from '@/components/ui/logo-icon';
+import ThemeToggle from '@/components/ui/theme-toggle';
 
 import { geistMono, geistSans } from '@/lib/fonts';
+import { readHomePageMarkdown } from '@/lib/home-content';
 import {
   resolveSiteUrl,
   SITE_CATEGORY,
@@ -10,7 +27,9 @@ import {
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
   SITE_NAME,
+  SITE_REPOSITORY_URL,
 } from '@/lib/site';
+import { HEADER_ICON_SX, responsive } from '@/lib/theme';
 import { AppThemeProviders } from '@/lib/theme-provider';
 
 const metadataBase = resolveSiteUrl();
@@ -65,6 +84,30 @@ export const metadata: Metadata = {
   },
 };
 
+async function AboutDialogContent() {
+  const { aboutMarkdown, howItWorksMarkdown } = await readHomePageMarkdown();
+
+  return (
+    <AboutDialog
+      markdown={aboutMarkdown}
+      howItWorksMarkdown={howItWorksMarkdown}
+    />
+  );
+}
+
+function AboutDialogFallback() {
+  return (
+    <IconButton
+      disabled
+      size="small"
+      aria-label="About Fetch URL"
+      disableRipple
+    >
+      <InfoOutlinedIcon sx={HEADER_ICON_SX} />
+    </IconButton>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -77,8 +120,97 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <Box
+          component="a"
+          href="#main-content"
+          sx={{
+            position: 'absolute',
+            left: '-9999px',
+            top: 'auto',
+            '&:focus': {
+              position: 'fixed',
+              top: 8,
+              left: 8,
+              zIndex: 'tooltip',
+              bgcolor: 'background.paper',
+              color: 'text.primary',
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+              boxShadow: 3,
+            },
+          }}
+        >
+          Skip to content
+        </Box>
         <InitColorSchemeScript attribute="class" />
-        <AppThemeProviders>{children}</AppThemeProviders>
+        <AppThemeProviders>
+          <Box
+            sx={{
+              minHeight: '100dvh',
+              display: 'flex',
+              flexDirection: 'column',
+              pt: responsive.pagePt,
+            }}
+          >
+            <Container
+              maxWidth="lg"
+              sx={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: responsive.containerGap,
+              }}
+            >
+              <AppBar>
+                <Toolbar sx={{ justifyContent: 'space-between' }}>
+                  <Stack
+                    direction="row"
+                    gap={1.5}
+                    alignItems="center"
+                    sx={{ minWidth: 0 }}
+                  >
+                    <LogoIcon
+                      sx={{
+                        fontSize: responsive.logoSize,
+                      }}
+                    />
+                    <Typography variant="h4" component="h1" noWrap>
+                      {SITE_NAME}
+                    </Typography>
+                  </Stack>
+                  <Stack
+                    direction="row"
+                    spacing={{ xs: 1, sm: 2 }}
+                    alignItems="center"
+                  >
+                    <Suspense fallback={<AboutDialogFallback />}>
+                      <AboutDialogContent />
+                    </Suspense>
+                    <Tooltip title="View on GitHub">
+                      <IconButton
+                        component="a"
+                        href={SITE_REPOSITORY_URL}
+                        target="_blank"
+                        size="small"
+                        disableRipple={true}
+                        rel="noopener noreferrer"
+                        aria-label="View on GitHub"
+                      >
+                        <GitHubIcon sx={HEADER_ICON_SX} />
+                      </IconButton>
+                    </Tooltip>
+                    <ThemeToggle />
+                  </Stack>
+                </Toolbar>
+              </AppBar>
+
+              <Box component="main" id="main-content">
+                {children}
+              </Box>
+            </Container>
+          </Box>
+        </AppThemeProviders>
       </body>
     </html>
   );
