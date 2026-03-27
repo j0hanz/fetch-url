@@ -8,7 +8,6 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Fade from '@mui/material/Fade';
 import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 
 import TransformForm from '@/components/features/form';
 import TransformResultPanel from '@/components/features/result';
@@ -45,13 +44,11 @@ export default function HomeClient() {
     formRef,
     handleAction,
     isPending,
-    progress,
     result,
     retry,
   } = useTransform();
 
   const viewState = deriveViewState(isPending, error, result);
-  const progressMessage = progress?.message;
 
   return (
     <Box sx={sx.flexColumn}>
@@ -72,15 +69,6 @@ export default function HomeClient() {
 
         <Fade in={viewState === 'loading'} mountOnEnter unmountOnExit>
           <Paper sx={LOADING_PANEL_SX}>
-            {progressMessage && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: 'block' }}
-              >
-                {progressMessage}...
-              </Typography>
-            )}
             <MarkdownSkeleton />
           </Paper>
         </Fade>
