@@ -7,7 +7,7 @@ import type {
   TransformError,
   TransformResult,
 } from '@/lib/api';
-import { isAbortError } from '@/lib/api';
+import { isAbortError, normalizeStreamProgressEvent } from '@/lib/api';
 import {
   mapClientTransformError,
   submitTransformRequest,
@@ -109,7 +109,9 @@ export function useTransform() {
           return;
         }
 
-        setProgress(event);
+        setProgress((previous) =>
+          normalizeStreamProgressEvent(event, previous)
+        );
       },
       onResult(result) {
         handleRequestResult(requestController, result);

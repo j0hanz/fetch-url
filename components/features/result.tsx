@@ -64,7 +64,19 @@ interface ResultDetailItem {
 const CONFIG = {
   COPY_FEEDBACK_DELAY_MS: 2000,
   DEFAULT_DOWNLOAD_FILE_NAME: 'page',
+  MAX_DOWNLOAD_FILE_NAME_LENGTH: 96,
 } as const;
+const INVALID_DOWNLOAD_FILE_NAME_CHARACTERS = new Set([
+  '<',
+  '>',
+  ':',
+  '"',
+  '/',
+  '\\',
+  '|',
+  '?',
+  '*',
+]);
 
 const VIEW_MODE_OPTIONS = [
   {
@@ -102,6 +114,28 @@ function isSafeImageUrl(url: string | undefined): url is string {
   }
 }
 
+export function sanitizeDownloadFileName(title: string | undefined): string {
+  let normalizedTitle = '';
+
+  for (const character of title ?? '') {
+    const isControlCharacter = character.charCodeAt(0) < 32;
+    normalizedTitle +=
+      isControlCharacter || INVALID_DOWNLOAD_FILE_NAME_CHARACTERS.has(character)
+        ? ' '
+        : character;
+  }
+
+  const sanitized = normalizedTitle
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[. ]+$/g, '')
+    .slice(0, CONFIG.MAX_DOWNLOAD_FILE_NAME_LENGTH)
+    .trim()
+    .replace(/[. ]+$/g, '');
+
+  return sanitized || CONFIG.DEFAULT_DOWNLOAD_FILE_NAME;
+}
+
 function downloadMarkdownFile(title: string | undefined, markdown: string) {
   const blob = new Blob([markdown], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
@@ -110,7 +144,7 @@ function downloadMarkdownFile(title: string | undefined, markdown: string) {
 
   try {
     link.href = url;
-    link.download = `${title || CONFIG.DEFAULT_DOWNLOAD_FILE_NAME}.md`;
+    link.download = `${sanitizeDownloadFileName(title)}.md`;
     document.body.appendChild(link);
     attached = true;
     link.click();
