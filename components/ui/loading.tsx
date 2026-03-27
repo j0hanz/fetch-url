@@ -13,7 +13,7 @@ interface SkeletonSection {
   mt?: number;
 }
 
-const SECTIONS: readonly SkeletonSection[] = [
+const SECTIONS = [
   {
     headingSize: '2.125rem',
     headingWidth: '50%',
@@ -31,7 +31,7 @@ const SECTIONS: readonly SkeletonSection[] = [
     lines: ['100%', '85%', '50%'],
     mt: 1.5,
   },
-];
+] as const satisfies readonly SkeletonSection[];
 
 const SKELETON_MIN_HEIGHT = {
   xs: `calc(${responsive.panelMaxHeight.xs} - 24px)`,

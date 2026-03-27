@@ -44,7 +44,10 @@ describe('TransformForm', () => {
     await submitUrlForm(VALID_URL);
 
     expect(action).toHaveBeenCalled();
-    const formData = action.mock.calls[0][0] as FormData;
+    const mockCall = action.mock.calls[0];
+    expect(mockCall).toBeDefined();
+    if (!mockCall) return;
+    const formData = mockCall[0] as FormData;
     expect(formData.get('url')).toBe(VALID_URL);
   });
 
