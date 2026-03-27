@@ -26,6 +26,8 @@ interface ClientTransformHandlers {
   onResult: (result: TransformResult) => void;
 }
 
+type JsonResponseReadResult = { ok: true; data: unknown } | { ok: false };
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
 const TRANSFORM_ENDPOINT = '/api/transform';
 
@@ -93,6 +95,18 @@ function emitParsedStreamEvent(
   return event.type !== 'progress';
 }
 
+function readStreamError(error: unknown): TransformError | null {
+  if (isTimeoutError(error)) {
+    return createTimeoutError();
+  }
+
+  if (isAbortError(error)) {
+    return null;
+  }
+
+  return createUnexpectedResponseError();
+}
+
 function readStreamTerminationError(
   sawTerminalEvent: boolean,
   signal: AbortSignal
@@ -134,15 +148,7 @@ async function readNdjsonStream(
     const sawTerminalEvent = streamReader.finalize();
     return readStreamTerminationError(sawTerminalEvent, signal);
   } catch (error) {
-    if (isTimeoutError(error)) {
-      return createTimeoutError();
-    }
-
-    if (isAbortError(error)) {
-      return null;
-    }
-
-    return createUnexpectedResponseError();
+    return readStreamError(error);
   } finally {
     await reader.cancel().catch(() => {});
     reader.releaseLock();
@@ -158,18 +164,18 @@ function handleStreamEvent(
     return;
   }
 
-  if (!isStreamResultEvent(event)) {
+  if (isStreamResultEvent(event)) {
+    if (hasTransformResult(event)) {
+      handlers.onResult(event.result);
+      return;
+    }
+
+    if (hasTransformError(event)) {
+      handlers.onError(event.error);
+      return;
+    }
+  } else {
     handlers.onError(createUnexpectedResponseError());
-    return;
-  }
-
-  if (hasTransformResult(event)) {
-    handlers.onResult(event.result);
-    return;
-  }
-
-  if (hasTransformError(event)) {
-    handlers.onError(event.error);
     return;
   }
 
@@ -190,7 +196,7 @@ function handleJsonErrorResponse(
 
 async function readJsonResponse(
   response: Response
-): Promise<{ ok: true; data: unknown } | { ok: false }> {
+): Promise<JsonResponseReadResult> {
   try {
     return { ok: true, data: await response.json() };
   } catch (error) {
@@ -207,27 +213,24 @@ async function handleTransformResponse(
   signal: AbortSignal,
   handlers: ClientTransformHandlers
 ): Promise<void> {
-  if (isNdjsonResponse(response)) {
-    const streamError = await readNdjsonStream(
-      response,
-      signal,
-      (streamEvent) => handleStreamEvent(streamEvent, handlers)
-    );
-
-    if (streamError) {
-      handlers.onError(streamError);
+  if (!isNdjsonResponse(response)) {
+    const jsonResponse = await readJsonResponse(response);
+    if (!jsonResponse.ok) {
+      handlers.onError(createUnexpectedResponseError());
+      return;
     }
 
+    handleJsonErrorResponse(jsonResponse.data, handlers.onError);
     return;
   }
 
-  const jsonResponse = await readJsonResponse(response);
-  if (!jsonResponse.ok) {
-    handlers.onError(createUnexpectedResponseError());
-    return;
-  }
+  const streamError = await readNdjsonStream(response, signal, (streamEvent) =>
+    handleStreamEvent(streamEvent, handlers)
+  );
 
-  handleJsonErrorResponse(jsonResponse.data, handlers.onError);
+  if (streamError) {
+    handlers.onError(streamError);
+  }
 }
 
 export async function submitTransformRequest(

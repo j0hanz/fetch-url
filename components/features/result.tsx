@@ -1,6 +1,11 @@
 'use client';
 
-import { type ReactNode, useState } from 'react';
+import {
+  type ComponentProps,
+  type MouseEvent,
+  type ReactNode,
+  useState,
+} from 'react';
 
 import CodeIcon from '@mui/icons-material/Code';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -33,25 +38,61 @@ import { usePreview } from '@/hooks/use-preview';
 import type { TransformResult } from '@/lib/api';
 import { sx, tokens } from '@/lib/theme';
 
-// ============================================================================
-// Types & Interfaces
-// ============================================================================
-
 interface TransformResultProps {
   result: TransformResult;
 }
 
 type ViewMode = 'preview' | 'code';
-type IconButtonColor = React.ComponentProps<typeof IconButton>['color'];
+type IconButtonColor = ComponentProps<typeof IconButton>['color'];
 
-// ============================================================================
-// Constants & Styles
-// ============================================================================
+interface PreviewTransitionState {
+  isPending: boolean;
+  previewTransitionDuration: number;
+  previewMarkdown: string | null;
+}
+
+interface ResultActionButtonProps {
+  ariaLabel: string;
+  title: string;
+  onClick: () => void;
+  children: ReactNode;
+  color?: IconButtonColor;
+}
+
+interface ResultDetailItem {
+  label: string;
+  value: ReactNode;
+}
+
+interface TransitionSwapProps {
+  busy?: boolean;
+  content: ReactNode;
+  fallback: ReactNode;
+  showFallback: boolean;
+  timeout: number;
+}
 
 const CONFIG = {
   COPY_FEEDBACK_DELAY_MS: 2000,
   DEFAULT_DOWNLOAD_FILE_NAME: 'page',
 } as const;
+
+const VIEW_MODE_OPTIONS = [
+  {
+    icon: <VisibilityIcon fontSize="small" />,
+    label: 'Preview',
+    value: 'preview',
+  },
+  {
+    icon: <CodeIcon fontSize="small" />,
+    label: 'Code',
+    value: 'code',
+  },
+] as const satisfies ReadonlyArray<{
+  icon: ReactNode;
+  label: string;
+  value: ViewMode;
+}>;
 
 const COPY_STATUS_DETAILS: Record<
   CopyStatus,
@@ -61,10 +102,6 @@ const COPY_STATUS_DETAILS: Record<
   copied: { color: 'success', message: 'Copied to clipboard' },
   failed: { color: 'error', message: 'Failed to copy' },
 };
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
 
 function isSafeImageUrl(url: string | undefined): url is string {
   if (!url) return false;
@@ -103,16 +140,50 @@ function formatBytes(bytes: number): string {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
-// ============================================================================
-// Sub-Components
-// ============================================================================
+function createResultDetailItems({
+  contentSize,
+  metadata,
+  truncated,
+  url,
+}: TransformResult): ResultDetailItem[] {
+  const items: ResultDetailItem[] = [{ label: 'URL:', value: url }];
 
-interface ResultActionButtonProps {
-  ariaLabel: string;
-  title: string;
-  onClick: () => void;
-  children: ReactNode;
-  color?: IconButtonColor;
+  if (metadata.description) {
+    items.push({ label: 'Info:', value: metadata.description });
+  }
+
+  items.push({ label: 'Size:', value: formatBytes(contentSize) });
+
+  if (truncated) {
+    items.push({ label: 'Truncated:', value: 'Yes' });
+  }
+
+  return items;
+}
+
+function TransitionSwap({
+  busy = false,
+  content,
+  fallback,
+  showFallback,
+  timeout,
+}: TransitionSwapProps) {
+  return (
+    <Box aria-busy={busy || undefined}>
+      <Fade
+        in={showFallback}
+        appear
+        timeout={timeout}
+        mountOnEnter
+        unmountOnExit
+      >
+        <Box>{fallback}</Box>
+      </Fade>
+      <Fade in={!showFallback} timeout={timeout} mountOnEnter unmountOnExit>
+        <Box>{content}</Box>
+      </Fade>
+    </Box>
+  );
 }
 
 function ResultActionButton({
@@ -131,67 +202,42 @@ function ResultActionButton({
   );
 }
 
-function PreviewContent({ markdown }: { markdown: string }) {
-  return <MarkdownPreview>{markdown}</MarkdownPreview>;
-}
-
 function PreviewSurface({
-  isPending,
   markdown,
-  previewTransitionDuration,
+  previewState,
 }: {
-  isPending: boolean;
   markdown: string;
-  previewTransitionDuration: number;
+  previewState: PreviewTransitionState;
 }) {
+  const { isPending, previewTransitionDuration } = previewState;
+
   return (
-    <Box aria-busy={isPending}>
-      <Fade
-        in={isPending}
-        appear
-        timeout={previewTransitionDuration}
-        mountOnEnter
-        unmountOnExit
-      >
-        <Box>
-          <MarkdownSkeleton />
-        </Box>
-      </Fade>
-      <Fade
-        in={!isPending}
-        timeout={previewTransitionDuration}
-        mountOnEnter
-        unmountOnExit
-      >
-        <Box>
-          <PreviewContent markdown={markdown} />
-        </Box>
-      </Fade>
-    </Box>
+    <TransitionSwap
+      busy={isPending}
+      showFallback={isPending}
+      timeout={previewTransitionDuration}
+      fallback={<MarkdownSkeleton />}
+      content={<MarkdownPreview>{markdown}</MarkdownPreview>}
+    />
   );
 }
 
 function ResultMarkdownPanel({
   isPreviewMode,
   markdown,
-  previewMarkdown,
-  isPending,
-  previewTransitionDuration,
+  previewState,
 }: {
   isPreviewMode: boolean;
   markdown: string;
-  previewMarkdown: string;
-  isPending: boolean;
-  previewTransitionDuration: number;
+  previewState: PreviewTransitionState;
 }) {
   return (
     <Paper sx={sx.markdownPanel}>
       <Box sx={{ display: isPreviewMode ? 'block' : 'none' }}>
         <MarkdownErrorBoundary resetKey={markdown}>
           <PreviewSurface
-            isPending={isPending}
-            markdown={previewMarkdown}
-            previewTransitionDuration={previewTransitionDuration}
+            markdown={previewState.previewMarkdown ?? ''}
+            previewState={previewState}
           />
         </MarkdownErrorBoundary>
       </Box>
@@ -228,7 +274,8 @@ function ResultDetailDialog({
   onClose,
   result,
 }: ResultDetailDialogProps) {
-  const { title, url, metadata, contentSize, truncated } = result;
+  const { metadata, title } = result;
+  const detailItems = createResultDetailItems(result);
 
   return (
     <BaseDialog
@@ -243,12 +290,9 @@ function ResultDetailDialog({
       maxWidth="sm"
     >
       <Stack gap={2}>
-        <DetailRow label="URL:" value={url} />
-        {metadata.description && (
-          <DetailRow label="Info:" value={metadata.description} />
-        )}
-        <DetailRow label="Size:" value={formatBytes(contentSize)} />
-        {truncated && <DetailRow label="Truncated:" value="Yes" />}
+        {detailItems.map((item) => (
+          <DetailRow key={item.label} label={item.label} value={item.value} />
+        ))}
         {isSafeImageUrl(metadata.image) && (
           <Box
             component="img"
@@ -262,37 +306,63 @@ function ResultDetailDialog({
   );
 }
 
+function ResultHeaderButtonContent({ result }: TransformResultProps) {
+  const { metadata, title, url, fromCache } = result;
+
+  return (
+    <Stack direction="row" gap={1.5} alignItems="center">
+      <Badge
+        variant="dot"
+        color="success"
+        invisible={!fromCache}
+        overlap="circular"
+      >
+        <Avatar
+          src={isSafeImageUrl(metadata.favicon) ? metadata.favicon : undefined}
+          sx={{
+            width: tokens.sizes.avatar,
+            height: tokens.sizes.avatar,
+          }}
+          alt={title ?? url}
+          variant="square"
+        >
+          {title?.[0]}
+        </Avatar>
+      </Badge>
+      <Stack sx={{ minWidth: 0 }}>
+        {title && (
+          <Typography variant="body2" sx={sx.truncatedText} noWrap>
+            {title}
+          </Typography>
+        )}
+        <Typography variant="caption" sx={sx.resultUrl} noWrap>
+          {url}
+        </Typography>
+      </Stack>
+    </Stack>
+  );
+}
+
 function ResultHeaderWithDetails({
   result,
-  isPending,
-  previewTransitionDuration,
+  previewState,
 }: TransformResultProps & {
-  isPending: boolean;
-  previewTransitionDuration: number;
+  previewState: PreviewTransitionState;
 }) {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const { title, url, metadata, fromCache } = result;
+  const { isPending, previewTransitionDuration } = previewState;
 
   return (
     <>
-      <Box sx={sx.transitionGrid}>
-        <Fade
-          in={isPending}
-          appear
-          timeout={previewTransitionDuration}
-          mountOnEnter
-          unmountOnExit
-        >
+      <TransitionSwap
+        showFallback={isPending}
+        timeout={previewTransitionDuration}
+        fallback={
           <Box sx={sx.transitionCell}>
             <ResultHeaderSkeleton />
           </Box>
-        </Fade>
-        <Fade
-          in={!isPending}
-          timeout={previewTransitionDuration}
-          mountOnEnter
-          unmountOnExit
-        >
+        }
+        content={
           <Box sx={sx.transitionCell}>
             <Tooltip title="View page details">
               <ButtonBase
@@ -301,45 +371,12 @@ function ResultHeaderWithDetails({
                 sx={sx.headerButton}
                 aria-label="View page details"
               >
-                <Stack direction="row" gap={1.5} alignItems="center">
-                  <Badge
-                    variant="dot"
-                    color="success"
-                    invisible={!fromCache}
-                    overlap="circular"
-                  >
-                    <Avatar
-                      src={
-                        isSafeImageUrl(metadata.favicon)
-                          ? metadata.favicon
-                          : undefined
-                      }
-                      sx={{
-                        width: tokens.sizes.avatar,
-                        height: tokens.sizes.avatar,
-                      }}
-                      alt={title ?? url}
-                      variant="square"
-                    >
-                      {title?.[0]}
-                    </Avatar>
-                  </Badge>
-                  <Stack sx={{ minWidth: 0 }}>
-                    {title && (
-                      <Typography variant="body2" sx={sx.truncatedText} noWrap>
-                        {title}
-                      </Typography>
-                    )}
-                    <Typography variant="caption" sx={sx.resultUrl} noWrap>
-                      {url}
-                    </Typography>
-                  </Stack>
-                </Stack>
+                <ResultHeaderButtonContent result={result} />
               </ButtonBase>
             </Tooltip>
           </Box>
-        </Fade>
-      </Box>
+        }
+      />
       <ResultDetailDialog
         open={detailDialogOpen}
         onClose={() => setDetailDialogOpen(false)}
@@ -352,7 +389,7 @@ function ResultHeaderWithDetails({
 interface ResultActionBarProps {
   viewMode: ViewMode;
   onViewModeChange: (
-    event: React.MouseEvent<HTMLElement>,
+    event: MouseEvent<HTMLElement>,
     newMode: ViewMode | null
   ) => void;
   result: TransformResult;
@@ -386,16 +423,16 @@ function ResultActionBar({
           size="small"
           aria-label="View mode"
         >
-          <ToggleButton
-            sx={sx.toggleButton}
-            value="preview"
-            aria-label="Preview"
-          >
-            <VisibilityIcon fontSize="small" />
-          </ToggleButton>
-          <ToggleButton sx={sx.toggleButton} value="code" aria-label="Code">
-            <CodeIcon fontSize="small" />
-          </ToggleButton>
+          {VIEW_MODE_OPTIONS.map((option) => (
+            <ToggleButton
+              key={option.value}
+              sx={sx.toggleButton}
+              value={option.value}
+              aria-label={option.label}
+            >
+              {option.icon}
+            </ToggleButton>
+          ))}
         </ToggleButtonGroup>
         <Stack direction="row" spacing={1}>
           <ResultActionButton
@@ -428,23 +465,19 @@ function ResultActionBar({
   );
 }
 
-// ============================================================================
-// Main Component
-// ============================================================================
-
 export default function TransformResultPanel({ result }: TransformResultProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
-  const { isPending, previewMarkdown, previewTransitionDuration } = usePreview(
-    result.markdown
-  );
+  const previewState = usePreview(result.markdown);
 
   function handleViewModeChange(
-    _event: React.MouseEvent<HTMLElement>,
+    _event: MouseEvent<HTMLElement>,
     nextViewMode: ViewMode | null
-  ) {
-    if (nextViewMode !== null) {
-      setViewMode(nextViewMode);
+  ): void {
+    if (nextViewMode === null) {
+      return;
     }
+
+    setViewMode(nextViewMode);
   }
 
   return (
@@ -456,11 +489,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
         </Alert>
       )}
 
-      <ResultHeaderWithDetails
-        result={result}
-        isPending={isPending}
-        previewTransitionDuration={previewTransitionDuration}
-      />
+      <ResultHeaderWithDetails result={result} previewState={previewState} />
 
       <Stack
         gap={0.2}
@@ -475,9 +504,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
         <ResultMarkdownPanel
           isPreviewMode={viewMode === 'preview'}
           markdown={result.markdown}
-          previewMarkdown={previewMarkdown ?? ''}
-          isPending={isPending}
-          previewTransitionDuration={previewTransitionDuration}
+          previewState={previewState}
         />
       </Stack>
     </Stack>

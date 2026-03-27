@@ -21,17 +21,25 @@ import {
   type JsonRecord,
 } from '@/lib/api';
 
+const DEFAULT_PACKAGE_VERSION = '0.0.0';
+const MAX_STDERR_BUFFER_LENGTH = 4000;
+const MCP_MAX_TOTAL_TIMEOUT = 120_000;
+const HTTP_ERROR_CODE_PREFIX = 'HTTP_';
+const RECONNECT_BASE_DELAY_MS = 500;
+const RECONNECT_MAX_DELAY_MS = 5000;
+
 interface FetchUrlArgs {
   url: string;
 }
 
 function readPackageVersion(): string {
   const pkgPath = findPackageJSON('..', import.meta.url);
-  if (!pkgPath) return '0.0.0';
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8')) as {
-    version?: string;
-  };
-  return pkg.version ?? '0.0.0';
+  if (!pkgPath) {
+    return DEFAULT_PACKAGE_VERSION;
+  }
+
+  const packageJson = parseJsonRecord(readFileSync(pkgPath, 'utf-8'));
+  return readString(packageJson?.version) ?? DEFAULT_PACKAGE_VERSION;
 }
 
 const CLIENT_INFO = { name: 'fetch-url', version: readPackageVersion() };
@@ -301,12 +309,6 @@ export function getFetchUrlTransportConfig(
   };
 }
 
-const MAX_STDERR_BUFFER_LENGTH = 4000;
-const MCP_MAX_TOTAL_TIMEOUT = 120_000;
-const HTTP_ERROR_CODE_PREFIX = 'HTTP_';
-const RECONNECT_BASE_DELAY_MS = 500;
-const RECONNECT_MAX_DELAY_MS = 5000;
-
 const KNOWN_MCP_ERRORS = {
   VALIDATION_ERROR: { code: 'VALIDATION_ERROR', retryable: false },
   FETCH_ERROR: { code: 'FETCH_ERROR', retryable: true },
@@ -340,24 +342,21 @@ function createTransportError(error: unknown, state: McpRuntimeState): Error {
 
   const transportErrorMessage = `${message}\nChild stderr: ${stderr}`;
   if (error instanceof McpError) {
-    const transportError = new McpError(
-      error.code,
-      transportErrorMessage,
-      error.data
+    return copyErrorStack(
+      new McpError(error.code, transportErrorMessage, error.data),
+      error
     );
-    if (error.stack) {
-      transportError.stack = error.stack;
-    }
-
-    return transportError;
   }
 
-  const transportError = new Error(transportErrorMessage);
-  if (error instanceof Error && error.stack) {
-    transportError.stack = error.stack;
+  return copyErrorStack(new Error(transportErrorMessage), error);
+}
+
+function copyErrorStack<T extends Error>(target: T, source: unknown): T {
+  if (source instanceof Error && source.stack) {
+    target.stack = source.stack;
   }
 
-  return transportError;
+  return target;
 }
 
 type KnownMcpErrorCode = keyof typeof KNOWN_MCP_ERRORS;
@@ -432,11 +431,23 @@ function extractMetadata(data: JsonRecord): TransformMetadata {
   return omitUndefinedFields({
     description: readString(metadata.description),
     author: readString(metadata.author),
-    publishedAt: readFirstString(metadata.publishedAt, metadata.publishedDate),
-    modifiedAt: readFirstString(metadata.modifiedAt, metadata.modifiedDate),
+    publishedAt: readMetadataTimestamp(
+      metadata,
+      'publishedAt',
+      'publishedDate'
+    ),
+    modifiedAt: readMetadataTimestamp(metadata, 'modifiedAt', 'modifiedDate'),
     image: readString(metadata.image),
     favicon: readString(metadata.favicon),
   }) as TransformMetadata;
+}
+
+function readMetadataTimestamp(
+  metadata: JsonRecord,
+  primaryField: string,
+  fallbackField: string
+): string | undefined {
+  return readFirstString(metadata[primaryField], metadata[fallbackField]);
 }
 
 function mapToTransformResult(data: JsonRecord): TransformResult {
@@ -460,13 +471,13 @@ type ParsedMcpResult =
 
 export function parseMcpResult(raw: CallToolResult): ParsedMcpResult {
   const payloadState = readPayloadRecord(raw);
-  if (!('payload' in payloadState)) {
-    return createPayloadParseFailure(raw.isError === true, payloadState.kind);
+  if ('payload' in payloadState) {
+    return raw.isError
+      ? createErrorResult(payloadState.payload)
+      : createSuccessResult(payloadState.payload);
   }
 
-  return raw.isError
-    ? createErrorResult(payloadState.payload)
-    : createSuccessResult(payloadState.payload);
+  return createPayloadParseFailure(raw.isError === true, payloadState.kind);
 }
 
 type PayloadReadState =
@@ -507,17 +518,18 @@ function createPayloadParseFailure(
     };
   }
 
-  if (kind === 'invalid_text') {
-    return {
-      ok: false,
-      error: createInternalError('Failed to parse MCP response as JSON'),
-    };
+  switch (kind) {
+    case 'invalid_text':
+      return {
+        ok: false,
+        error: createInternalError('Failed to parse MCP response as JSON'),
+      };
+    case 'missing':
+      return {
+        ok: false,
+        error: createInternalError('Empty MCP response'),
+      };
   }
-
-  return {
-    ok: false,
-    error: createInternalError('Empty MCP response'),
-  };
 }
 
 function readTextPayloadRecord(raw: CallToolResult): PayloadReadState {
@@ -550,21 +562,21 @@ function readErrorDetails(
     return undefined;
   }
 
-  const retryAfter = details.retryAfter;
-  const timeout = readInteger(details.timeout);
-  const reason = readString(details.reason);
   const mappedDetails = omitUndefinedFields({
-    retryAfter:
-      typeof retryAfter === 'number' ||
-      typeof retryAfter === 'string' ||
-      retryAfter === null
-        ? retryAfter
-        : undefined,
-    timeout,
-    reason,
+    retryAfter: readRetryAfter(details.retryAfter),
+    timeout: readInteger(details.timeout),
+    reason: readString(details.reason),
   });
 
   return Object.keys(mappedDetails).length > 0 ? mappedDetails : undefined;
+}
+
+function readRetryAfter(value: unknown): number | string | null | undefined {
+  return typeof value === 'number' ||
+    typeof value === 'string' ||
+    value === null
+    ? value
+    : undefined;
 }
 
 function parseJsonRecord(value: string): JsonRecord | null {

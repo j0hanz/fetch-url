@@ -16,6 +16,12 @@ import {
 
 export type ViewState = 'idle' | 'loading' | 'error' | 'result';
 
+interface TransformRequestHandlers {
+  onError: (error: TransformError) => void;
+  onProgress: (event: StreamProgressEvent) => void;
+  onResult: (result: TransformResult) => void;
+}
+
 export function deriveViewState(
   isPending: boolean,
   error: TransformError | null,
@@ -44,14 +50,20 @@ export function useTransform() {
     };
   }, []);
 
+  function resetRequestState(): void {
+    setError(null);
+    setResult(null);
+    setProgress(null);
+  }
+
   function isActiveRequest(requestController: AbortController): boolean {
     return abortControllerRef.current === requestController;
   }
 
-  function completeRequest(
+  function finalizeActiveRequest(
     requestController: AbortController,
     onComplete: () => void
-  ) {
+  ): void {
     if (!isActiveRequest(requestController)) {
       return;
     }
@@ -60,11 +72,19 @@ export function useTransform() {
     onComplete();
   }
 
+  function beginRequest(): AbortController {
+    abortControllerRef.current?.abort();
+    const requestController = new AbortController();
+    abortControllerRef.current = requestController;
+    resetRequestState();
+    return requestController;
+  }
+
   function handleRequestResult(
     requestController: AbortController,
     nextResult: TransformResult
-  ) {
-    completeRequest(requestController, () => {
+  ): void {
+    finalizeActiveRequest(requestController, () => {
       setResult(nextResult);
       formRef.current?.clear();
     });
@@ -73,49 +93,52 @@ export function useTransform() {
   function handleRequestError(
     requestController: AbortController,
     nextError: TransformError
-  ) {
-    completeRequest(requestController, () => {
+  ): void {
+    finalizeActiveRequest(requestController, () => {
       setError(nextError);
     });
   }
 
-  function submitUrl(url: string) {
-    lastUrlRef.current = url;
-
-    startTransition(async () => {
-      abortControllerRef.current?.abort();
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
-
-      setError(null);
-      setResult(null);
-      setProgress(null);
-
-      const handlers = {
-        onProgress(event: StreamProgressEvent) {
-          if (isActiveRequest(abortController)) setProgress(event);
-        },
-        onResult(res: TransformResult) {
-          handleRequestResult(abortController, res);
-        },
-        onError(err: TransformError) {
-          handleRequestError(abortController, err);
-        },
-      };
-
-      try {
-        await submitTransformRequest(url, handlers, abortController.signal);
-      } catch (err) {
-        if (isAbortError(err) || !isActiveRequest(abortController)) {
+  function createRequestHandlers(
+    requestController: AbortController
+  ): TransformRequestHandlers {
+    return {
+      onProgress(event) {
+        if (!isActiveRequest(requestController)) {
           return;
         }
 
-        handleRequestError(abortController, mapClientTransformError(err));
+        setProgress(event);
+      },
+      onResult(result) {
+        handleRequestResult(requestController, result);
+      },
+      onError(nextError) {
+        handleRequestError(requestController, nextError);
+      },
+    };
+  }
+
+  function submitUrl(url: string): void {
+    lastUrlRef.current = url;
+
+    startTransition(async () => {
+      const requestController = beginRequest();
+      const handlers = createRequestHandlers(requestController);
+
+      try {
+        await submitTransformRequest(url, handlers, requestController.signal);
+      } catch (err) {
+        if (isAbortError(err) || !isActiveRequest(requestController)) {
+          return;
+        }
+
+        handleRequestError(requestController, mapClientTransformError(err));
       }
     });
   }
 
-  function handleAction(formData: FormData) {
+  function handleAction(formData: FormData): void {
     const url = formData.get('url');
     if (typeof url !== 'string' || url === '') {
       return;
@@ -124,13 +147,13 @@ export function useTransform() {
     submitUrl(url);
   }
 
-  function retry() {
+  function retry(): void {
     if (lastUrlRef.current) {
       submitUrl(lastUrlRef.current);
     }
   }
 
-  function dismissError() {
+  function dismissError(): void {
     setError(null);
   }
 

@@ -36,6 +36,7 @@ const NDJSON_HEADERS = {
 } as const;
 
 const MAX_REQUEST_BODY_SIZE = 4096;
+const INVALID_JSON_BODY_MESSAGE = 'Invalid JSON body.';
 
 interface NdjsonStreamWriter {
   close: () => void;
@@ -55,6 +56,7 @@ interface BufferedProgressEmitter {
 type FirstTransformOutcome =
   | { type: 'progress' }
   | { type: 'response'; response: TransformResponse };
+type NdjsonWritableEvent = StreamProgressEvent | StreamResultEvent;
 
 function readValidationErrorMessage(error: unknown): string {
   return error instanceof ValidationError ? error.message : 'Invalid request.';
@@ -62,7 +64,7 @@ function readValidationErrorMessage(error: unknown): string {
 
 async function readRequestBody(request: Request): Promise<unknown> {
   const text = await request.text().catch(() => {
-    throw new ValidationError('Invalid JSON body.');
+    throw new ValidationError(INVALID_JSON_BODY_MESSAGE);
   });
 
   if (text.length > MAX_REQUEST_BODY_SIZE) {
@@ -72,7 +74,7 @@ async function readRequestBody(request: Request): Promise<unknown> {
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new ValidationError('Invalid JSON body.');
+    throw new ValidationError(INVALID_JSON_BODY_MESSAGE);
   }
 }
 
@@ -97,7 +99,7 @@ function createErrorResponse(error: TransformError): Response {
 
 function encodeNdjsonEvent(
   encoder: TextEncoder,
-  event: StreamProgressEvent | StreamResultEvent
+  event: NdjsonWritableEvent
 ): Uint8Array {
   return encoder.encode(JSON.stringify(event) + '\n');
 }
@@ -109,7 +111,7 @@ function createNdjsonStreamWriter(
 ): NdjsonStreamWriter {
   let closed = false;
 
-  const close = () => {
+  const close = (): void => {
     if (closed) {
       return;
     }
@@ -125,7 +127,7 @@ function createNdjsonStreamWriter(
 
   request.signal.addEventListener('abort', close, { once: true });
 
-  function write(event: StreamProgressEvent | StreamResultEvent) {
+  function write(event: NdjsonWritableEvent): void {
     if (closed) {
       return;
     }
@@ -211,11 +213,7 @@ function createBufferedProgressEmitter(): BufferedProgressEmitter {
     },
     emitProgress(progress) {
       markProgressSeen();
-      const event = createStreamProgressEvent(
-        progress.progress,
-        progress.total,
-        progress.message
-      );
+      const event = createProgressEvent(progress);
 
       if (writer) {
         writer.writeProgress(event);
@@ -238,6 +236,14 @@ function createBufferedProgressEmitter(): BufferedProgressEmitter {
   };
 }
 
+function createProgressEvent(progress: Progress): StreamProgressEvent {
+  return createStreamProgressEvent(
+    progress.progress,
+    progress.total,
+    progress.message
+  );
+}
+
 function shouldReturnImmediateErrorResponse(
   initialOutcome: FirstTransformOutcome,
   progressEmitter: BufferedProgressEmitter
@@ -250,6 +256,20 @@ function shouldReturnImmediateErrorResponse(
     !progressEmitter.hasProgress() &&
     !initialOutcome.response.ok
   );
+}
+
+function createStreamingTransformResponse(
+  request: Request,
+  responsePromise: Promise<TransformResponse>,
+  progressEmitter: BufferedProgressEmitter
+): Response {
+  const stream = createNdjsonResponseStream(
+    request,
+    responsePromise,
+    progressEmitter.attachWriter
+  );
+
+  return new Response(stream, { headers: NDJSON_HEADERS });
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -269,13 +289,11 @@ export async function POST(request: Request): Promise<Response> {
       return createErrorResponse(initialOutcome.response.error);
     }
 
-    const stream = createNdjsonResponseStream(
+    return createStreamingTransformResponse(
       request,
       responsePromise,
-      progressEmitter.attachWriter
+      progressEmitter
     );
-
-    return new Response(stream, { headers: NDJSON_HEADERS });
   } catch (error) {
     return createValidationErrorResponse(readValidationErrorMessage(error));
   }
