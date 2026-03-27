@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type {
   StreamProgressEvent,
@@ -36,7 +36,7 @@ export function useTransform() {
   const [result, setResult] = useState<TransformResult | null>(null);
   const [error, setError] = useState<TransformError | null>(null);
   const [progress, setProgress] = useState<StreamProgressEvent | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -68,6 +68,7 @@ export function useTransform() {
     }
 
     abortControllerRef.current = null;
+    setIsPending(false);
     onComplete();
   }
 
@@ -75,6 +76,7 @@ export function useTransform() {
     abortControllerRef.current?.abort();
     const requestController = new AbortController();
     abortControllerRef.current = requestController;
+    setIsPending(true);
     resetRequestState();
     return requestController;
   }
@@ -121,20 +123,18 @@ export function useTransform() {
   function submitUrl(url: string): void {
     lastUrlRef.current = url;
 
-    startTransition(async () => {
-      const requestController = beginRequest();
-      const handlers = createRequestHandlers(requestController);
+    const requestController = beginRequest();
+    const handlers = createRequestHandlers(requestController);
 
-      try {
-        await submitTransformRequest(url, handlers, requestController.signal);
-      } catch (err) {
+    void submitTransformRequest(url, handlers, requestController.signal).catch(
+      (err: unknown) => {
         if (isAbortError(err) || !isActiveRequest(requestController)) {
           return;
         }
 
         handleRequestError(requestController, mapClientTransformError(err));
       }
-    });
+    );
   }
 
   function handleAction(formData: FormData): void {

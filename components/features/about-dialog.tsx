@@ -5,7 +5,6 @@ import {
   type ReactNode,
   Suspense,
   type SyntheticEvent,
-  useRef,
   useState,
 } from 'react';
 
@@ -60,17 +59,12 @@ interface TabPanelProps {
 }
 
 function TabPanel({ children, tab, visible }: TabPanelProps) {
-  const hasRenderedRef = useRef(visible);
   const { panelId, tabId } =
     ABOUT_TABS.find((t) => t.id === tab) ?? ABOUT_TABS[0];
 
-  if (visible && !hasRenderedRef.current) {
-    hasRenderedRef.current = true;
-  }
-
   return (
     <div role="tabpanel" hidden={!visible} id={panelId} aria-labelledby={tabId}>
-      {(hasRenderedRef.current || visible) && children}
+      {visible ? children : null}
     </div>
   );
 }

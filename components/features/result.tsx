@@ -16,7 +16,6 @@ import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
-import Fade from '@mui/material/Fade';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
@@ -28,10 +27,6 @@ import Typography from '@mui/material/Typography';
 
 import { BaseDialog } from '@/components/ui/dialog';
 import { MarkdownErrorBoundary } from '@/components/ui/error';
-import {
-  MarkdownSkeleton,
-  ResultHeaderSkeleton,
-} from '@/components/ui/loading';
 import MarkdownPreview from '@/components/ui/markdown-preview';
 import { type CopyStatus, useFeedback } from '@/hooks/use-feedback';
 import { usePreview } from '@/hooks/use-preview';
@@ -62,14 +57,6 @@ interface ResultActionButtonProps {
 interface ResultDetailItem {
   label: string;
   value: ReactNode;
-}
-
-interface TransitionSwapProps {
-  busy?: boolean;
-  content: ReactNode;
-  fallback: ReactNode;
-  showFallback: boolean;
-  timeout: number;
 }
 
 const CONFIG = {
@@ -161,31 +148,6 @@ function createResultDetailItems({
   return items;
 }
 
-function TransitionSwap({
-  busy = false,
-  content,
-  fallback,
-  showFallback,
-  timeout,
-}: TransitionSwapProps) {
-  return (
-    <Box aria-busy={busy || undefined}>
-      <Fade
-        in={showFallback}
-        appear
-        timeout={timeout}
-        mountOnEnter
-        unmountOnExit
-      >
-        <Box>{fallback}</Box>
-      </Fade>
-      <Fade in={!showFallback} timeout={timeout} mountOnEnter unmountOnExit>
-        <Box>{content}</Box>
-      </Fade>
-    </Box>
-  );
-}
-
 function ResultActionButton({
   ariaLabel,
   title,
@@ -212,13 +174,15 @@ function PreviewSurface({
   const { isPending, previewTransitionDuration } = previewState;
 
   return (
-    <TransitionSwap
-      busy={isPending}
-      showFallback={isPending}
-      timeout={previewTransitionDuration}
-      fallback={<MarkdownSkeleton />}
-      content={<MarkdownPreview>{markdown}</MarkdownPreview>}
-    />
+    <Box
+      aria-busy={isPending || undefined}
+      sx={{
+        opacity: isPending ? 0.72 : 1,
+        transition: `opacity ${previewTransitionDuration}ms linear`,
+      }}
+    >
+      <MarkdownPreview>{markdown}</MarkdownPreview>
+    </Box>
   );
 }
 
@@ -338,40 +302,27 @@ function ResultHeaderButtonContent({ result }: TransformResultProps) {
 
 function ResultHeaderWithDetails({
   result,
-  previewState,
 }: TransformResultProps & {
-  previewState: PreviewTransitionState;
+  previewState?: PreviewTransitionState;
 }) {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const { isPending, previewTransitionDuration } = previewState;
 
   return (
     <>
-      <TransitionSwap
-        showFallback={isPending}
-        timeout={previewTransitionDuration}
-        fallback={
-          <Box sx={sx.transitionCell}>
-            <ResultHeaderSkeleton />
-          </Box>
-        }
-        content={
-          <Box sx={sx.transitionCell}>
-            <Tooltip title="View page details">
-              <ButtonBase
-                onClick={() => {
-                  setDetailDialogOpen(true);
-                }}
-                disableRipple={true}
-                sx={sx.headerButton}
-                aria-label="View page details"
-              >
-                <ResultHeaderButtonContent result={result} />
-              </ButtonBase>
-            </Tooltip>
-          </Box>
-        }
-      />
+      <Box sx={sx.transitionCell}>
+        <Tooltip title="View page details">
+          <ButtonBase
+            onClick={() => {
+              setDetailDialogOpen(true);
+            }}
+            disableRipple={true}
+            sx={sx.headerButton}
+            aria-label="View page details"
+          >
+            <ResultHeaderButtonContent result={result} />
+          </ButtonBase>
+        </Tooltip>
+      </Box>
       <ResultDetailDialog
         open={detailDialogOpen}
         onClose={() => {
@@ -486,7 +437,7 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
         </Alert>
       )}
 
-      <ResultHeaderWithDetails result={result} previewState={previewState} />
+      <ResultHeaderWithDetails result={result} />
 
       <Stack
         gap={0.2}

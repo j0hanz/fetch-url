@@ -1,35 +1,14 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
-import { useFormStatus } from 'react-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import TransformForm from '@/components/features/form';
 import { submitUrlForm } from '@/tests/setup';
-
-vi.mock('react-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-dom')>();
-  return {
-    ...actual,
-    useFormStatus: vi.fn(),
-  };
-});
-
-const mockUseFormStatus = vi.mocked(useFormStatus);
 
 const action = vi.fn();
 const VALID_URL = 'https://example.com';
 
 describe('TransformForm', () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-    mockUseFormStatus.mockReturnValue({
-      pending: false,
-      data: null,
-      method: null,
-      action: null,
-    });
-  });
-
   it('renders URL input and submit button', () => {
     renderForm();
 
@@ -52,19 +31,13 @@ describe('TransformForm', () => {
   });
 
   it('disables the URL input and shows loading state on button', () => {
-    mockUseFormStatus.mockReturnValue({
-      pending: true,
-      data: new FormData(),
-      method: 'get',
-      action: (_formData: FormData) => {},
-    });
-    renderForm();
+    renderForm({ isPending: true });
 
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
   });
 });
 
-function renderForm() {
-  return render(<TransformForm action={action} />);
+function renderForm({ isPending = false }: { isPending?: boolean } = {}) {
+  return render(<TransformForm action={action} isPending={isPending} />);
 }

@@ -22,19 +22,10 @@ const baseResult: TransformResult = {
 };
 
 describe('TransformResultPanel', () => {
-  it('renders markdown preview by default', async () => {
+  it('renders markdown preview by default', () => {
     renderPanel();
 
-    expect(
-      screen.getByRole('status', { name: /markdown preview loading/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('status', { name: /result header loading/i })
-    ).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.getByText('Example')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Example')).toBeInTheDocument();
     expect(screen.getByText('This is an example.')).toBeInTheDocument();
   });
 
@@ -146,12 +137,10 @@ describe('TransformResultPanel', () => {
     });
   });
 
-  it('shows the skeleton again when new preview content arrives', async () => {
+  it('updates the preview content when new result content arrives', async () => {
     const { rerender } = renderPanel();
 
-    await waitFor(() => {
-      expect(screen.getByText('Example')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Example')).toBeInTheDocument();
 
     rerender(
       <TransformResultPanel
@@ -164,17 +153,11 @@ describe('TransformResultPanel', () => {
       />
     );
 
-    expect(
-      screen.getByRole('status', { name: /markdown preview loading/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('status', { name: /result header loading/i })
-    ).toBeInTheDocument();
+    expect(screen.getByText('Updated Domain')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('Updated')).toBeInTheDocument();
     });
-    expect(screen.getByText('Updated Domain')).toBeInTheDocument();
   });
 });
 

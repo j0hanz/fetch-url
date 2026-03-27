@@ -53,7 +53,11 @@ export default function HomeClient() {
 
   return (
     <Box sx={sx.flexColumn}>
-      <TransformForm ref={formRef} action={handleAction} />
+      <TransformForm
+        ref={formRef}
+        action={handleAction}
+        isPending={isPending}
+      />
 
       <Box aria-live="polite" sx={sx.transitionGrid}>
         <ViewStateSection state={viewState} visibleState="idle">
