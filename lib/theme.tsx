@@ -13,8 +13,8 @@ declare module '@mui/material/styles' {
 // ── Design tokens ───────────────────────────────────────────────
 export const tokens = {
   fonts: {
-    mono: "'Geist Mono Variable', monospace",
-    sans: "'Geist Variable', sans-serif",
+    mono: 'var(--font-geist-mono), ui-monospace, monospace',
+    sans: 'var(--font-geist-sans), system-ui, sans-serif',
   },
   radius: { panel: 6, code: 1 },
   blur: { paper: '12.5px', dialog: '12.5px' },

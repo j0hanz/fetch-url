@@ -2,9 +2,7 @@ import type { Metadata, Viewport } from 'next';
 
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 
-import '@fontsource-variable/geist';
-import '@fontsource-variable/geist-mono';
-
+import { geistMono, geistSans } from '@/lib/fonts';
 import {
   resolveSiteUrl,
   SITE_CATEGORY,
@@ -73,7 +71,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
       <body>
         <InitColorSchemeScript attribute="class" />
         <AppThemeProviders>{children}</AppThemeProviders>
