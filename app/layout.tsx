@@ -15,6 +15,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import AboutDialog from '@/components/features/about-dialog';
+import Footer from '@/components/ui/footer';
 import LogoIcon from '@/components/ui/logo-icon';
 import ThemeToggle from '@/components/ui/theme-toggle';
 
@@ -208,6 +209,7 @@ export default function RootLayout({
               <Box component="main" id="main-content" sx={sx.flexColumn}>
                 {children}
               </Box>
+              <Footer />
             </Container>
           </Box>
         </AppThemeProviders>
