@@ -320,10 +320,10 @@ export function getFetchUrlTransportConfig(
 }
 
 const KNOWN_MCP_ERRORS = {
-  VALIDATION_ERROR: { code: 'VALIDATION_ERROR', retryable: false },
-  FETCH_ERROR: { code: 'FETCH_ERROR', retryable: true },
-  ABORTED: { code: 'ABORTED', retryable: true },
-  queue_full: { code: 'QUEUE_FULL', retryable: true },
+  VALIDATION_ERROR: { code: 'VALIDATION_ERROR' },
+  FETCH_ERROR: { code: 'FETCH_ERROR' },
+  ABORTED: { code: 'ABORTED' },
+  queue_full: { code: 'QUEUE_FULL' },
 } as const;
 
 function attachTransportDiagnostics(
@@ -399,26 +399,29 @@ function mapMcpError(errorPayload: JsonRecord): TransformError {
   const knownError = readKnownMcpError(code);
   const statusCode = readInteger(errorPayload.statusCode);
   const details = readErrorDetails(errorPayload);
+  const retryable = readBoolean(errorPayload.retryable);
 
   if (knownError) {
     return createTransformError(knownError.code, message, {
-      retryable: knownError.retryable,
+      retryable: retryable ?? false,
       statusCode,
       details,
     });
   }
 
-  return mapUnknownMcpError(code, message, statusCode, details);
+  return mapUnknownMcpError(code, message, retryable, statusCode, details);
 }
 
 function mapUnknownMcpError(
   code: string,
   message: string,
+  retryable?: boolean,
   statusCode?: number,
   details?: TransformError['details']
 ): TransformError {
   if (!code.startsWith(HTTP_ERROR_CODE_PREFIX)) {
     return createTransformError('INTERNAL_ERROR', message, {
+      retryable: retryable ?? false,
       statusCode,
       details,
     });
@@ -426,7 +429,9 @@ function mapUnknownMcpError(
 
   const resolvedStatusCode = statusCode ?? readHttpStatusCode(code);
   return createTransformError('HTTP_ERROR', message, {
-    retryable: resolvedStatusCode !== undefined && resolvedStatusCode >= 500,
+    retryable:
+      retryable ??
+      (resolvedStatusCode !== undefined && resolvedStatusCode >= 500),
     statusCode: resolvedStatusCode,
     details,
   });

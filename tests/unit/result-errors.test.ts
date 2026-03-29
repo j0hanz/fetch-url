@@ -104,7 +104,9 @@ describe('error mapper', () => {
     'maps $code to $expectedCode',
     ({ code, message, expectedCode, retryable, statusCode, details }) => {
       const error = expectErrorResult(
-        parseMcpResult(errorResult(code, message, { statusCode, details }))
+        parseMcpResult(
+          errorResult(code, message, { retryable, statusCode, details })
+        )
       );
 
       expect(error.code).toBe(expectedCode);
@@ -136,6 +138,7 @@ describe('error mapper', () => {
       structuredContent: {
         error: 'Upstream unavailable',
         code: 'FETCH_ERROR',
+        retryable: true,
         url: 'https://example.com',
         details: { reason: 'timeout', timeout: 30_000 },
       },
