@@ -13,6 +13,13 @@ interface PackageLock {
   packages?: Record<string, LockfilePackage>;
 }
 
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+} as const;
 const FETCH_URL_PACKAGE_NAME = '@j0hanz/fetch-url-mcp';
 const FETCH_URL_PACKAGE_FALLBACK_PATH = 'node_modules/@j0hanz/fetch-url-mcp';
 
@@ -128,6 +135,17 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   reactCompiler: true,
   typedRoutes: true,
+  headers() {
+    return Promise.resolve([
+      {
+        source: '/:path*',
+        headers: Object.entries(SECURITY_HEADERS).map(([key, value]) => ({
+          key,
+          value,
+        })),
+      },
+    ]);
+  },
   outputFileTracingIncludes: {
     '/api/transform': collectPackageTraceGlobs(readFetchUrlPackagePath()),
   },

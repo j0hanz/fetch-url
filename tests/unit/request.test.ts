@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { proxy } from '@/proxy';
-
 import { POST } from '@/app/api/transform/route';
 
 import type { TransformResponse } from '@/lib/api';
@@ -132,13 +130,14 @@ describe('POST /api/transform', () => {
   it('returns a validation error for invalid JSON payloads', async () => {
     const response = await POST(createJsonRequest('not json'));
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({
       ok: false,
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Invalid JSON body.',
         retryable: false,
+        statusCode: 400,
       },
     });
   });
@@ -155,13 +154,14 @@ describe('POST /api/transform', () => {
       )
     );
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(413);
     await expect(response.json()).resolves.toEqual({
       ok: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: 'Invalid request.',
+        message: 'Request body too large.',
         retryable: false,
+        statusCode: 413,
       },
     });
   });
@@ -304,28 +304,5 @@ describe('POST /api/transform', () => {
         message: 'Starting',
       },
     ]);
-  });
-});
-
-describe('proxy', () => {
-  it('adds the configured security headers without blocking the request', () => {
-    const response = proxy({
-      headers: new Headers(),
-      method: 'GET',
-      nextUrl: new URL('http://localhost/api/transform'),
-    } as never);
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
-    expect(response.headers.get('X-Frame-Options')).toBe('DENY');
-    expect(response.headers.get('Referrer-Policy')).toBe(
-      'strict-origin-when-cross-origin'
-    );
-    expect(response.headers.get('Permissions-Policy')).toBe(
-      'camera=(), microphone=(), geolocation=()'
-    );
-    expect(response.headers.get('Strict-Transport-Security')).toBe(
-      'max-age=63072000; includeSubDomains; preload'
-    );
   });
 });

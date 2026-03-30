@@ -33,17 +33,21 @@ const NDJSON_HEADERS = {
 const MAX_REQUEST_BODY_SIZE = 4096;
 const INVALID_JSON_BODY_MESSAGE = 'Invalid JSON body.';
 
-function readValidationErrorMessage(error: unknown): string {
-  return error instanceof ValidationError ? error.message : 'Invalid request.';
-}
-
 async function readRequestBody(request: Request): Promise<unknown> {
+  const contentLength = Number.parseInt(
+    request.headers.get('Content-Length') ?? '',
+    10
+  );
+  if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BODY_SIZE) {
+    throw new ValidationError('Request body too large.', 413);
+  }
+
   const text = await request.text().catch(() => {
     throw new ValidationError(INVALID_JSON_BODY_MESSAGE);
   });
 
   if (text.length > MAX_REQUEST_BODY_SIZE) {
-    throw new ValidationError('Request body too large.');
+    throw new ValidationError('Request body too large.', 413);
   }
 
   try {
@@ -59,9 +63,17 @@ async function parseTransformRequest(
   return validateTransformRequest(await readRequestBody(request));
 }
 
-function createValidationErrorResponse(message: string): Response {
+function createValidationErrorResponse(error: unknown): Response {
+  const validationError =
+    error instanceof ValidationError
+      ? error
+      : new ValidationError('Invalid request.');
+
   return createErrorResponse(
-    createTransformError('VALIDATION_ERROR', message, { retryable: false })
+    createTransformError('VALIDATION_ERROR', validationError.message, {
+      retryable: false,
+      statusCode: validationError.statusCode,
+    })
   );
 }
 
@@ -149,6 +161,6 @@ export async function POST(request: Request): Promise<Response> {
     );
   } catch (error) {
     scheduleValidationLog(request, startTime);
-    return createValidationErrorResponse(readValidationErrorMessage(error));
+    return createValidationErrorResponse(error);
   }
 }

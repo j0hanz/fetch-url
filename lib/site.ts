@@ -6,6 +6,10 @@ const SITE_URL_ENV_KEYS = [
   'VERCEL_URL',
 ] as const;
 type SiteEnvironment = Readonly<Record<string, string | undefined>>;
+type ConfiguredSiteUrl = {
+  key: (typeof SITE_URL_ENV_KEYS)[number];
+  value: string;
+};
 
 export const SITE_NAME = 'Fetch URL';
 export const SITE_TAGLINE = 'Turn public web pages into clean Markdown';
@@ -35,6 +39,20 @@ function createDefaultSiteUrl(): URL {
   return new URL(DEFAULT_SITE_URL);
 }
 
+function createMissingSiteUrlError(): Error {
+  return new Error(
+    `Site URL is not configured. Set one of: ${SITE_URL_ENV_KEYS.join(', ')}.`
+  );
+}
+
+function createInvalidSiteUrlError(key: string, value: string): Error {
+  return new Error(`Invalid site URL in ${key}: "${value}".`);
+}
+
+function isProductionEnvironment(environment: SiteEnvironment): boolean {
+  return environment.NODE_ENV === 'production';
+}
+
 function normalizeSiteUrl(value: string): URL | null {
   const trimmedValue = value.trim();
   const withProtocol = SITE_URL_PROTOCOL_PATTERN.test(trimmedValue)
@@ -55,11 +73,11 @@ function normalizeSiteUrl(value: string): URL | null {
 
 function readConfiguredSiteUrl(
   environment: SiteEnvironment
-): string | undefined {
+): ConfiguredSiteUrl | undefined {
   for (const key of SITE_URL_ENV_KEYS) {
     const value = environment[key]?.trim();
     if (value) {
-      return value;
+      return { key, value };
     }
   }
 
@@ -69,8 +87,26 @@ function readConfiguredSiteUrl(
 export function resolveSiteUrl(
   environment: SiteEnvironment = process.env
 ): URL {
-  const configuredUrl = readConfiguredSiteUrl(environment);
-  return configuredUrl
-    ? (normalizeSiteUrl(configuredUrl) ?? createDefaultSiteUrl())
-    : createDefaultSiteUrl();
+  const configuredSiteUrl = readConfiguredSiteUrl(environment);
+  if (!configuredSiteUrl) {
+    if (isProductionEnvironment(environment)) {
+      throw createMissingSiteUrlError();
+    }
+
+    return createDefaultSiteUrl();
+  }
+
+  const normalizedSiteUrl = normalizeSiteUrl(configuredSiteUrl.value);
+  if (!normalizedSiteUrl) {
+    if (isProductionEnvironment(environment)) {
+      throw createInvalidSiteUrlError(
+        configuredSiteUrl.key,
+        configuredSiteUrl.value
+      );
+    }
+
+    return createDefaultSiteUrl();
+  }
+
+  return normalizedSiteUrl;
 }

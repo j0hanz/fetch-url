@@ -1,9 +1,6 @@
-import { Suspense } from 'react';
-
 import type { Metadata, Viewport } from 'next';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -20,7 +17,6 @@ import LogoIcon from '@/components/ui/logo-icon';
 import ThemeToggle from '@/components/ui/theme-toggle';
 
 import { geistMono, geistSans } from '@/lib/fonts';
-import { readHomePageMarkdown } from '@/lib/home-content';
 import {
   resolveSiteUrl,
   SITE_CATEGORY,
@@ -84,30 +80,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
   },
 };
-
-async function AboutDialogContent() {
-  const { aboutMarkdown, howItWorksMarkdown } = await readHomePageMarkdown();
-
-  return (
-    <AboutDialog
-      markdown={aboutMarkdown}
-      howItWorksMarkdown={howItWorksMarkdown}
-    />
-  );
-}
-
-function AboutDialogFallback() {
-  return (
-    <IconButton
-      disabled
-      size="small"
-      aria-label="About Fetch URL"
-      disableRipple
-    >
-      <InfoOutlinedIcon sx={sx.headerIcon} />
-    </IconButton>
-  );
-}
 
 export default function RootLayout({
   children,
@@ -185,9 +157,7 @@ export default function RootLayout({
                     sx={{ gap: 'clamp(0.5rem, 0.25rem + 0.5vw, 1rem)' }}
                     alignItems="center"
                   >
-                    <Suspense fallback={<AboutDialogFallback />}>
-                      <AboutDialogContent />
-                    </Suspense>
+                    <AboutDialog />
                     <Tooltip title="View on GitHub">
                       <IconButton
                         component="a"

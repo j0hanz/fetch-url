@@ -8,9 +8,12 @@ const TRANSFORM_REQUEST_FIELD_NAMES = new Set<keyof TransformRequest>(['url']);
 const SUPPORTED_PROTOCOLS = new Set<URL['protocol']>(['http:', 'https:']);
 
 export class ValidationError extends Error {
-  constructor(message: string) {
+  readonly statusCode: number;
+
+  constructor(message: string, statusCode = 400) {
     super(message);
     this.name = 'ValidationError';
+    this.statusCode = statusCode;
   }
 }
 

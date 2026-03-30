@@ -32,4 +32,21 @@ describe('resolveSiteUrl', () => {
 
     expect(siteUrl.toString()).toBe('http://localhost:3000/');
   });
+
+  it('throws in production when no deployment url is configured', () => {
+    expect(() =>
+      resolveSiteUrl({
+        NODE_ENV: 'production',
+      })
+    ).toThrow(/Site URL is not configured/);
+  });
+
+  it('throws in production when the configured site url is invalid', () => {
+    expect(() =>
+      resolveSiteUrl({
+        NODE_ENV: 'production',
+        SITE_URL: '://bad-url',
+      })
+    ).toThrow(/Invalid site URL/);
+  });
 });

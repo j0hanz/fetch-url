@@ -51,10 +51,10 @@ describe('POST /api/transform', () => {
 
     const response = await POST(request);
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
       ok: false,
-      error: { code: 'VALIDATION_ERROR' },
+      error: { code: 'VALIDATION_ERROR', statusCode: 400 },
     });
     expect(callFetchUrlMock).not.toHaveBeenCalled();
   });

@@ -19,7 +19,6 @@ export const tokens = {
   radius: { panel: 4, code: 1 },
   blur: { paper: '12.5px', dialog: '12.5px' },
   sizes: { avatar: 32, chipHeight: 20, loader: 32 },
-  scrollbar: { width: 'none' as const },
 } as const;
 
 // ── Fluid design tokens ─────────────────────────────────────────
@@ -90,16 +89,6 @@ export const theme = responsiveFontSizes(
       fontFamily: tokens.fonts.sans,
     },
     components: {
-      MuiCssBaseline: {
-        styleOverrides: {
-          html: {
-            scrollbarWidth: tokens.scrollbar.width,
-          },
-          '*, *::before, *::after': {
-            scrollbarWidth: 'inherit',
-          },
-        },
-      },
       MuiAlert: {
         defaultProps: {
           variant: 'outlined',
