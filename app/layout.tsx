@@ -167,6 +167,7 @@ export default async function RootLayout({
                       aboutMarkdown={aboutMarkdown}
                       howItWorksMarkdown={howItWorksMarkdown}
                     />
+                    <Box sx={sx.headerDivider} />
                     <Tooltip title="View on GitHub">
                       <IconButton
                         component="a"
@@ -180,6 +181,7 @@ export default async function RootLayout({
                         <GitHubIcon sx={sx.headerIcon} />
                       </IconButton>
                     </Tooltip>
+                    <Box sx={sx.headerDivider} />
                     <ThemeToggle />
                   </Stack>
                 </Toolbar>

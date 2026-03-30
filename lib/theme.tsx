@@ -24,7 +24,7 @@ export const tokens = {
 // ── Fluid design tokens ─────────────────────────────────────────
 export const fluid = {
   pagePt: 'clamp(0.5rem, 0.25rem + 0.25vw, 1rem)',
-  headerGap: 'clamp(0.5rem, 0.25rem + 0.5vw, 1rem)',
+  headerGap: 'clamp(0.5rem, 0.25rem + 0.5vw, 0.75rem)',
   containerGap: 'clamp(0.75rem, 0.5rem + 0.5vw, 1rem)',
   codeFontSize: '0.85rem',
   truncateWidth: 'clamp(30ch, 15ch + 25vw, 70ch)',
@@ -38,6 +38,13 @@ export const fluid = {
 export const sx = {
   flexColumn: { flex: 1, display: 'flex', flexDirection: 'column' },
   headerIcon: { fontSize: 'clamp(1.25rem, 1rem + 0.5vw, 1.5rem)' },
+  headerDivider: {
+    border: 0,
+    width: '1px',
+    height: 'clamp(1rem, 1rem + 0.5vw, 1.25rem)',
+    display: 'block',
+    bgcolor: 'divider',
+  },
   minWidthZero: { minWidth: 0 },
 
   // Result panel
