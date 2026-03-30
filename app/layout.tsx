@@ -18,6 +18,7 @@ import ThemeToggle from '@/components/ui/theme-toggle';
 import { WebVitals } from '@/components/ui/web-vitals';
 
 import { geistMono, geistSans } from '@/lib/fonts';
+import { readHomePageMarkdown } from '@/lib/home-content';
 import {
   resolveSiteUrl,
   SITE_CATEGORY,
@@ -84,11 +85,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { aboutMarkdown, howItWorksMarkdown } = await readHomePageMarkdown();
+
   return (
     <html
       lang="en"
@@ -164,7 +167,10 @@ export default function RootLayout({
                     sx={{ gap: 'clamp(0.5rem, 0.25rem + 0.5vw, 1rem)' }}
                     alignItems="center"
                   >
-                    <AboutDialog />
+                    <AboutDialog
+                      aboutMarkdown={aboutMarkdown}
+                      howItWorksMarkdown={howItWorksMarkdown}
+                    />
                     <Tooltip title="View on GitHub">
                       <IconButton
                         component="a"

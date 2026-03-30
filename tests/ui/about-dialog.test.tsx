@@ -1,26 +1,20 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import AboutDialog from '@/components/features/about-dialog';
 import AboutDialogPanel from '@/components/features/about-dialog-panel';
 
 describe('AboutDialog', () => {
-  beforeEach(() => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
-          aboutMarkdown: '# Overview',
-          howItWorksMarkdown: '# How It Works',
-        }),
-    } satisfies Partial<Response>);
-  });
-
   it('exposes an accessible dialog name', async () => {
     const user = userEvent.setup();
-    render(<AboutDialog />);
+    render(
+      <AboutDialog
+        aboutMarkdown="# Overview"
+        howItWorksMarkdown="# How It Works"
+      />
+    );
 
     await user.click(screen.getByRole('button', { name: /about fetch url/i }));
 
@@ -31,7 +25,12 @@ describe('AboutDialog', () => {
 
   it('loads help content when opened', async () => {
     const user = userEvent.setup();
-    render(<AboutDialog />);
+    render(
+      <AboutDialog
+        aboutMarkdown="# Overview"
+        howItWorksMarkdown="# How It Works"
+      />
+    );
 
     expect(
       screen.getByRole('button', { name: /about fetch url/i })
@@ -40,7 +39,7 @@ describe('AboutDialog', () => {
     await user.click(screen.getByRole('button', { name: /about fetch url/i }));
 
     expect(
-      await screen.findByRole('status', { name: /markdown preview loading/i })
+      await screen.findByRole('dialog', { name: /about/i })
     ).toBeInTheDocument();
   });
 
@@ -49,11 +48,8 @@ describe('AboutDialog', () => {
       <AboutDialogPanel
         aboutMarkdown="# Overview"
         howItWorksMarkdown="# How It Works"
-        contentLoadFailed={false}
-        isContentLoading={false}
         open
         onClose={() => {}}
-        onRetry={() => {}}
       />
     );
 
