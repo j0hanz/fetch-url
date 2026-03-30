@@ -153,12 +153,15 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   poweredByHeader: false,
   reactCompiler: true,
+  serverExternalPackages: [FETCH_URL_PACKAGE_NAME, '@modelcontextprotocol/sdk'],
   typedRoutes: true,
   experimental: {
     globalNotFound: true,
+    webpackMemoryOptimizations: true,
     webVitalsAttribution: ['CLS', 'FCP', 'FID', 'INP', 'LCP', 'TTFB'],
     staleTimes: {
       dynamic: 30,
+      static: 300,
     },
   },
   headers() {

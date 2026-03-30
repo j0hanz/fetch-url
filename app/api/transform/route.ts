@@ -25,6 +25,8 @@ import {
   ValidationError,
 } from '@/lib/validate';
 
+export const maxDuration = 120;
+
 const NDJSON_HEADERS = {
   'Content-Type': NDJSON_CONTENT_TYPE,
   'Cache-Control': 'no-cache',
