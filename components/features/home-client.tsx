@@ -19,7 +19,8 @@ import type { ViewState } from '@/hooks/use-transform';
 import { sx } from '@/lib/theme';
 
 const TransformResultPanel = dynamic(
-  () => import('@/components/features/result')
+  () => import('@/components/features/result'),
+  { loading: () => <MarkdownSkeleton /> }
 );
 
 const LOADING_PANEL_SX = { ...sx.markdownPanel, ...sx.transitionCell } as const;

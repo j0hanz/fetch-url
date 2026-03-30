@@ -13,13 +13,31 @@ interface PackageLock {
   packages?: Record<string, LockfilePackage>;
 }
 
-const SECURITY_HEADERS = {
+const isDev = process.env.NODE_ENV === 'development';
+
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' https: data: blob:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  'upgrade-insecure-requests',
+].join('; ');
+
+const SECURITY_HEADERS: Record<string, string> = {
+  'Content-Security-Policy': CONTENT_SECURITY_POLICY,
   'X-Content-Type-Options': 'nosniff',
+  'X-DNS-Prefetch-Control': 'on',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
   'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
-} as const;
+};
 const FETCH_URL_PACKAGE_NAME = '@j0hanz/fetch-url-mcp';
 const FETCH_URL_PACKAGE_FALLBACK_PATH = 'node_modules/@j0hanz/fetch-url-mcp';
 
@@ -133,6 +151,7 @@ function collectPackageTraceGlobs(rootPackagePath: string): string[] {
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  poweredByHeader: false,
   reactCompiler: true,
   typedRoutes: true,
   headers() {
