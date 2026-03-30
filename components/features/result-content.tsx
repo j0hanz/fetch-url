@@ -141,7 +141,7 @@ const MOBILE_RESULT_BAR_SX = {
   position: 'relative',
   display: 'block',
   textAlign: 'left',
-  border: `1px solid rgba(255, 255, 255, .16);`,
+  border: '1px solid var(--mui-palette-divider)',
   width: '100%',
   minHeight: fluid.panelMaxHeight,
   overflow: 'hidden',
