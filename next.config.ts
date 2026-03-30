@@ -31,6 +31,7 @@ const CONTENT_SECURITY_POLICY = [
 
 const SECURITY_HEADERS: Record<string, string> = {
   'Content-Security-Policy': CONTENT_SECURITY_POLICY,
+  'Cross-Origin-Resource-Policy': 'same-origin',
   'X-Content-Type-Options': 'nosniff',
   'X-DNS-Prefetch-Control': 'on',
   'X-Frame-Options': 'DENY',
@@ -153,12 +154,19 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   poweredByHeader: false,
   reactCompiler: true,
+  reactStrictMode: true,
   serverExternalPackages: [FETCH_URL_PACKAGE_NAME, '@modelcontextprotocol/sdk'],
   typedRoutes: true,
+  logging: {
+    fetches: {
+      fullUrl: true,
+      hmrRefreshes: true,
+    },
+  },
   experimental: {
     globalNotFound: true,
     webpackMemoryOptimizations: true,
-    webVitalsAttribution: ['CLS', 'FCP', 'FID', 'INP', 'LCP', 'TTFB'],
+    webVitalsAttribution: ['CLS', 'FCP', 'INP', 'LCP', 'TTFB'],
     staleTimes: {
       dynamic: 30,
       static: 300,
