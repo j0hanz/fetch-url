@@ -1,31 +1,19 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
-// ── Module augmentation for custom palette ──────────────────────
-declare module '@mui/material/styles' {
-  interface PaletteOptions {
-    brand?: { primary: string; secondary: string };
-  }
-  interface Palette {
-    brand: { primary: string; secondary: string };
-  }
-}
-
 // ── Design tokens ───────────────────────────────────────────────
 export const tokens = {
   fonts: {
     mono: 'var(--font-geist-mono), ui-monospace, monospace',
     sans: 'var(--font-geist-sans), system-ui, sans-serif',
   },
-  radius: { panel: 4, code: 1 },
-  blur: { paper: '12.5px', dialog: '12.5px' },
+  radius: { panel: 4, code: 2, button: 6 },
+  blur: { paper: '15px', dialog: '15px' },
   sizes: { avatar: 32, chipHeight: 20, loader: 32 },
 } as const;
-
-// ── Fluid design tokens ─────────────────────────────────────────
 export const fluid = {
-  pagePt: 'clamp(0.5rem, 0.25rem + 0.25vw, 1rem)',
+  pagePt: 'clamp(0.25rem, 0.25rem + 0.25vw, 1rem)',
   headerGap: 'clamp(0.5rem, 0.25rem + 0.5vw, 0.75rem)',
-  containerGap: 'clamp(0.5rem, 0.25rem + 0.5vw, 0.75rem)',
+  containerGap: 'clamp(0.75rem, 0.5rem + 0.5vw, 1rem)',
   codeFontSize: '0.85rem',
   truncateWidth: 'clamp(30ch, 15ch + 25vw, 70ch)',
   panelMaxHeight: 'clamp(50dvh, 50dvh + 5vw, 70dvh)',
@@ -43,14 +31,13 @@ export const sx = {
     width: '1px',
     height: 'clamp(1rem, 1rem + 0.5vw, 1.25rem)',
     display: 'block',
-    bgcolor: 'currentColor',
-    opacity: 0.2,
+    bgcolor: 'divider',
   },
   minWidthZero: { minWidth: 0 },
 
   // Result panel
   markdownPanel: {
-    p: { '@': 1.5, '@sm': 2.5 },
+    p: { xs: 2, sm: 3 },
     flex: 1,
     maxHeight: fluid.panelMaxHeight,
     overflow: 'auto',
@@ -65,14 +52,8 @@ export const sx = {
 } as const;
 
 // ── Internal style constants ────────────────────────────────────
-const PAPER_ROOT_SX = {
-  borderRadius: tokens.radius.panel,
-  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-  backdropFilter: `blur(${tokens.blur.paper})`,
-  WebkitBackdropFilter: `blur(${tokens.blur.paper})`,
-} as const;
 const AUTOFILL_TEXT_SX = {
-  WebkitBoxShadow: '0 0 0 100px var(--mui-palette-background-default) inset',
+  WebkitBoxShadow: '0 0 0 100px var(--mui-palette-background-paper) inset',
   WebkitTextFillColor: 'var(--mui-palette-text-primary)',
   caretColor: 'var(--mui-palette-text-primary)',
 } as const;
@@ -84,19 +65,29 @@ export const theme = responsiveFontSizes(
     colorSchemes: {
       light: {
         palette: {
-          background: { default: '#FEFBFF', paper: '#FFFFFF' },
-          brand: { primary: '#141314', secondary: '#000000' },
+          primary: { main: '#09090b', contrastText: '#ffffff' },
+          background: { default: '#fafafa', paper: '#ffffff' },
+          text: { primary: '#09090b', secondary: '#52525b' },
+          divider: 'rgba(0, 0, 0, 0.10)',
         },
       },
       dark: {
         palette: {
-          background: { default: '#141314', paper: '#000000' },
-          brand: { primary: '#FEFBFF', secondary: '#FFFFFF' },
+          primary: { main: '#fafafa', contrastText: '#000000' },
+          background: { default: '#09090b', paper: '#18181b' },
+          text: { primary: '#fafafa', secondary: '#a1a1aa' },
+          divider: 'rgba(255, 255, 255, 0.10)',
         },
       },
     },
+    shape: {
+      borderRadius: tokens.radius.button,
+    },
     typography: {
-      fontFamily: tokens.fonts.sans,
+      button: {
+        textTransform: 'none',
+        fontWeight: 500,
+      },
     },
     components: {
       MuiAlert: {
@@ -104,11 +95,24 @@ export const theme = responsiveFontSizes(
           variant: 'outlined',
         },
       },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: tokens.radius.button,
+            boxShadow: 'none',
+            textTransform: 'none',
+            fontWeight: 500,
+            '&:hover': {
+              boxShadow: 'none',
+            },
+          },
+        },
+      },
       MuiDialog: {
         styleOverrides: {
           paper: ({ theme }) => ({
             ...theme.applyStyles('dark', {
-              background: 'rgba(63, 63, 63, 0.71)',
+              background: 'rgba(46, 46, 46, 0.72)',
               backdropFilter: `blur(${tokens.blur.dialog})`,
               WebkitBackdropFilter: `blur(${tokens.blur.dialog})`,
             }),
@@ -123,25 +127,16 @@ export const theme = responsiveFontSizes(
         },
         styleOverrides: {
           root: {
-            borderRadius: 0,
-            boxShadow: 'none',
-            backdropFilter: 'none',
-            WebkitBackdropFilter: 'none',
+            borderBottom: '1px solid var(--mui-palette-divider)',
           },
         },
       },
-      MuiToolbar: {
-        defaultProps: {
-          disableGutters: true,
-        },
-      },
-      MuiPaper: {
-        styleOverrides: {
-          root: PAPER_ROOT_SX,
-        },
-      },
+      MuiToolbar: { defaultProps: { disableGutters: true } },
       MuiOutlinedInput: {
         styleOverrides: {
+          root: {
+            borderRadius: tokens.radius.button,
+          },
           input: {
             '&:-webkit-autofill': {
               ...AUTOFILL_TEXT_SX,
