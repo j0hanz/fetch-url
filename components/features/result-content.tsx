@@ -282,6 +282,108 @@ function getCopyFeedbackMessage(copyStatus: CopyStatus): string | undefined {
   return COPY_STATUS_DETAILS[copyStatus].message;
 }
 
+function getCopyFeedbackColor(copyStatus: CopyStatus): IconButtonColor {
+  return COPY_STATUS_DETAILS[copyStatus].color;
+}
+
+function useResultDocumentActions(result: TransformResult) {
+  const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
+    useFeedback();
+
+  const handleCopyMarkdown = () => handleCopy(result.markdown);
+  const handleDownload = () => {
+    downloadMarkdownFile(result.title, result.markdown);
+  };
+
+  return {
+    clearCopyFeedback,
+    copyFeedbackOpen,
+    copyStatusMessage: getCopyFeedbackMessage(copyStatus),
+    copyStatusColor: getCopyFeedbackColor(copyStatus),
+    handleCopyMarkdown,
+    handleDownload,
+  };
+}
+
+function CopyFeedbackSnackbar({
+  message,
+  onClose,
+  open,
+}: {
+  message?: string;
+  onClose: () => void;
+  open: boolean;
+}) {
+  return (
+    <Snackbar
+      open={open}
+      autoHideDuration={CONFIG.COPY_FEEDBACK_DELAY_MS}
+      onClose={onClose}
+      message={message}
+    />
+  );
+}
+
+function ViewModeToggle({
+  onViewModeChange,
+  viewMode,
+}: Pick<ResultActionBarProps, 'onViewModeChange' | 'viewMode'>) {
+  return (
+    <ToggleButtonGroup
+      value={viewMode}
+      exclusive
+      onChange={onViewModeChange}
+      size="small"
+      aria-label="View mode"
+    >
+      {VIEW_MODE_OPTIONS.map((option) => (
+        <ToggleButton
+          key={option.value}
+          sx={TOGGLE_BUTTON_SX}
+          value={option.value}
+          aria-label={option.label}
+        >
+          {option.icon}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
+  );
+}
+
+function ResultDocumentActions({
+  copyButtonColor,
+  onCopy,
+  onDownload,
+  truncated,
+}: {
+  copyButtonColor: IconButtonColor;
+  onCopy: () => void;
+  onDownload: () => void;
+  truncated: boolean;
+}) {
+  return (
+    <Stack direction="row" spacing={1}>
+      <ResultActionButton
+        ariaLabel="Copy Markdown"
+        title="Copy Markdown"
+        onClick={onCopy}
+        color={copyButtonColor}
+      >
+        <ContentCopyIcon fontSize="small" />
+      </ResultActionButton>
+      <ResultActionButton
+        ariaLabel="Download Markdown"
+        title="Download Markdown"
+        onClick={onDownload}
+      >
+        <Badge variant="dot" color="warning" invisible={!truncated}>
+          <DownloadIcon fontSize="small" />
+        </Badge>
+      </ResultActionButton>
+    </Stack>
+  );
+}
+
 export function PreviewSurface({ markdown }: { markdown: string }) {
   return (
     <Suspense fallback={<MarkdownSkeleton />}>
@@ -441,13 +543,7 @@ export function ResultActionBar({
   onViewModeChange,
   result,
 }: ResultActionBarProps) {
-  const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
-    useFeedback();
-  const copyStatusDetails = COPY_STATUS_DETAILS[copyStatus];
-
-  function handleDownload() {
-    downloadMarkdownFile(result.title, result.markdown);
-  }
+  const documentActions = useResultDocumentActions(result);
 
   return (
     <>
@@ -457,50 +553,22 @@ export function ResultActionBar({
         alignItems="center"
         sx={{ flexWrap: 'wrap', gap: 1 }}
       >
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={onViewModeChange}
-          size="small"
-          aria-label="View mode"
-        >
-          {VIEW_MODE_OPTIONS.map((option) => (
-            <ToggleButton
-              key={option.value}
-              sx={TOGGLE_BUTTON_SX}
-              value={option.value}
-              aria-label={option.label}
-            >
-              {option.icon}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-        <Stack direction="row" spacing={1}>
-          <ResultActionButton
-            ariaLabel="Copy Markdown"
-            title="Copy Markdown"
-            onClick={() => handleCopy(result.markdown)}
-            color={copyStatusDetails.color}
-          >
-            <ContentCopyIcon fontSize="small" />
-          </ResultActionButton>
-          <ResultActionButton
-            ariaLabel="Download Markdown"
-            title="Download Markdown"
-            onClick={handleDownload}
-          >
-            <Badge variant="dot" color="warning" invisible={!result.truncated}>
-              <DownloadIcon fontSize="small" />
-            </Badge>
-          </ResultActionButton>
-        </Stack>
+        <ViewModeToggle
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+        />
+        <ResultDocumentActions
+          copyButtonColor={documentActions.copyStatusColor}
+          onCopy={documentActions.handleCopyMarkdown}
+          onDownload={documentActions.handleDownload}
+          truncated={result.truncated}
+        />
       </Stack>
 
-      <Snackbar
-        open={copyFeedbackOpen}
-        autoHideDuration={CONFIG.COPY_FEEDBACK_DELAY_MS}
-        onClose={clearCopyFeedback}
-        message={getCopyFeedbackMessage(copyStatus)}
+      <CopyFeedbackSnackbar
+        open={documentActions.copyFeedbackOpen}
+        onClose={documentActions.clearCopyFeedback}
+        message={documentActions.copyStatusMessage}
       />
     </>
   );
@@ -549,29 +617,22 @@ function MobileResultBar({
 }
 
 function MobileResultFab({ result }: { result: TransformResult }) {
-  const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
-    useFeedback();
+  const documentActions = useResultDocumentActions(result);
 
   return (
     <>
       <Box sx={MOBILE_RESULT_FAB_SX}>
         <Fab
           size="small"
-          color={
-            copyStatus === 'copied'
-              ? 'success'
-              : copyStatus === 'failed'
-                ? 'error'
-                : 'default'
-          }
-          onClick={() => handleCopy(result.markdown)}
+          color={documentActions.copyStatusColor}
+          onClick={documentActions.handleCopyMarkdown}
           aria-label="Copy Markdown"
         >
           <ContentCopyIcon fontSize="small" />
         </Fab>
         <Fab
           size="small"
-          onClick={() => downloadMarkdownFile(result.title, result.markdown)}
+          onClick={documentActions.handleDownload}
           aria-label="Download Markdown"
         >
           <Badge variant="dot" color="warning" invisible={!result.truncated}>
@@ -580,12 +641,63 @@ function MobileResultFab({ result }: { result: TransformResult }) {
         </Fab>
       </Box>
 
-      <Snackbar
-        open={copyFeedbackOpen}
-        autoHideDuration={CONFIG.COPY_FEEDBACK_DELAY_MS}
-        onClose={clearCopyFeedback}
-        message={getCopyFeedbackMessage(copyStatus)}
+      <CopyFeedbackSnackbar
+        open={documentActions.copyFeedbackOpen}
+        onClose={documentActions.clearCopyFeedback}
+        message={documentActions.copyStatusMessage}
       />
+    </>
+  );
+}
+
+function MobileResultDialogHeader({
+  onTabChange,
+  viewMode,
+}: {
+  onTabChange: (event: SyntheticEvent, nextTab: ViewMode) => void;
+  viewMode: ViewMode;
+}) {
+  return (
+    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Tabs
+        value={viewMode}
+        onChange={onTabChange}
+        variant="fullWidth"
+        aria-label="Result view tabs"
+      >
+        {MOBILE_TABS.map((tab) => (
+          <Tab
+            key={tab.id}
+            value={tab.id}
+            label={tab.label}
+            id={tab.tabId}
+            aria-controls={tab.panelId}
+          />
+        ))}
+      </Tabs>
+    </Box>
+  );
+}
+
+function MobileResultDialogPanels({
+  result,
+  viewMode,
+}: {
+  result: TransformResult;
+  viewMode: ViewMode;
+}) {
+  return (
+    <>
+      <MobileResultTabPanel tab="preview" visible={viewMode === 'preview'}>
+        <MarkdownErrorBoundary resetKey={result.markdown}>
+          <PreviewSurface markdown={result.markdown} />
+        </MarkdownErrorBoundary>
+      </MobileResultTabPanel>
+      <MobileResultTabPanel tab="code" visible={viewMode === 'code'}>
+        <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
+          {result.markdown}
+        </Typography>
+      </MobileResultTabPanel>
     </>
   );
 }
@@ -612,36 +724,13 @@ function MobileResultDialog({
       hiddenTitle
       fullScreen
       header={
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs
-            value={viewMode}
-            onChange={onTabChange}
-            variant="fullWidth"
-            aria-label="Result view tabs"
-          >
-            {MOBILE_TABS.map((tab) => (
-              <Tab
-                key={tab.id}
-                value={tab.id}
-                label={tab.label}
-                id={tab.tabId}
-                aria-controls={tab.panelId}
-              />
-            ))}
-          </Tabs>
-        </Box>
+        <MobileResultDialogHeader
+          viewMode={viewMode}
+          onTabChange={onTabChange}
+        />
       }
     >
-      <MobileResultTabPanel tab="preview" visible={viewMode === 'preview'}>
-        <MarkdownErrorBoundary resetKey={result.markdown}>
-          <PreviewSurface markdown={result.markdown} />
-        </MarkdownErrorBoundary>
-      </MobileResultTabPanel>
-      <MobileResultTabPanel tab="code" visible={viewMode === 'code'}>
-        <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
-          {result.markdown}
-        </Typography>
-      </MobileResultTabPanel>
+      <MobileResultDialogPanels result={result} viewMode={viewMode} />
       <MobileResultFab result={result} />
     </BaseDialog>
   );

@@ -25,18 +25,11 @@ interface TransformResultProps {
   result: TransformResult;
 }
 
-export default function TransformResultPanel({ result }: TransformResultProps) {
+function useResultPresentationState() {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [mobileDialogOpen, setMobileDialogOpen] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), {
-    noSsr: true,
-  });
 
-  function handleViewModeChange(
-    _event: MouseEvent<HTMLElement>,
-    nextViewMode: ViewMode | null
-  ): void {
+  function updateViewMode(nextViewMode: ViewMode | null): void {
     if (nextViewMode === null || nextViewMode === viewMode) {
       return;
     }
@@ -46,15 +39,48 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
     });
   }
 
-  function handleTabChange(_event: SyntheticEvent, nextTab: ViewMode) {
-    if (nextTab === viewMode) {
-      return;
-    }
+  const closeMobileDialog = () => {
+    setMobileDialogOpen(false);
+  };
 
-    startTransition(() => {
-      setViewMode(nextTab);
-    });
-  }
+  const handleTabChange = (_event: SyntheticEvent, nextTab: ViewMode) => {
+    updateViewMode(nextTab);
+  };
+
+  const handleViewModeChange = (
+    _event: MouseEvent<HTMLElement>,
+    nextViewMode: ViewMode | null
+  ) => {
+    updateViewMode(nextViewMode);
+  };
+
+  const openMobileDialog = () => {
+    setMobileDialogOpen(true);
+  };
+
+  return {
+    closeMobileDialog,
+    handleTabChange,
+    handleViewModeChange,
+    mobileDialogOpen,
+    openMobileDialog,
+    viewMode,
+  };
+}
+
+export default function TransformResultPanel({ result }: TransformResultProps) {
+  const {
+    closeMobileDialog,
+    handleTabChange,
+    handleViewModeChange,
+    mobileDialogOpen,
+    openMobileDialog,
+    viewMode,
+  } = useResultPresentationState();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), {
+    noSsr: true,
+  });
 
   if (isMobile) {
     return (
@@ -62,12 +88,8 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
         <ResultHeaderWithDetails result={result} />
         <MobileResultPresentation
           mobileDialogOpen={mobileDialogOpen}
-          onClose={() => {
-            setMobileDialogOpen(false);
-          }}
-          onOpen={() => {
-            setMobileDialogOpen(true);
-          }}
+          onClose={closeMobileDialog}
+          onOpen={openMobileDialog}
           onTabChange={handleTabChange}
           result={result}
           viewMode={viewMode}

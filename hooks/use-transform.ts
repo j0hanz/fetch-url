@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 
 import type {
   StreamProgressEvent,
@@ -21,7 +21,30 @@ interface TransformRequestHandlers {
   onResult: (result: TransformResult) => void;
 }
 
+interface TransformState {
+  error: TransformError | null;
+  isPending: boolean;
+  result: TransformResult | null;
+}
+
 const noop = () => {};
+const IDLE_STATE: TransformState = {
+  error: null,
+  isPending: false,
+  result: null,
+};
+const PENDING_STATE: TransformState = {
+  ...IDLE_STATE,
+  isPending: true,
+};
+
+function createErrorState(error: TransformError): TransformState {
+  return { ...IDLE_STATE, error };
+}
+
+function createResultState(result: TransformResult): TransformState {
+  return { ...IDLE_STATE, result };
+}
 
 export function deriveViewState(
   isPending: boolean,
@@ -34,13 +57,88 @@ export function deriveViewState(
   return 'idle';
 }
 
-export function useTransform() {
-  const [result, setResult] = useState<TransformResult | null>(null);
-  const [error, setError] = useState<TransformError | null>(null);
-  const [isPending, setIsPending] = useState(false);
-
-  const formRef = useRef<HTMLFormElement>(null);
+function useTransformRequestState() {
+  const [state, setState] = useState(IDLE_STATE);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  function updateTerminalState(nextState: TransformState): void {
+    startTransition(() => {
+      setState(nextState);
+    });
+  }
+
+  function isActiveRequest(requestController: AbortController): boolean {
+    return abortControllerRef.current === requestController;
+  }
+
+  function settleActiveRequest(
+    requestController: AbortController,
+    nextState: TransformState,
+    onSettled: () => void = noop
+  ): void {
+    if (!isActiveRequest(requestController)) {
+      return;
+    }
+
+    abortControllerRef.current = null;
+    onSettled();
+    updateTerminalState(nextState);
+  }
+
+  function beginRequest(): AbortController {
+    abortControllerRef.current?.abort();
+    const requestController = new AbortController();
+    abortControllerRef.current = requestController;
+    setState(PENDING_STATE);
+    return requestController;
+  }
+
+  return {
+    abortControllerRef,
+    beginRequest,
+    dismissError: () => {
+      setState((currentState) =>
+        currentState.error === null ? currentState : IDLE_STATE
+      );
+    },
+    isActiveRequest,
+    settleError: (
+      requestController: AbortController,
+      nextError: TransformError
+    ) => {
+      if (nextError.code === 'ABORTED') {
+        settleActiveRequest(requestController, IDLE_STATE);
+        return;
+      }
+
+      settleActiveRequest(requestController, createErrorState(nextError));
+    },
+    settleResult: (
+      requestController: AbortController,
+      nextResult: TransformResult,
+      onSettled: () => void
+    ) => {
+      settleActiveRequest(
+        requestController,
+        createResultState(nextResult),
+        onSettled
+      );
+    },
+    state,
+  };
+}
+
+export function useTransform() {
+  const {
+    abortControllerRef,
+    beginRequest,
+    dismissError,
+    isActiveRequest,
+    settleError,
+    settleResult,
+    state,
+  } = useTransformRequestState();
+  const formRef = useRef<HTMLFormElement>(null);
   const lastUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -48,62 +146,7 @@ export function useTransform() {
       abortControllerRef.current?.abort();
       abortControllerRef.current = null;
     };
-  }, []);
-
-  function clearVisibleState(): void {
-    setError(null);
-    setResult(null);
-  }
-
-  function isActiveRequest(requestController: AbortController): boolean {
-    return abortControllerRef.current === requestController;
-  }
-
-  function completeActiveRequest(
-    requestController: AbortController,
-    onComplete: () => void = noop
-  ): void {
-    if (!isActiveRequest(requestController)) {
-      return;
-    }
-
-    abortControllerRef.current = null;
-    setIsPending(false);
-    onComplete();
-  }
-
-  function beginRequest(): AbortController {
-    abortControllerRef.current?.abort();
-    const requestController = new AbortController();
-    abortControllerRef.current = requestController;
-    setIsPending(true);
-    clearVisibleState();
-    return requestController;
-  }
-
-  function handleRequestResult(
-    requestController: AbortController,
-    nextResult: TransformResult
-  ): void {
-    completeActiveRequest(requestController, () => {
-      setResult(nextResult);
-      formRef.current?.reset();
-    });
-  }
-
-  function handleRequestError(
-    requestController: AbortController,
-    nextError: TransformError
-  ): void {
-    if (nextError.code === 'ABORTED') {
-      completeActiveRequest(requestController);
-      return;
-    }
-
-    completeActiveRequest(requestController, () => {
-      setError(nextError);
-    });
-  }
+  }, [abortControllerRef]);
 
   function createRequestHandlers(
     requestController: AbortController
@@ -111,10 +154,12 @@ export function useTransform() {
     return {
       onProgress: noop,
       onResult(result) {
-        handleRequestResult(requestController, result);
+        settleResult(requestController, result, () => {
+          formRef.current?.reset();
+        });
       },
       onError(nextError) {
-        handleRequestError(requestController, nextError);
+        settleError(requestController, nextError);
       },
     };
   }
@@ -131,7 +176,7 @@ export function useTransform() {
           return;
         }
 
-        handleRequestError(requestController, mapClientTransformError(err));
+        settleError(requestController, mapClientTransformError(err));
       }
     );
   }
@@ -151,17 +196,13 @@ export function useTransform() {
     }
   }
 
-  function dismissError(): void {
-    setError(null);
-  }
-
   return {
     dismissError,
-    error,
+    error: state.error,
     formRef,
     handleAction,
-    isPending,
-    result,
+    isPending: state.isPending,
+    result: state.result,
     retry,
   };
 }
