@@ -5,7 +5,6 @@ import Stack from '@mui/material/Stack';
 export default function Loading() {
   return (
     <Box role="status" aria-label="Loading page">
-      {/* Form input + button row */}
       <Stack direction="row" spacing={1.5} alignItems="center">
         <Skeleton
           variant="rectangular"
@@ -20,7 +19,6 @@ export default function Loading() {
         />
       </Stack>
 
-      {/* Preview panel */}
       <Skeleton
         variant="rectangular"
         sx={{ flex: 1, minHeight: 200, borderRadius: 1, mt: 2 }}
