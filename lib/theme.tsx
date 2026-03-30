@@ -16,7 +16,7 @@ export const tokens = {
     mono: 'var(--font-geist-mono), ui-monospace, monospace',
     sans: 'var(--font-geist-sans), system-ui, sans-serif',
   },
-  radius: { panel: 6, code: 1 },
+  radius: { panel: 4, code: 1 },
   blur: { paper: '12.5px', dialog: '12.5px' },
   sizes: { avatar: 32, chipHeight: 20, loader: 32 },
   scrollbar: { width: 'none' as const },
@@ -32,7 +32,6 @@ export const fluid = {
   paragraphMb: 'clamp(0.5rem, 0.375rem + 0.25vw, 0.75rem)',
   listItemMb: 'clamp(0.25rem, 0.125rem + 0.25vw, 0.5rem)',
   logoSize: 'clamp(1.5rem, 1.25rem + 0.5vw, 2rem)',
-  mobileBarMaxHeight: 'clamp(35dvh, 30dvh + 12vw, 50dvh)',
 } as const;
 
 // ── Shared sx presets ───────────────────────────────────────────

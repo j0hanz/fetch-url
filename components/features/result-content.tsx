@@ -137,20 +137,21 @@ const RESULT_URL_SX = {
   maxWidth: fluid.truncateWidth,
 } as const;
 const MOBILE_RESULT_BAR_SX = {
+  ...sx.markdownPanel,
   position: 'relative',
   display: 'block',
   textAlign: 'left',
+  border: `1px solid rgba(255, 255, 255, .16);`,
   width: '100%',
-  maxHeight: fluid.mobileBarMaxHeight,
+  minHeight: fluid.panelMaxHeight,
   overflow: 'hidden',
   borderRadius: tokens.radius.panel,
   cursor: 'pointer',
-  p: 2,
   '&::after': {
     content: '""',
     position: 'absolute',
     inset: 'auto 0 0 0',
-    height: '40%',
+    height: '50%',
     background:
       'linear-gradient(to bottom, transparent, var(--mui-palette-background-default))',
     pointerEvents: 'none',
