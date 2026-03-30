@@ -32,6 +32,7 @@ export const fluid = {
   paragraphMb: 'clamp(0.5rem, 0.375rem + 0.25vw, 0.75rem)',
   listItemMb: 'clamp(0.25rem, 0.125rem + 0.25vw, 0.5rem)',
   logoSize: 'clamp(1.5rem, 1.25rem + 0.5vw, 2rem)',
+  mobileBarMaxHeight: 'clamp(35dvh, 30dvh + 12vw, 50dvh)',
 } as const;
 
 // ── Shared sx presets ───────────────────────────────────────────
@@ -153,13 +154,44 @@ export const sx = {
     alignItems: 'start',
     containerType: 'inline-size',
   },
-  transitionCell: { gridArea: '1 / 1' },
+  transitionCell: { gridArea: '1 / 1', minWidth: 0 },
 
   // Table
   tableContainer: { my: 2, overflowX: 'auto' },
   tableRowStriped: {
     '&:nth-of-type(odd)': { bgcolor: 'action.selected' },
     '&:last-child td, &:last-child th': { border: 0 },
+  },
+
+  // Mobile result (xs only)
+  mobileResultBar: {
+    position: 'relative',
+    display: 'block',
+    textAlign: 'left',
+    width: '100%',
+    maxHeight: fluid.mobileBarMaxHeight,
+    overflow: 'hidden',
+    borderRadius: tokens.radius.panel,
+    cursor: 'pointer',
+    p: 2,
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      inset: 'auto 0 0 0',
+      height: '40%',
+      background:
+        'linear-gradient(to bottom, transparent, var(--mui-palette-background-default))',
+      pointerEvents: 'none',
+    },
+  },
+  mobileResultFab: {
+    position: 'absolute',
+    bottom: 75,
+    right: 15,
+    zIndex: 1,
+    gap: 1,
+    display: 'flex',
+    flexDirection: 'column',
   },
 } as const;
 

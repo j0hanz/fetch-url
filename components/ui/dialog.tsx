@@ -21,6 +21,7 @@ interface BaseDialogProps {
   children: ReactNode;
   maxWidth?: DialogProps['maxWidth'];
   actions?: ReactNode;
+  fullScreen?: boolean;
 }
 
 export function BaseDialog({
@@ -33,9 +34,11 @@ export function BaseDialog({
   children,
   maxWidth,
   actions,
+  fullScreen,
 }: BaseDialogProps) {
   const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const smallScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const isFullScreen = fullScreen ?? smallScreen;
 
   return (
     <Dialog
@@ -43,7 +46,7 @@ export function BaseDialog({
       onClose={onClose}
       aria-labelledby={titleId}
       fullWidth
-      fullScreen={fullScreen}
+      fullScreen={isFullScreen}
       maxWidth={maxWidth}
       scroll="paper"
     >

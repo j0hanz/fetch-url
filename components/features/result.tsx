@@ -4,6 +4,7 @@ import {
   type ComponentProps,
   type MouseEvent,
   type ReactNode,
+  type SyntheticEvent,
   useState,
 } from 'react';
 
@@ -15,14 +16,19 @@ import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
+import Fab from '@mui/material/Fab';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { BaseDialog } from '@/components/ui/dialog';
 import { MarkdownErrorBoundary } from '@/components/ui/error';
@@ -445,9 +451,192 @@ function ResultActionBar({
   );
 }
 
+// ── Mobile sub-components (xs only, < sm breakpoint) ───────────
+
+const MOBILE_TABS = [
+  {
+    id: 'preview',
+    label: 'Preview',
+    panelId: 'result-tabpanel-preview',
+    tabId: 'result-tab-preview',
+  },
+  {
+    id: 'code',
+    label: 'Code',
+    panelId: 'result-tabpanel-code',
+    tabId: 'result-tab-code',
+  },
+] as const satisfies readonly {
+  id: ViewMode;
+  label: string;
+  panelId: string;
+  tabId: string;
+}[];
+
+function MobileResultTabPanel({
+  children,
+  tab,
+  visible,
+}: {
+  children: ReactNode;
+  tab: ViewMode;
+  visible: boolean;
+}) {
+  const definition = MOBILE_TABS.find((t) => t.id === tab) ?? MOBILE_TABS[0];
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={!visible}
+      id={definition.panelId}
+      aria-labelledby={definition.tabId}
+    >
+      {visible ? children : null}
+    </div>
+  );
+}
+
+function MobileResultBar({
+  markdown,
+  previewState,
+  onOpen,
+}: {
+  markdown: string;
+  previewState: PreviewTransitionState;
+  onOpen: () => void;
+}) {
+  return (
+    <ButtonBase
+      onClick={onOpen}
+      aria-label="View result"
+      component="div"
+      sx={sx.mobileResultBar}
+    >
+      <MarkdownErrorBoundary resetKey={markdown}>
+        <PreviewSurface
+          markdown={previewState.previewMarkdown}
+          previewState={previewState}
+        />
+      </MarkdownErrorBoundary>
+    </ButtonBase>
+  );
+}
+
+interface MobileResultDialogProps {
+  open: boolean;
+  onClose: () => void;
+  result: TransformResult;
+  viewMode: ViewMode;
+  onTabChange: (event: SyntheticEvent, nextTab: ViewMode) => void;
+  previewState: PreviewTransitionState;
+}
+
+function MobileResultDialog({
+  open,
+  onClose,
+  result,
+  viewMode,
+  onTabChange,
+  previewState,
+}: MobileResultDialogProps) {
+  return (
+    <BaseDialog
+      open={open}
+      onClose={onClose}
+      titleId="mobile-result-dialog-title"
+      title={result.title ?? 'Result'}
+      hiddenTitle
+      fullScreen
+      header={
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={viewMode}
+            onChange={onTabChange}
+            variant="fullWidth"
+            aria-label="Result view tabs"
+          >
+            {MOBILE_TABS.map((tab) => (
+              <Tab
+                key={tab.id}
+                value={tab.id}
+                label={tab.label}
+                id={tab.tabId}
+                aria-controls={tab.panelId}
+              />
+            ))}
+          </Tabs>
+        </Box>
+      }
+    >
+      <MobileResultTabPanel tab="preview" visible={viewMode === 'preview'}>
+        <MarkdownErrorBoundary resetKey={result.markdown}>
+          <PreviewSurface
+            markdown={previewState.previewMarkdown}
+            previewState={previewState}
+          />
+        </MarkdownErrorBoundary>
+      </MobileResultTabPanel>
+      <MobileResultTabPanel tab="code" visible={viewMode === 'code'}>
+        <Typography component="pre" variant="body2" sx={sx.rawMarkdown}>
+          {result.markdown}
+        </Typography>
+      </MobileResultTabPanel>
+      <MobileResultFab result={result} />
+    </BaseDialog>
+  );
+}
+
+function MobileResultFab({ result }: { result: TransformResult }) {
+  const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
+    useFeedback();
+  const copyStatusDetails = COPY_STATUS_DETAILS[copyStatus];
+
+  function handleDownload() {
+    downloadMarkdownFile(result.title, result.markdown);
+  }
+
+  return (
+    <>
+      <Box sx={sx.mobileResultFab}>
+        <Fab
+          size="small"
+          color={
+            copyStatusDetails.color === 'default'
+              ? 'default'
+              : copyStatusDetails.color
+          }
+          onClick={() => handleCopy(result.markdown)}
+          aria-label="Copy Markdown"
+        >
+          <ContentCopyIcon fontSize="small" />
+        </Fab>
+        <Fab
+          size="small"
+          onClick={handleDownload}
+          aria-label="Download Markdown"
+        >
+          <Badge variant="dot" color="warning" invisible={!result.truncated}>
+            <DownloadIcon fontSize="small" />
+          </Badge>
+        </Fab>
+      </Box>
+
+      <Snackbar
+        open={copyFeedbackOpen}
+        autoHideDuration={CONFIG.COPY_FEEDBACK_DELAY_MS}
+        onClose={clearCopyFeedback}
+        message={copyStatusDetails.message}
+      />
+    </>
+  );
+}
+
 export default function TransformResultPanel({ result }: TransformResultProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
+  const [mobileDialogOpen, setMobileDialogOpen] = useState(false);
   const previewState = usePreview(result.markdown);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   function handleViewModeChange(
     _event: MouseEvent<HTMLElement>,
@@ -458,6 +647,35 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
     }
 
     setViewMode(nextViewMode);
+  }
+
+  function handleTabChange(_event: SyntheticEvent, nextTab: ViewMode) {
+    setViewMode(nextTab);
+  }
+
+  if (isMobile) {
+    return (
+      <Stack spacing={2}>
+        <ResultHeaderWithDetails result={result} />
+        <MobileResultBar
+          markdown={result.markdown}
+          previewState={previewState}
+          onOpen={() => {
+            setMobileDialogOpen(true);
+          }}
+        />
+        <MobileResultDialog
+          open={mobileDialogOpen}
+          onClose={() => {
+            setMobileDialogOpen(false);
+          }}
+          result={result}
+          viewMode={viewMode}
+          onTabChange={handleTabChange}
+          previewState={previewState}
+        />
+      </Stack>
+    );
   }
 
   return (
