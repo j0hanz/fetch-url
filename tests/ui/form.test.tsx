@@ -4,10 +4,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import TransformForm from '@/components/features/form';
 
-import { submitUrlForm } from '@/tests/setup';
+import { submitUrlForm, VALID_URL } from '@/tests/setup';
 
 const action = vi.fn();
-const VALID_URL = 'https://example.com';
 
 describe('TransformForm', () => {
   it('renders URL input and submit button', () => {

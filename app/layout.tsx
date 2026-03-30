@@ -85,6 +85,24 @@ export const metadata: Metadata = {
   },
 };
 
+const SKIP_LINK_SX = {
+  position: 'absolute',
+  left: '-9999px',
+  top: 'auto',
+  '&:focus': {
+    position: 'fixed',
+    top: 8,
+    left: 8,
+    zIndex: 'tooltip',
+    bgcolor: 'background.paper',
+    color: 'text.primary',
+    px: 2,
+    py: 1,
+    borderRadius: 1,
+    boxShadow: 3,
+  },
+} as const;
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -105,27 +123,7 @@ export default async function RootLayout({
         <WebVitals />
         <InitColorSchemeScript attribute="class" />
         <AppThemeProviders>
-          <Box
-            component="a"
-            href="#main-content"
-            sx={{
-              position: 'absolute',
-              left: '-9999px',
-              top: 'auto',
-              '&:focus': {
-                position: 'fixed',
-                top: 8,
-                left: 8,
-                zIndex: 'tooltip',
-                bgcolor: 'background.paper',
-                color: 'text.primary',
-                px: 2,
-                py: 1,
-                borderRadius: 1,
-                boxShadow: 3,
-              },
-            }}
-          >
+          <Box component="a" href="#main-content" sx={SKIP_LINK_SX}>
             Skip to content
           </Box>
           <Box
@@ -139,9 +137,7 @@ export default async function RootLayout({
             <Container
               maxWidth="lg"
               sx={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
+                ...sx.flexColumn,
                 gap: fluid.containerGap,
               }}
             >
@@ -151,7 +147,7 @@ export default async function RootLayout({
                     direction="row"
                     gap={1.5}
                     alignItems="center"
-                    sx={{ minWidth: 0 }}
+                    sx={sx.minWidthZero}
                   >
                     <LogoIcon
                       sx={{
@@ -164,7 +160,7 @@ export default async function RootLayout({
                   </Stack>
                   <Stack
                     direction="row"
-                    sx={{ gap: 'clamp(0.5rem, 0.25rem + 0.5vw, 1rem)' }}
+                    sx={{ gap: fluid.headerGap }}
                     alignItems="center"
                   >
                     <AboutDialog

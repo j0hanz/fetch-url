@@ -3,6 +3,25 @@ import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach } from 'vitest';
 
+import type { TransformResult } from '@/lib/api';
+
+export const VALID_URL = 'https://example.com';
+
+export const MOCK_TRANSFORM_RESULT: TransformResult = {
+  url: VALID_URL,
+  resolvedUrl: 'https://example.com/',
+  finalUrl: 'https://example.com/',
+  title: 'Example Domain',
+  metadata: {
+    description: 'An example page',
+    author: 'IANA',
+  },
+  markdown: '# Example\n\nThis is an example.',
+  fetchedAt: '2026-03-10T12:00:00.000Z',
+  contentSize: 42,
+  truncated: false,
+};
+
 if (
   typeof window !== 'undefined' &&
   typeof HTMLFormElement !== 'undefined' &&

@@ -5,7 +5,7 @@ import {
   submitTransformRequest,
 } from '@/lib/client-transform';
 
-const VALID_URL = 'https://example.com';
+import { VALID_URL } from '@/tests/setup';
 
 describe('client-transform', () => {
   beforeEach(() => {

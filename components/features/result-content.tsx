@@ -139,7 +139,8 @@ const MOBILE_RESULT_BAR_SX = {
   position: 'relative',
   display: 'block',
   textAlign: 'left',
-  border: '1px solid var(--mui-palette-divider)',
+  border: 1,
+  borderColor: 'divider',
   width: '100%',
   minHeight: fluid.panelMaxHeight,
   overflow: 'hidden',
@@ -422,7 +423,10 @@ function DetailRow({ label, value }: ResultDetailItem) {
       <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
         {label}
       </Typography>
-      <Typography variant="body2" sx={{ wordBreak: 'break-word', minWidth: 0 }}>
+      <Typography
+        variant="body2"
+        sx={{ wordBreak: 'break-word', ...sx.minWidthZero }}
+      >
         {value}
       </Typography>
     </Stack>
@@ -447,7 +451,7 @@ function ResultDetailDialog({
       onClose={onClose}
       titleId="result-detail-title"
       title={
-        <Typography variant="subtitle1" sx={{ minWidth: 0 }}>
+        <Typography variant="subtitle1" sx={sx.minWidthZero}>
           {title ?? 'Page Details'}
         </Typography>
       }
@@ -488,7 +492,7 @@ function ResultHeaderButtonContent({ result }: { result: TransformResult }) {
       >
         {title?.[0]}
       </Avatar>
-      <Stack sx={{ minWidth: 0 }}>
+      <Stack sx={sx.minWidthZero}>
         {title && (
           <Typography variant="body2" sx={RESULT_TITLE_SX} noWrap>
             {title}

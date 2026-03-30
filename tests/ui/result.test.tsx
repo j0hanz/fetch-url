@@ -7,20 +7,7 @@ import TransformResultPanel from '@/components/features/result';
 
 import type { TransformResult } from '@/lib/api';
 
-const baseResult: TransformResult = {
-  url: 'https://example.com',
-  resolvedUrl: 'https://example.com/',
-  finalUrl: 'https://example.com/',
-  title: 'Example Domain',
-  metadata: {
-    description: 'An example page',
-    author: 'IANA',
-  },
-  markdown: '# Example\n\nThis is an example.',
-  fetchedAt: '2026-03-10T12:00:00.000Z',
-  contentSize: 42,
-  truncated: false,
-};
+import { MOCK_TRANSFORM_RESULT as baseResult } from '@/tests/setup';
 
 describe('TransformResultPanel', () => {
   beforeEach(() => {

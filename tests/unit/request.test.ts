@@ -6,6 +6,8 @@ import type { TransformResponse } from '@/lib/api';
 import { transformUrl } from '@/lib/transform';
 import { validateTransformRequest, ValidationError } from '@/lib/validate';
 
+import { MOCK_TRANSFORM_RESULT, VALID_URL } from '@/tests/setup';
+
 vi.mock('next/server', async (importOriginal) => {
   const actual = await importOriginal<typeof import('next/server')>();
   return { ...actual, after: vi.fn() };
@@ -22,18 +24,10 @@ const UNKNOWN_FIELDS = [
   { maxInlineChars: 100 },
 ] as const;
 const INVALID_BODIES = [null, [], 'string'] as const;
-const VALID_URL = 'https://example.com';
 const transformUrlMock = vi.mocked(transformUrl);
 const SUCCESS_RESPONSE: TransformResponse = {
   ok: true,
-  result: {
-    url: VALID_URL,
-    metadata: {},
-    markdown: '# Example',
-    fetchedAt: '2026-03-11T00:00:00.000Z',
-    contentSize: 9,
-    truncated: false,
-  },
+  result: MOCK_TRANSFORM_RESULT,
 };
 const IMMEDIATE_ERROR_RESPONSE: TransformResponse = {
   ok: false,

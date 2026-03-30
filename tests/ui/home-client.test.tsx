@@ -4,19 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import HomeClient from '@/components/features/home-client';
 
-import type { TransformResult } from '@/lib/api';
-
-import { submitUrlForm } from '@/tests/setup';
-
-const VALID_URL = 'https://example.com';
-const SUCCESS_RESULT: TransformResult = {
-  url: VALID_URL,
-  markdown: '# Example',
-  fetchedAt: '2026-03-10T00:00:00Z',
-  contentSize: 9,
-  truncated: false,
-  metadata: {},
-};
+import { MOCK_TRANSFORM_RESULT, submitUrlForm, VALID_URL } from '@/tests/setup';
 
 describe('HomeClient', () => {
   it('shows skeleton loading then transitions to the final result', async () => {
@@ -32,7 +20,7 @@ describe('HomeClient', () => {
       ).toBeInTheDocument();
     });
 
-    stream.emit({ type: 'result', ok: true, result: SUCCESS_RESULT });
+    stream.emit({ type: 'result', ok: true, result: MOCK_TRANSFORM_RESULT });
     stream.close();
 
     await waitFor(() => {
@@ -145,7 +133,11 @@ describe('HomeClient', () => {
     expect(await screen.findByText('Upstream unavailable')).toBeInTheDocument();
 
     await submitUrlForm(VALID_URL);
-    secondStream.emit({ type: 'result', ok: true, result: SUCCESS_RESULT });
+    secondStream.emit({
+      type: 'result',
+      ok: true,
+      result: MOCK_TRANSFORM_RESULT,
+    });
     secondStream.close();
 
     await waitFor(() => {
