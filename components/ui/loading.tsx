@@ -1,11 +1,12 @@
 import Box from '@mui/material/Box';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 import { fluid } from '@/lib/theme';
 
 interface SkeletonSection {
-  headingSize: string;
+  headingVariant: 'h4' | 'h5';
   headingWidth: string;
   lines: readonly string[];
   mt?: number;
@@ -13,18 +14,18 @@ interface SkeletonSection {
 
 const SECTIONS = [
   {
-    headingSize: '2.125rem',
+    headingVariant: 'h4',
     headingWidth: '50%',
     lines: ['100%', '100%', '75%'],
   },
   {
-    headingSize: '1.5rem',
+    headingVariant: 'h5',
     headingWidth: '35%',
     lines: ['100%', '90%', '100%', '60%'],
     mt: 1.5,
   },
   {
-    headingSize: '1.5rem',
+    headingVariant: 'h5',
     headingWidth: '40%',
     lines: ['100%', '85%', '50%'],
     mt: 1.5,
@@ -34,21 +35,23 @@ const SECTIONS = [
 const SKELETON_MIN_HEIGHT = `calc(${fluid.panelMaxHeight} - clamp(24px, 16px + 2cqi, 40px))`;
 
 function SectionSkeleton({
-  headingSize,
+  headingVariant,
   headingWidth,
   lines,
   mt,
 }: SkeletonSection) {
   return (
     <Box sx={mt ? { mt } : undefined}>
-      <Skeleton
-        animation="wave"
-        variant="text"
-        width={headingWidth}
-        sx={{ fontSize: headingSize }}
-      />
+      <Typography
+        variant={headingVariant}
+        sx={{ borderBottom: 1, borderColor: 'divider', pb: 0.5, my: 1.5 }}
+      >
+        <Skeleton variant="text" width={headingWidth} />
+      </Typography>
       {lines.map((width, i) => (
-        <Skeleton key={i} animation="wave" variant="text" width={width} />
+        <Typography key={i} variant="body1" sx={{ mb: fluid.paragraphMb }}>
+          <Skeleton variant="text" width={width} />
+        </Typography>
       ))}
     </Box>
   );
@@ -59,12 +62,11 @@ export function MarkdownSkeleton() {
     <Stack
       role="status"
       aria-label="Markdown preview loading"
-      sx={{ minHeight: SKELETON_MIN_HEIGHT }}
+      sx={{ minHeight: SKELETON_MIN_HEIGHT, overflow: 'hidden' }}
     >
       <SectionSkeleton {...SECTIONS[0]} />
       <SectionSkeleton {...SECTIONS[1]} />
       <Skeleton
-        animation="wave"
         variant="rounded"
         sx={{ flexGrow: 1, minHeight: 80, mt: fluid.paragraphMb }}
       />

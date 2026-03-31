@@ -6,7 +6,7 @@ export const tokens = {
     mono: 'var(--font-geist-mono), ui-monospace, monospace',
     sans: 'var(--font-geist-sans), system-ui, sans-serif',
   },
-  radius: { panel: 4, code: 2, button: 6 },
+  radius: { panel: 2, code: 1, button: 6 },
   blur: { paper: '15px', dialog: '15px' },
   sizes: { avatar: 32, chipHeight: 20, loader: 32 },
 } as const;
@@ -90,6 +90,7 @@ export const theme = responsiveFontSizes(
       },
     },
     components: {
+      MuiSkeleton: { defaultProps: { animation: 'wave' } },
       MuiAlert: {
         defaultProps: {
           variant: 'outlined',

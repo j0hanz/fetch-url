@@ -23,7 +23,11 @@ const TransformResultPanel = dynamic(
   { loading: () => <MarkdownSkeleton /> }
 );
 
-const LOADING_PANEL_SX = { ...sx.markdownPanel, ...sx.transitionCell } as const;
+const LOADING_PANEL_SX = {
+  ...sx.markdownPanel,
+  ...sx.transitionCell,
+  overflow: 'hidden',
+} as const;
 
 function ViewStateSection({
   children,
