@@ -20,7 +20,7 @@ import {
   ResultHeaderWithDetails,
   useResultDocumentActions,
   type ViewMode,
-} from '@/components/features/result-shared';
+} from '@/components/features/result-content';
 import { BaseDialog } from '@/components/ui/dialog';
 import { MarkdownErrorBoundary } from '@/components/ui/error';
 

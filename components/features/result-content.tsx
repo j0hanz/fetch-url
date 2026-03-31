@@ -2,11 +2,8 @@
 
 import {
   type ComponentProps,
-  lazy,
   type MouseEvent,
   type ReactNode,
-  Suspense,
-  type SyntheticEvent,
   useState,
 } from 'react';
 
@@ -18,13 +15,10 @@ import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
-import Fab from '@mui/material/Fab';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
@@ -32,7 +26,7 @@ import Typography from '@mui/material/Typography';
 
 import { BaseDialog } from '@/components/ui/dialog';
 import { MarkdownErrorBoundary } from '@/components/ui/error';
-import { MarkdownSkeleton } from '@/components/ui/loading';
+import MarkdownPreview from '@/components/ui/markdown-preview';
 
 import { type CopyStatus, useFeedback } from '@/hooks/use-feedback';
 
@@ -42,19 +36,12 @@ import { fluid, sx, tokens } from '@/lib/theme';
 export type ViewMode = 'preview' | 'code';
 type IconButtonColor = ComponentProps<typeof IconButton>['color'];
 
-const MarkdownPreview = lazy(() => import('@/components/ui/markdown-preview'));
-
 interface ResultActionButtonProps {
   ariaLabel: string;
   title: string;
   onClick: () => void;
   children: ReactNode;
   color?: IconButtonColor;
-}
-
-interface ResultDetailItem {
-  label: string;
-  value: ReactNode;
 }
 
 interface ResultActionBarProps {
@@ -64,6 +51,11 @@ interface ResultActionBarProps {
     newMode: ViewMode | null
   ) => void;
   result: TransformResult;
+}
+
+interface ResultDetailItem {
+  label: string;
+  value: ReactNode;
 }
 
 const CONFIG = {
@@ -110,7 +102,7 @@ const COPY_STATUS_DETAILS: Record<
   failed: { color: 'error', message: 'Failed to copy' },
 };
 
-const RAW_MARKDOWN_SX = {
+export const RAW_MARKDOWN_SX = {
   fontFamily: tokens.fonts.mono,
   fontSize: fluid.codeFontSize,
   whiteSpace: 'pre-wrap',
@@ -134,60 +126,10 @@ const RESULT_URL_SX = {
   textOverflow: 'ellipsis',
   maxWidth: fluid.truncateWidth,
 } as const;
-const MOBILE_RESULT_BAR_SX = {
-  ...sx.markdownPanel,
-  position: 'relative',
-  display: 'block',
-  textAlign: 'left',
-  border: 1,
-  borderColor: 'divider',
-  width: '100%',
-  minHeight: fluid.panelMaxHeight,
-  overflow: 'hidden',
-  borderRadius: tokens.radius.panel,
-  cursor: 'pointer',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    inset: 'auto 0 0 0',
-    height: '50%',
-    background:
-      'linear-gradient(to bottom, transparent, var(--mui-palette-background-default))',
-    pointerEvents: 'none',
-  },
-} as const;
-const MOBILE_RESULT_FAB_SX = {
-  position: 'absolute',
-  bottom: 75,
-  right: 15,
-  zIndex: 1,
-  gap: 1,
-  display: 'flex',
-  flexDirection: 'column',
-} as const;
-
-const MOBILE_TABS = [
-  {
-    id: 'preview',
-    label: 'Preview',
-    panelId: 'result-tabpanel-preview',
-    tabId: 'result-tab-preview',
-  },
-  {
-    id: 'code',
-    label: 'Code',
-    panelId: 'result-tabpanel-code',
-    tabId: 'result-tab-code',
-  },
-] as const satisfies readonly {
-  id: ViewMode;
-  label: string;
-  panelId: string;
-  tabId: string;
-}[];
 
 export function isSafeImageUrl(url: string | undefined): url is string {
   if (!url) return false;
+
   try {
     const parsed = new URL(url);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
@@ -237,8 +179,10 @@ function downloadMarkdownFile(title: string | undefined, markdown: string) {
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
+
   const kb = bytes / 1024;
   if (kb < 1024) return `${kb.toFixed(1)} KB`;
+
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
@@ -287,7 +231,66 @@ function getCopyFeedbackColor(copyStatus: CopyStatus): IconButtonColor {
   return COPY_STATUS_DETAILS[copyStatus].color;
 }
 
-function useResultDocumentActions(result: TransformResult) {
+function DetailRow({ label, value }: ResultDetailItem) {
+  return (
+    <Stack direction="row" gap={2}>
+      <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+        {label}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{ wordBreak: 'break-word', ...sx.minWidthZero }}
+      >
+        {value}
+      </Typography>
+    </Stack>
+  );
+}
+
+function ResultDetailDialog({
+  open,
+  onClose,
+  result,
+}: {
+  open: boolean;
+  onClose: () => void;
+  result: TransformResult;
+}) {
+  const { metadata, title } = result;
+  const detailItems = createResultDetailItems(result);
+
+  return (
+    <BaseDialog
+      open={open}
+      onClose={onClose}
+      titleId="result-detail-title"
+      title={
+        <Typography variant="subtitle1" sx={sx.minWidthZero}>
+          {title ?? 'Page Details'}
+        </Typography>
+      }
+      maxWidth="sm"
+    >
+      <Stack gap={2}>
+        {detailItems.map((item) => (
+          <DetailRow key={item.label} {...item} />
+        ))}
+        {isSafeImageUrl(metadata.image) && (
+          <Box
+            component="img"
+            src={metadata.image}
+            alt="Page preview"
+            loading="lazy"
+            decoding="async"
+            sx={{ maxWidth: '100%', borderRadius: 1 }}
+          />
+        )}
+      </Stack>
+    </BaseDialog>
+  );
+}
+
+export function useResultDocumentActions(result: TransformResult) {
   const { clearCopyFeedback, copyFeedbackOpen, copyStatus, handleCopy } =
     useFeedback();
 
@@ -306,7 +309,7 @@ function useResultDocumentActions(result: TransformResult) {
   };
 }
 
-function CopyFeedbackSnackbar({
+export function CopyFeedbackSnackbar({
   message,
   onClose,
   open,
@@ -387,11 +390,9 @@ function ResultDocumentActions({
 
 export function PreviewSurface({ markdown }: { markdown: string }) {
   return (
-    <Suspense fallback={<MarkdownSkeleton />}>
-      <Box>
-        <MarkdownPreview>{markdown}</MarkdownPreview>
-      </Box>
-    </Suspense>
+    <Box>
+      <MarkdownPreview>{markdown}</MarkdownPreview>
+    </Box>
   );
 }
 
@@ -414,65 +415,6 @@ export function ResultMarkdownPanel({
         </Typography>
       )}
     </Paper>
-  );
-}
-
-function DetailRow({ label, value }: ResultDetailItem) {
-  return (
-    <Stack direction="row" gap={2}>
-      <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
-        {label}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{ wordBreak: 'break-word', ...sx.minWidthZero }}
-      >
-        {value}
-      </Typography>
-    </Stack>
-  );
-}
-
-function ResultDetailDialog({
-  open,
-  onClose,
-  result,
-}: {
-  open: boolean;
-  onClose: () => void;
-  result: TransformResult;
-}) {
-  const { metadata, title } = result;
-  const detailItems = createResultDetailItems(result);
-
-  return (
-    <BaseDialog
-      open={open}
-      onClose={onClose}
-      titleId="result-detail-title"
-      title={
-        <Typography variant="subtitle1" sx={sx.minWidthZero}>
-          {title ?? 'Page Details'}
-        </Typography>
-      }
-      maxWidth="sm"
-    >
-      <Stack gap={2}>
-        {detailItems.map((item) => (
-          <DetailRow key={item.label} {...item} />
-        ))}
-        {isSafeImageUrl(metadata.image) && (
-          <Box
-            component="img"
-            src={metadata.image}
-            alt="Page preview"
-            loading="lazy"
-            decoding="async"
-            sx={{ maxWidth: '100%', borderRadius: 1 }}
-          />
-        )}
-      </Stack>
-    </BaseDialog>
   );
 }
 
@@ -574,201 +516,6 @@ export function ResultActionBar({
         onClose={documentActions.clearCopyFeedback}
         message={documentActions.copyStatusMessage}
       />
-    </>
-  );
-}
-
-function MobileResultTabPanel({
-  children,
-  tab,
-  visible,
-}: {
-  children: ReactNode;
-  tab: ViewMode;
-  visible: boolean;
-}) {
-  const definition = MOBILE_TABS.find((currentTab) => currentTab.id === tab);
-  const fallbackDefinition = MOBILE_TABS[0];
-  const panelId = definition?.panelId ?? fallbackDefinition.panelId;
-  const tabId = definition?.tabId ?? fallbackDefinition.tabId;
-
-  return (
-    <div role="tabpanel" hidden={!visible} id={panelId} aria-labelledby={tabId}>
-      {visible ? children : null}
-    </div>
-  );
-}
-
-function MobileResultBar({
-  markdown,
-  onOpen,
-}: {
-  markdown: string;
-  onOpen: () => void;
-}) {
-  return (
-    <ButtonBase
-      onClick={onOpen}
-      aria-label="View result"
-      component="div"
-      sx={MOBILE_RESULT_BAR_SX}
-    >
-      <MarkdownErrorBoundary resetKey={markdown}>
-        <PreviewSurface markdown={markdown} />
-      </MarkdownErrorBoundary>
-    </ButtonBase>
-  );
-}
-
-function MobileResultFab({ result }: { result: TransformResult }) {
-  const documentActions = useResultDocumentActions(result);
-
-  return (
-    <>
-      <Box sx={MOBILE_RESULT_FAB_SX}>
-        <Fab
-          size="small"
-          color={documentActions.copyStatusColor}
-          onClick={documentActions.handleCopyMarkdown}
-          aria-label="Copy Markdown"
-        >
-          <ContentCopyIcon fontSize="small" />
-        </Fab>
-        <Fab
-          size="small"
-          onClick={documentActions.handleDownload}
-          aria-label="Download Markdown"
-        >
-          <Badge variant="dot" color="warning" invisible={!result.truncated}>
-            <DownloadIcon fontSize="small" />
-          </Badge>
-        </Fab>
-      </Box>
-
-      <CopyFeedbackSnackbar
-        open={documentActions.copyFeedbackOpen}
-        onClose={documentActions.clearCopyFeedback}
-        message={documentActions.copyStatusMessage}
-      />
-    </>
-  );
-}
-
-function MobileResultDialogHeader({
-  onTabChange,
-  viewMode,
-}: {
-  onTabChange: (event: SyntheticEvent, nextTab: ViewMode) => void;
-  viewMode: ViewMode;
-}) {
-  return (
-    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-      <Tabs
-        value={viewMode}
-        onChange={onTabChange}
-        variant="fullWidth"
-        aria-label="Result view tabs"
-      >
-        {MOBILE_TABS.map((tab) => (
-          <Tab
-            key={tab.id}
-            value={tab.id}
-            label={tab.label}
-            id={tab.tabId}
-            aria-controls={tab.panelId}
-          />
-        ))}
-      </Tabs>
-    </Box>
-  );
-}
-
-function MobileResultDialogPanels({
-  result,
-  viewMode,
-}: {
-  result: TransformResult;
-  viewMode: ViewMode;
-}) {
-  return (
-    <>
-      <MobileResultTabPanel tab="preview" visible={viewMode === 'preview'}>
-        <MarkdownErrorBoundary resetKey={result.markdown}>
-          <PreviewSurface markdown={result.markdown} />
-        </MarkdownErrorBoundary>
-      </MobileResultTabPanel>
-      <MobileResultTabPanel tab="code" visible={viewMode === 'code'}>
-        <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
-          {result.markdown}
-        </Typography>
-      </MobileResultTabPanel>
-    </>
-  );
-}
-
-function MobileResultDialog({
-  open,
-  onClose,
-  result,
-  viewMode,
-  onTabChange,
-}: {
-  open: boolean;
-  onClose: () => void;
-  result: TransformResult;
-  viewMode: ViewMode;
-  onTabChange: (event: SyntheticEvent, nextTab: ViewMode) => void;
-}) {
-  return (
-    <BaseDialog
-      open={open}
-      onClose={onClose}
-      titleId="mobile-result-dialog-title"
-      title={result.title ?? 'Result'}
-      hiddenTitle
-      fullScreen
-      header={
-        <MobileResultDialogHeader
-          viewMode={viewMode}
-          onTabChange={onTabChange}
-        />
-      }
-    >
-      <MobileResultDialogPanels result={result} viewMode={viewMode} />
-      <MobileResultFab result={result} />
-    </BaseDialog>
-  );
-}
-
-export function MobileResultPresentation({
-  mobileDialogOpen,
-  onClose,
-  onOpen,
-  onTabChange,
-  result,
-  viewMode,
-}: {
-  mobileDialogOpen: boolean;
-  onClose: () => void;
-  onOpen: () => void;
-  onTabChange: (event: SyntheticEvent, nextTab: ViewMode) => void;
-  result: TransformResult;
-  viewMode: ViewMode;
-}) {
-  return (
-    <>
-      {!mobileDialogOpen ? (
-        <MobileResultBar markdown={result.markdown} onOpen={onOpen} />
-      ) : null}
-      {mobileDialogOpen ? (
-        <MobileResultDialog
-          open
-          onClose={onClose}
-          result={result}
-          viewMode={viewMode}
-          onTabChange={onTabChange}
-        />
-      ) : null}
     </>
   );
 }

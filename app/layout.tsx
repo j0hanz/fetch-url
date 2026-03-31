@@ -14,13 +14,14 @@ import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-import AboutDialogContent from '@/components/features/about-dialog-content';
+import AboutDialog from '@/components/features/about-dialog';
 import Footer from '@/components/ui/footer';
 import LogoIcon from '@/components/ui/logo-icon';
 import ThemeToggle from '@/components/ui/theme-toggle';
 import { WebVitals } from '@/components/ui/web-vitals';
 
 import { geistMono, geistSans } from '@/lib/fonts';
+import { readHomePageMarkdown } from '@/lib/home-content';
 import {
   resolveSiteUrl,
   SITE_CATEGORY,
@@ -119,6 +120,17 @@ function AboutDialogFallback() {
   );
 }
 
+async function AboutDialogSlot() {
+  const { aboutMarkdown, howItWorksMarkdown } = await readHomePageMarkdown();
+
+  return (
+    <AboutDialog
+      aboutMarkdown={aboutMarkdown}
+      howItWorksMarkdown={howItWorksMarkdown}
+    />
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -178,7 +190,7 @@ export default function RootLayout({
                     alignItems="center"
                   >
                     <Suspense fallback={<AboutDialogFallback />}>
-                      <AboutDialogContent />
+                      <AboutDialogSlot />
                     </Suspense>
                     <Box sx={sx.headerDivider} />
                     <Tooltip title="View on GitHub">

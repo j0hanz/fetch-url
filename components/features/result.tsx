@@ -9,10 +9,16 @@ import {
 
 import dynamic from 'next/dynamic';
 
+import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import type { ViewMode } from '@/components/features/result-shared';
+import {
+  ResultActionBar,
+  ResultHeaderWithDetails,
+  ResultMarkdownPanel,
+  type ViewMode,
+} from '@/components/features/result-content';
 import { MarkdownSkeleton } from '@/components/ui/loading';
 
 import type { TransformResult } from '@/lib/api';
@@ -21,10 +27,6 @@ interface TransformResultProps {
   result: TransformResult;
 }
 
-const ResultDesktop = dynamic(
-  () => import('@/components/features/result-desktop'),
-  { loading: () => <MarkdownSkeleton /> }
-);
 const ResultMobile = dynamic(
   () => import('@/components/features/result-mobile'),
   { loading: () => <MarkdownSkeleton /> }
@@ -101,10 +103,24 @@ export default function TransformResultPanel({ result }: TransformResultProps) {
   }
 
   return (
-    <ResultDesktop
-      result={result}
-      viewMode={viewMode}
-      onViewModeChange={handleViewModeChange}
-    />
+    <Stack spacing={2}>
+      <ResultHeaderWithDetails result={result} />
+
+      <Stack
+        gap={0.2}
+        component="section"
+        sx={{ containerType: 'inline-size' }}
+      >
+        <ResultActionBar
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          result={result}
+        />
+        <ResultMarkdownPanel
+          isPreviewMode={viewMode === 'preview'}
+          markdown={result.markdown}
+        />
+      </Stack>
+    </Stack>
   );
 }
