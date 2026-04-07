@@ -16,7 +16,6 @@ const MarkdownPreview = lazy(() => import('@/components/ui/markdown-preview'));
 type AboutTabId = 'overview' | 'how-it-works';
 
 interface AboutTabDefinition {
-  content: string;
   id: AboutTabId;
   label: string;
   panelId: string;
@@ -54,8 +53,7 @@ function TabPanel({
   tab: AboutTabId;
   visible: boolean;
 }) {
-  const { panelId, tabId } =
-    ABOUT_TABS.find((currentTab) => currentTab.id === tab) ?? ABOUT_TABS[0];
+  const { panelId, tabId } = ABOUT_TAB_DEFINITION_BY_ID[tab];
 
   return (
     <div role="tabpanel" hidden={!visible} id={panelId} aria-labelledby={tabId}>
@@ -74,12 +72,10 @@ function MarkdownTabPanel({ children }: { children: string }) {
   );
 }
 
-function createAboutTabDefinitions(contentById: Record<AboutTabId, string>) {
-  return ABOUT_TABS.map((tab) => ({
-    ...tab,
-    content: contentById[tab.id],
-  }));
-}
+const ABOUT_TAB_DEFINITION_BY_ID: Record<AboutTabId, AboutTabDefinition> = {
+  overview: ABOUT_TABS[0],
+  'how-it-works': ABOUT_TABS[1],
+};
 
 export default function AboutDialogPanel({
   aboutMarkdown,
@@ -88,10 +84,10 @@ export default function AboutDialogPanel({
   open,
 }: AboutDialogPanelProps) {
   const [tab, setTab] = useState<AboutTabId>('overview');
-  const tabs = createAboutTabDefinitions({
+  const contentByTab: Record<AboutTabId, string> = {
     overview: aboutMarkdown,
     'how-it-works': howItWorksMarkdown,
-  });
+  };
 
   function handleTabChange(_event: SyntheticEvent, nextTab: AboutTabId) {
     setTab(nextTab);
@@ -112,7 +108,7 @@ export default function AboutDialogPanel({
             variant="fullWidth"
             aria-label="About dialog tabs"
           >
-            {tabs.map((tabDefinition) => (
+            {ABOUT_TABS.map((tabDefinition) => (
               <Tab
                 key={tabDefinition.id}
                 value={tabDefinition.id}
@@ -125,13 +121,13 @@ export default function AboutDialogPanel({
         </Box>
       }
     >
-      {tabs.map((tabDefinition) => (
+      {ABOUT_TABS.map((tabDefinition) => (
         <TabPanel
           key={tabDefinition.id}
           tab={tabDefinition.id}
           visible={tab === tabDefinition.id}
         >
-          {tabDefinition.content}
+          {contentByTab[tabDefinition.id]}
         </TabPanel>
       ))}
     </BaseDialog>

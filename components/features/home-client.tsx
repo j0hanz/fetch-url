@@ -13,8 +13,7 @@ import { CenterMessage } from '@/components/ui/error';
 import { MarkdownSkeleton } from '@/components/ui/loading';
 import PreviewPlaceholder from '@/components/ui/preview-placeholder';
 
-import { deriveViewState, useTransform } from '@/hooks/use-transform';
-import type { ViewState } from '@/hooks/use-transform';
+import { useTransform } from '@/hooks/use-transform';
 
 import { sx } from '@/lib/theme';
 
@@ -31,24 +30,21 @@ const LOADING_PANEL_SX = {
 
 function ViewStateSection({
   children,
-  state,
-  visibleState,
+  visible,
 }: {
   children: ReactNode;
-  state: ViewState;
-  visibleState: ViewState;
+  visible: boolean;
 }) {
   return (
-    <Fade in={state === visibleState} mountOnEnter unmountOnExit>
+    <Fade in={visible} mountOnEnter unmountOnExit>
       <Box sx={sx.transitionCell}>{children}</Box>
     </Fade>
   );
 }
 
 export default function HomeClient() {
-  const { error, formRef, handleAction, isPending, result } = useTransform();
-
-  const viewState = deriveViewState(isPending, error, result);
+  const { error, formRef, handleAction, isPending, result, viewState } =
+    useTransform();
 
   return (
     <Box sx={sx.flexColumn}>
@@ -63,17 +59,17 @@ export default function HomeClient() {
         aria-busy={viewState === 'loading'}
         sx={sx.transitionGrid}
       >
-        <ViewStateSection state={viewState} visibleState="idle">
+        <ViewStateSection visible={viewState === 'idle'}>
           <PreviewPlaceholder />
         </ViewStateSection>
 
-        <Fade in={viewState === 'loading'} mountOnEnter unmountOnExit>
+        <ViewStateSection visible={viewState === 'loading'}>
           <Paper sx={LOADING_PANEL_SX}>
             <MarkdownSkeleton />
           </Paper>
-        </Fade>
+        </ViewStateSection>
 
-        <ViewStateSection state={viewState} visibleState="error">
+        <ViewStateSection visible={viewState === 'error'}>
           {error && (
             <CenterMessage
               code={error.code}
@@ -83,7 +79,7 @@ export default function HomeClient() {
           )}
         </ViewStateSection>
 
-        <ViewStateSection state={viewState} visibleState="result">
+        <ViewStateSection visible={viewState === 'result'}>
           {result && <TransformResultPanel result={result} />}
         </ViewStateSection>
       </Box>

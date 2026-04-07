@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useReducer, useRef } from 'react';
 
 import type {
   StreamProgressEvent,
@@ -23,95 +23,104 @@ interface TransformRequestHandlers {
 
 interface TransformState {
   error: TransformError | null;
-  isPending: boolean;
   result: TransformResult | null;
+  viewState: ViewState;
 }
 
-const noop = () => {};
+type TransformStateAction =
+  | { type: 'start' }
+  | { type: 'result'; result: TransformResult }
+  | { type: 'error'; error: TransformError }
+  | { type: 'dismissError' };
+
+const NOOP = () => {};
 const IDLE_STATE: TransformState = {
   error: null,
-  isPending: false,
   result: null,
+  viewState: 'idle',
 };
 const PENDING_STATE: TransformState = {
   ...IDLE_STATE,
-  isPending: true,
+  viewState: 'loading',
 };
 
 function createErrorState(error: TransformError): TransformState {
-  return { ...IDLE_STATE, error };
+  return { ...IDLE_STATE, error, viewState: 'error' };
 }
 
 function createResultState(result: TransformResult): TransformState {
-  return { ...IDLE_STATE, result };
+  return { ...IDLE_STATE, result, viewState: 'result' };
 }
 
-export function deriveViewState(
-  isPending: boolean,
-  error: TransformError | null,
-  result: TransformResult | null
-): ViewState {
-  if (!isPending && result !== null) return 'result';
-  if (!isPending && error !== null) return 'error';
-  if (isPending) return 'loading';
-  return 'idle';
+function transformStateReducer(
+  state: TransformState,
+  action: TransformStateAction
+): TransformState {
+  switch (action.type) {
+    case 'start':
+      return PENDING_STATE;
+    case 'result':
+      return createResultState(action.result);
+    case 'error':
+      return action.error.code === 'ABORTED'
+        ? IDLE_STATE
+        : createErrorState(action.error);
+    case 'dismissError':
+      return state.viewState === 'error' ? IDLE_STATE : state;
+    default:
+      return state;
+  }
 }
 
 function useTransformRequestState() {
-  const [state, setState] = useState(IDLE_STATE);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const [state, dispatch] = useReducer(transformStateReducer, IDLE_STATE);
+  const activeRequestControllerRef = useRef<AbortController | null>(null);
 
-  function updateTerminalState(nextState: TransformState): void {
+  function dispatchTerminalState(action: TransformStateAction): void {
     startTransition(() => {
-      setState(nextState);
+      dispatch(action);
     });
   }
 
   function isActiveRequest(requestController: AbortController): boolean {
-    return abortControllerRef.current === requestController;
+    return activeRequestControllerRef.current === requestController;
   }
 
   function settleActiveRequest(
     requestController: AbortController,
-    nextState: TransformState,
-    onSettled: () => void = noop
+    action: TransformStateAction,
+    onSettled: () => void = NOOP
   ): void {
     if (!isActiveRequest(requestController)) {
       return;
     }
 
-    abortControllerRef.current = null;
+    activeRequestControllerRef.current = null;
     onSettled();
-    updateTerminalState(nextState);
+    dispatchTerminalState(action);
   }
 
   function beginRequest(): AbortController {
-    abortControllerRef.current?.abort();
+    activeRequestControllerRef.current?.abort();
     const requestController = new AbortController();
-    abortControllerRef.current = requestController;
-    setState(PENDING_STATE);
+    activeRequestControllerRef.current = requestController;
+    dispatch({ type: 'start' });
     return requestController;
   }
 
   return {
-    abortControllerRef,
+    activeRequestControllerRef,
     beginRequest,
-    dismissError: () => {
-      setState((currentState) =>
-        currentState.error === null ? currentState : IDLE_STATE
-      );
-    },
+    dismissError: () => dispatch({ type: 'dismissError' }),
     isActiveRequest,
     settleError: (
       requestController: AbortController,
       nextError: TransformError
     ) => {
-      if (nextError.code === 'ABORTED') {
-        settleActiveRequest(requestController, IDLE_STATE);
-        return;
-      }
-
-      settleActiveRequest(requestController, createErrorState(nextError));
+      settleActiveRequest(requestController, {
+        type: 'error',
+        error: nextError,
+      });
     },
     settleResult: (
       requestController: AbortController,
@@ -120,7 +129,10 @@ function useTransformRequestState() {
     ) => {
       settleActiveRequest(
         requestController,
-        createResultState(nextResult),
+        {
+          type: 'result',
+          result: nextResult,
+        },
         onSettled
       );
     },
@@ -130,7 +142,7 @@ function useTransformRequestState() {
 
 export function useTransform() {
   const {
-    abortControllerRef,
+    activeRequestControllerRef,
     beginRequest,
     dismissError,
     isActiveRequest,
@@ -143,16 +155,16 @@ export function useTransform() {
 
   useEffect(() => {
     return () => {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = null;
+      activeRequestControllerRef.current?.abort();
+      activeRequestControllerRef.current = null;
     };
-  }, [abortControllerRef]);
+  }, [activeRequestControllerRef]);
 
   function createRequestHandlers(
     requestController: AbortController
   ): TransformRequestHandlers {
     return {
-      onProgress: noop,
+      onProgress: NOOP,
       onResult(result) {
         settleResult(requestController, result, () => {
           formRef.current?.reset();
@@ -201,8 +213,9 @@ export function useTransform() {
     error: state.error,
     formRef,
     handleAction,
-    isPending: state.isPending,
+    isPending: state.viewState === 'loading',
     result: state.result,
     retry,
+    viewState: state.viewState,
   };
 }

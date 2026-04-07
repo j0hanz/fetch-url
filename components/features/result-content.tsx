@@ -2,6 +2,7 @@
 
 import {
   type ComponentProps,
+  memo,
   type MouseEvent,
   type ReactNode,
   useState,
@@ -58,6 +59,12 @@ interface ResultDetailItem {
   value: ReactNode;
 }
 
+interface ResultViewModeOption {
+  icon: ReactNode;
+  label: string;
+  value: ViewMode;
+}
+
 const CONFIG = {
   COPY_FEEDBACK_DELAY_MS: 2000,
   DEFAULT_DOWNLOAD_FILE_NAME: 'page',
@@ -76,7 +83,7 @@ const INVALID_DOWNLOAD_FILE_NAME_CHARACTERS = new Set([
   '*',
 ]);
 
-const VIEW_MODE_OPTIONS = [
+export const RESULT_VIEW_MODE_OPTIONS = [
   {
     icon: <VisibilityIcon fontSize="small" />,
     label: 'Preview',
@@ -87,11 +94,7 @@ const VIEW_MODE_OPTIONS = [
     label: 'Code',
     value: 'code',
   },
-] as const satisfies readonly {
-  icon: ReactNode;
-  label: string;
-  value: ViewMode;
-}[];
+] as const satisfies readonly ResultViewModeOption[];
 
 const COPY_STATUS_DETAILS: Record<
   CopyStatus,
@@ -108,6 +111,7 @@ export const RAW_MARKDOWN_SX = {
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
 } as const;
+const HIDDEN_RESULT_VIEW_SX = { display: 'none' } as const;
 
 const HEADER_BUTTON_SX = {
   justifyContent: 'flex-start',
@@ -231,6 +235,14 @@ function getCopyFeedbackColor(copyStatus: CopyStatus): IconButtonColor {
   return COPY_STATUS_DETAILS[copyStatus].color;
 }
 
+export function getResultViewPanelId(viewMode: ViewMode): string {
+  return `result-tabpanel-${viewMode}`;
+}
+
+export function getResultViewTabId(viewMode: ViewMode): string {
+  return `result-tab-${viewMode}`;
+}
+
 function DetailRow({ label, value }: ResultDetailItem) {
   return (
     <Stack direction="row" gap={2}>
@@ -340,7 +352,7 @@ function ViewModeToggle({
       size="small"
       aria-label="View mode"
     >
-      {VIEW_MODE_OPTIONS.map((option) => (
+      {RESULT_VIEW_MODE_OPTIONS.map((option) => (
         <ToggleButton
           key={option.value}
           sx={TOGGLE_BUTTON_SX}
@@ -388,13 +400,47 @@ function ResultDocumentActions({
   );
 }
 
-export function PreviewSurface({ markdown }: { markdown: string }) {
+export const PreviewSurface = memo(function PreviewSurface({
+  markdown,
+}: {
+  markdown: string;
+}) {
   return (
     <Box>
       <MarkdownPreview>{markdown}</MarkdownPreview>
     </Box>
   );
-}
+});
+
+const CodeSurface = memo(function CodeSurface({
+  markdown,
+}: {
+  markdown: string;
+}) {
+  return (
+    <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
+      {markdown}
+    </Typography>
+  );
+});
+
+export const ResultViewContent = memo(function ResultViewContent({
+  markdown,
+  viewMode,
+}: {
+  markdown: string;
+  viewMode: ViewMode;
+}) {
+  if (viewMode === 'preview') {
+    return (
+      <MarkdownErrorBoundary resetKey={markdown}>
+        <PreviewSurface markdown={markdown} />
+      </MarkdownErrorBoundary>
+    );
+  }
+
+  return <CodeSurface markdown={markdown} />;
+});
 
 export function ResultMarkdownPanel({
   isPreviewMode,
@@ -405,15 +451,18 @@ export function ResultMarkdownPanel({
 }) {
   return (
     <Paper sx={sx.markdownPanel}>
-      {isPreviewMode ? (
-        <MarkdownErrorBoundary resetKey={markdown}>
-          <PreviewSurface markdown={markdown} />
-        </MarkdownErrorBoundary>
-      ) : (
-        <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
-          {markdown}
-        </Typography>
-      )}
+      <Box
+        hidden={!isPreviewMode}
+        sx={!isPreviewMode ? HIDDEN_RESULT_VIEW_SX : undefined}
+      >
+        <ResultViewContent markdown={markdown} viewMode="preview" />
+      </Box>
+      <Box
+        hidden={isPreviewMode}
+        sx={isPreviewMode ? HIDDEN_RESULT_VIEW_SX : undefined}
+      >
+        <ResultViewContent markdown={markdown} viewMode="code" />
+      </Box>
     </Paper>
   );
 }

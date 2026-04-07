@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  type MouseEvent,
-  startTransition,
-  type SyntheticEvent,
-  useState,
-} from 'react';
+import { type MouseEvent, type SyntheticEvent, useState } from 'react';
 
 import dynamic from 'next/dynamic';
 
@@ -41,9 +36,7 @@ function useResultPresentationState() {
       return;
     }
 
-    startTransition(() => {
-      setViewMode(nextViewMode);
-    });
+    setViewMode(nextViewMode);
   }
 
   const closeMobileDialog = () => {

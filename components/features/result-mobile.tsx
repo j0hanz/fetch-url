@@ -11,18 +11,18 @@ import Fab from '@mui/material/Fab';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import Typography from '@mui/material/Typography';
 
 import {
   CopyFeedbackSnackbar,
-  PreviewSurface,
-  RAW_MARKDOWN_SX,
+  getResultViewPanelId,
+  getResultViewTabId,
+  RESULT_VIEW_MODE_OPTIONS,
   ResultHeaderWithDetails,
+  ResultViewContent,
   useResultDocumentActions,
   type ViewMode,
 } from '@/components/features/result-content';
 import { BaseDialog } from '@/components/ui/dialog';
-import { MarkdownErrorBoundary } from '@/components/ui/error';
 
 import type { TransformResult } from '@/lib/api';
 import { fluid, sx, tokens } from '@/lib/theme';
@@ -59,26 +59,6 @@ const MOBILE_RESULT_FAB_SX = {
   flexDirection: 'column',
 } as const;
 
-const MOBILE_TABS = [
-  {
-    id: 'preview',
-    label: 'Preview',
-    panelId: 'result-tabpanel-preview',
-    tabId: 'result-tab-preview',
-  },
-  {
-    id: 'code',
-    label: 'Code',
-    panelId: 'result-tabpanel-code',
-    tabId: 'result-tab-code',
-  },
-] as const satisfies readonly {
-  id: ViewMode;
-  label: string;
-  panelId: string;
-  tabId: string;
-}[];
-
 function MobileResultTabPanel({
   children,
   tab,
@@ -88,14 +68,14 @@ function MobileResultTabPanel({
   tab: ViewMode;
   visible: boolean;
 }) {
-  const definition = MOBILE_TABS.find((currentTab) => currentTab.id === tab);
-  const fallbackDefinition = MOBILE_TABS[0];
-  const panelId = definition?.panelId ?? fallbackDefinition.panelId;
-  const tabId = definition?.tabId ?? fallbackDefinition.tabId;
-
   return (
-    <div role="tabpanel" hidden={!visible} id={panelId} aria-labelledby={tabId}>
-      {visible ? children : null}
+    <div
+      role="tabpanel"
+      hidden={!visible}
+      id={getResultViewPanelId(tab)}
+      aria-labelledby={getResultViewTabId(tab)}
+    >
+      {children}
     </div>
   );
 }
@@ -114,9 +94,7 @@ function MobileResultBar({
       component="div"
       sx={MOBILE_RESULT_BAR_SX}
     >
-      <MarkdownErrorBoundary resetKey={markdown}>
-        <PreviewSurface markdown={markdown} />
-      </MarkdownErrorBoundary>
+      <ResultViewContent markdown={markdown} viewMode="preview" />
     </ButtonBase>
   );
 }
@@ -170,13 +148,13 @@ function MobileResultDialogHeader({
         variant="fullWidth"
         aria-label="Result view tabs"
       >
-        {MOBILE_TABS.map((tab) => (
+        {RESULT_VIEW_MODE_OPTIONS.map((tab) => (
           <Tab
-            key={tab.id}
-            value={tab.id}
+            key={tab.value}
+            value={tab.value}
             label={tab.label}
-            id={tab.tabId}
-            aria-controls={tab.panelId}
+            id={getResultViewTabId(tab.value)}
+            aria-controls={getResultViewPanelId(tab.value)}
           />
         ))}
       </Tabs>
@@ -193,16 +171,18 @@ function MobileResultDialogPanels({
 }) {
   return (
     <>
-      <MobileResultTabPanel tab="preview" visible={viewMode === 'preview'}>
-        <MarkdownErrorBoundary resetKey={result.markdown}>
-          <PreviewSurface markdown={result.markdown} />
-        </MarkdownErrorBoundary>
-      </MobileResultTabPanel>
-      <MobileResultTabPanel tab="code" visible={viewMode === 'code'}>
-        <Typography component="pre" variant="body2" sx={RAW_MARKDOWN_SX}>
-          {result.markdown}
-        </Typography>
-      </MobileResultTabPanel>
+      {RESULT_VIEW_MODE_OPTIONS.map((option) => (
+        <MobileResultTabPanel
+          key={option.value}
+          tab={option.value}
+          visible={viewMode === option.value}
+        >
+          <ResultViewContent
+            markdown={result.markdown}
+            viewMode={option.value}
+          />
+        </MobileResultTabPanel>
+      ))}
     </>
   );
 }

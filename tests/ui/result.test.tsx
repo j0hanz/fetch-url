@@ -73,7 +73,7 @@ describe('TransformResultPanel', () => {
     });
   });
 
-  it('unmounts the preview tree when switching to code view', async () => {
+  it('keeps the preview tree mounted when switching between views', async () => {
     renderPanel({
       result: {
         ...baseResult,
@@ -81,17 +81,24 @@ describe('TransformResultPanel', () => {
       },
     });
 
-    await waitFor(() => {
-      expect(screen.getByRole('img', { name: 'Tracker' })).toBeInTheDocument();
-    });
+    const previewImage = await screen.findByRole('img', { name: 'Tracker' });
 
     await userEvent
       .setup()
       .click(screen.getByRole('button', { name: /code/i }));
 
+    expect(previewImage.isConnected).toBe(true);
     expect(
       screen.queryByRole('img', { name: 'Tracker' })
     ).not.toBeInTheDocument();
+
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: /preview/i }));
+
+    expect(await screen.findByRole('img', { name: 'Tracker' })).toBe(
+      previewImage
+    );
   });
 
   it('renders favicon avatar with site icon', () => {
